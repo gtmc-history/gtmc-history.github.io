@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>찰리쌤의 한국사 게임실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a052;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,160,82,0.15);
+    --red: #8b1c1c;
+    --ink: #090b0d;
+    --ink-mid: #111418;
+    --ink-soft: #1a1f26;
+    --text: #e8dcc8;
+    --text-muted: #9a8e7a;
+    --border: rgba(201,160,82,0.2);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: var(--ink);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* — background pattern — */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,160,82,0.08) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a052' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  /* — header — */
+  header {
+    text-align: center;
+    padding: 5rem 2rem 3.5rem;
+    position: relative;
+  }
+
+  .header-deco {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .deco-line {
+    height: 1px;
+    width: 80px;
+    background: linear-gradient(to right, transparent, var(--gold));
+  }
+  .deco-line.right { background: linear-gradient(to left, transparent, var(--gold)); }
+
+  .deco-diamond {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    transform: rotate(45deg);
+  }
+
+  .site-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: #f0e8d4;
+    margin-bottom: 1rem;
+  }
+
+  .tagline {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    font-weight: 300;
+  }
+
+  /* — divider — */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 auto 3rem;
+    max-width: 400px;
+  }
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-divider span {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  /* — game grid — */
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+    gap: 1.5rem;
+    padding-bottom: 5rem;
+  }
+
+  .game-card {
+    position: relative;
+    background: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2rem 2rem 1.75rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .game-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(201,160,82,0.06) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+
+  .game-card:hover {
+    border-color: rgba(201,160,82,0.5);
+    transform: translateY(-3px);
+  }
+  .game-card:hover::before { opacity: 1; }
+  .game-card:hover::after { opacity: 1; }
+
+  /* card number watermark */
+  .card-num {
+    position: absolute;
+    top: 1.4rem; right: 1.6rem;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: rgba(201,160,82,0.07);
+    line-height: 1;
+    pointer-events: none;
+    transition: color 0.3s;
+  }
+  .game-card:hover .card-num { color: rgba(201,160,82,0.12); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .era-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--gold);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  .card-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    line-height: 1.6;
+  }
+
+  .card-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    font-weight: 600;
+    line-height: 1.5;
+    color: #f0e8d4;
+    margin-bottom: 0.6rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 1.4rem;
+    letter-spacing: 0.02em;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(201,160,82,0.1);
+    padding-top: 1rem;
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .play-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--gold);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    transition: gap 0.2s;
+  }
+
+  .game-card:hover .play-btn { gap: 0.65rem; }
+
+  .play-arrow {
+    width: 18px; height: 18px;
+    border: 1px solid rgba(201,160,82,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-arrow svg {
+    width: 7px; height: 7px;
+    fill: var(--gold);
+  }
+
+  /* — footer — */
+  footer {
+    text-align: center;
+    padding: 2.5rem 2rem 3rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-logo {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-link {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover { color: var(--gold); }
+
+  /* — card entrance animation — */
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .game-card {
+    animation: cardIn 0.5s ease both;
+  }
+  .game-card:nth-child(1) { animation-delay: 0.05s; }
+  .game-card:nth-child(2) { animation-delay: 0.15s; }
+  .game-card:nth-child(3) { animation-delay: 0.25s; }
+  .game-card:nth-child(4) { animation-delay: 0.35s; }
+
+  @keyframes headerIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  header { animation: headerIn 0.6s ease both; }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    header { padding: 3.5rem 1.5rem 2.5rem; }
+    .game-card { padding: 1.5rem 1.25rem 1.25rem; }
+    .card-num { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="site-label">찰리쌤의 한국사 게임실</p>
+  <h1>역사를 직접<br>살아보는 시간</h1>
+  <p class="tagline">교실에서 바로 쓰는 한국사 인터랙티브 게임 · gtmc-history</p>
+</header>
+
+<div class="wrap">
+
+  <div class="section-divider">
+    <span>◆ 게임 목록 ◆</span>
+  </div>
+
+  <div class="game-grid">
+
+    <!-- 게임 1: 발해 수사대 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/balhae/" target="_blank">
+      <div class="card-num">01</div>
+      <div class="card-top">
+        <span class="era-badge">발해 · 698–926</span>
+        <div class="card-meta">단원 도입 · 27분</div>
+      </div>
+      <p class="card-title">발해에서 고구려의<br>DNA를 찾아라</p>
+      <p class="card-subtitle">동북아 역사 수사대 — 증거 교차 분석 임무<br>문헌·유물 자료를 교차 분석해 발해의 계승성을 논증한다</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">수사·추리</span>
+          <span class="tag">사료 분석</span>
+          <span class="tag">모둠 활동</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 게임 2: 왕건의 외교전 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/wang-geon/" target="_blank">
+      <div class="card-num">02</div>
+      <div class="card-top">
+        <span class="era-badge">후삼국 · 900–936</span>
+        <div class="card-meta">단원 도입 · 5~10분</div>
+      </div>
+      <p class="card-title">왕건의 외교전<br>918년</p>
+      <p class="card-subtitle">후삼국의 혼돈 속에서<br>카드 선택으로 동맹과 배신을 결정하는 외교 시뮬레이션</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">카드 선택</span>
+          <span class="tag">외교</span>
+          <span class="tag">전략</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 게임 3: 고려 말 대논쟁 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/goryeo-debate/" target="_blank">
+      <div class="card-num">03</div>
+      <div class="card-top">
+        <span class="era-badge">고려 말 · 1388–1392</span>
+        <div class="card-meta">단원 정리 · 5~10분</div>
+      </div>
+      <p class="card-title">고려 말 · 신진사대부의<br>대논쟁</p>
+      <p class="card-subtitle">조선을 세울 것인가, 고려를 지킬 것인가<br>역성혁명 직전, 정도전과 정몽주의 운명을 건 선택</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">AI 토론</span>
+          <span class="tag">역할극</span>
+          <span class="tag">논증</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 게임 4: 스카이캐슬 in 고려 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/skycastle/" target="_blank">
+      <div class="card-num">04</div>
+      <div class="card-top">
+        <span class="era-badge">고려 전기 · 918–1170</span>
+        <div class="card-meta">단원 정리 · 5~10분</div>
+      </div>
+      <p class="card-title">고려에서 환생했다<br>문벌의 사다리</p>
+      <p class="card-subtitle">고려 전기 신분제 시뮬레이션<br>음서·과거·혼인으로 3대 안에 문벌의 정점을 노려라</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">가챠</span>
+          <span class="tag">신분제</span>
+          <span class="tag">시뮬레이션</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  <p class="footer-logo">찰리쌤의 스마트 교무실</p>
+  <a class="footer-link" href="https://hischarlie.tistory.com" target="_blank">
+    hischarlie.tistory.com
+  </a>
+</footer>
+
+</body>
+</html>
