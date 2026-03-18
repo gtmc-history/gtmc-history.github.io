@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-G350VXSFGE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-G350VXSFGE");
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>찰리쌤의 한국사 게임실</title>
@@ -321,6 +329,8 @@
   .game-card:nth-child(2) { animation-delay: 0.15s; }
   .game-card:nth-child(3) { animation-delay: 0.25s; }
   .game-card:nth-child(4) { animation-delay: 0.35s; }
+  .game-card:nth-child(5) { animation-delay: 0.45s; }
+  .game-card:nth-child(6) { animation-delay: 0.55s; }
 
   @keyframes headerIn {
     from { opacity: 0; transform: translateY(-12px); }
@@ -438,6 +448,54 @@
           <span class="tag">가챠</span>
           <span class="tag">신분제</span>
           <span class="tag">시뮬레이션</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 게임 5: 고려 지배세력 추리 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/goryeo-detective/" target="_blank">
+      <div class="card-num">05</div>
+      <div class="card-top">
+        <span class="era-badge">고려 후기 · 무신~원 간섭기</span>
+        <div class="card-meta">단원 정리 · 5~10분</div>
+      </div>
+      <p class="card-title">고려 지배 세력<br>변천사 추리</p>
+      <p class="card-subtitle">호족·문벌·무신·권문세족·신진사대부<br>대사 카드를 읽고 어느 세력인지 맞혀라</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">추리</span>
+          <span class="tag">카드 매칭</span>
+          <span class="tag">지배세력</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 게임 6: 사화 팩트체크 -->
+    <a class="game-card" href="https://gtmc-history.github.io/games/sahwa-factcheck/" target="_blank">
+      <div class="card-num">06</div>
+      <div class="card-top">
+        <span class="era-badge">조선 전기 · 연산군~명종</span>
+        <div class="card-meta">단원 도입·정리 · 5~10분</div>
+      </div>
+      <p class="card-title">사화 팩트체크 뉴스</p>
+      <p class="card-subtitle">훈구 vs 사림 — 공식 죄목과 실제 배경은 다르다<br>4대 사화의 진짜 원인을 가려내라</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">팩트체크</span>
+          <span class="tag">훈구·사림</span>
+          <span class="tag">사화</span>
         </div>
         <div class="play-btn">
           시작하기
