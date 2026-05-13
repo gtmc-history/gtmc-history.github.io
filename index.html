@@ -131,6 +131,42 @@
     white-space: nowrap;
   }
 
+  /* — era tabs — */
+  .era-tabs {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin: 0 auto 2.5rem;
+    justify-content: center;
+  }
+
+  .era-tab {
+    font-size: 0.72rem;
+    font-family: 'Noto Serif KR', serif;
+    letter-spacing: 0.12em;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .era-tab:hover {
+    border-color: rgba(201,160,82,0.4);
+    color: var(--text);
+  }
+
+  .era-tab.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,160,82,0.08);
+  }
+
+  .game-card.hidden { display: none; }
+
   /* — game grid — */
   .game-grid {
     display: grid;
@@ -368,10 +404,14 @@
     <span>◆ 게임 목록 ◆</span>
   </div>
 
-  <div class="game-grid">
+  <div class="era-tabs" id="era-tabs">
+    <!-- 탭은 JS가 동적으로 생성 — 게임 없는 시대는 숨김 -->
+  </div>
+
+  <div class="game-grid" id="game-grid">
 
     <!-- 게임 1: 발해 수사대 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/balhae/" target="_blank">
+    <a class="game-card" data-era="삼국·남북국" href="https://gtmc-history.github.io/games/balhae/" target="_blank">
       <div class="card-num">01</div>
       <div class="card-top">
         <span class="era-badge">발해 · 698–926</span>
@@ -395,7 +435,7 @@
     </a>
 
     <!-- 게임 2: 왕건의 외교전 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/wang-geon/" target="_blank">
+    <a class="game-card" data-era="고려" href="https://gtmc-history.github.io/games/wang-geon/" target="_blank">
       <div class="card-num">02</div>
       <div class="card-top">
         <span class="era-badge">후삼국 · 900–936</span>
@@ -419,7 +459,7 @@
     </a>
 
     <!-- 게임 3: 고려 말 대논쟁 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/goryeo-debate/" target="_blank">
+    <a class="game-card" data-era="고려" href="https://gtmc-history.github.io/games/goryeo-debate/" target="_blank">
       <div class="card-num">03</div>
       <div class="card-top">
         <span class="era-badge">고려 말 · 1388–1392</span>
@@ -443,7 +483,7 @@
     </a>
 
     <!-- 게임 4: 스카이캐슬 in 고려 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/skycastle/" target="_blank">
+    <a class="game-card" data-era="고려" href="https://gtmc-history.github.io/games/skycastle/" target="_blank">
       <div class="card-num">04</div>
       <div class="card-top">
         <span class="era-badge">고려 전기 · 918–1170</span>
@@ -467,7 +507,7 @@
     </a>
 
     <!-- 게임 5: 몽골 서바이벌 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/mongol-survival/" target="_blank">
+    <a class="game-card" data-era="고려" href="https://gtmc-history.github.io/games/mongol-survival/" target="_blank">
       <div class="card-num">05</div>
       <div class="card-top">
         <span class="era-badge">고려 중기 · 1231–1273</span>
@@ -491,7 +531,7 @@
     </a>
 
     <!-- 게임 6: 고려 지배세력 추리 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/goryeo-detective/" target="_blank">
+    <a class="game-card" data-era="고려" href="https://gtmc-history.github.io/games/goryeo-detective/" target="_blank">
       <div class="card-num">06</div>
       <div class="card-top">
         <span class="era-badge">고려 후기 · 무신~원 간섭기</span>
@@ -515,7 +555,7 @@
     </a>
 
     <!-- 게임 7: 왕의 결재함 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/wangs-approval/" target="_blank">
+    <a class="game-card" data-era="조선" href="https://gtmc-history.github.io/games/wangs-approval/" target="_blank">
       <div class="card-num">07</div>
       <div class="card-top">
         <span class="era-badge">조선 전기 · 태종~세종</span>
@@ -539,7 +579,7 @@
     </a>
 
     <!-- 게임 8: 3사 청문회 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/samsa-hearing/" target="_blank">
+    <a class="game-card" data-era="조선" href="https://gtmc-history.github.io/games/samsa-hearing/" target="_blank">
       <div class="card-num">08</div>
       <div class="card-top">
         <span class="era-badge">조선 전기 · 성종~중종</span>
@@ -563,7 +603,7 @@
     </a>
 
     <!-- 게임 9: 사화 팩트체크 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/sahwa-factcheck/" target="_blank">
+    <a class="game-card" data-era="조선" href="https://gtmc-history.github.io/games/sahwa-factcheck/" target="_blank">
       <div class="card-num">09</div>
       <div class="card-top">
         <span class="era-badge">조선 전기 · 연산군~명종</span>
@@ -587,7 +627,7 @@
     </a>
 
     <!-- 게임 10: 붕당의 탄생 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/bungdang/" target="_blank">
+    <a class="game-card" data-era="조선" href="https://gtmc-history.github.io/games/bungdang/" target="_blank">
       <div class="card-num">10</div>
       <div class="card-top">
         <span class="era-badge">조선 중기 · 선조 (1575)</span>
@@ -611,7 +651,7 @@
     </a>
 
     <!-- 게임 11: 흥선 대원군의 선택 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/daewongun/" target="_blank">
+    <a class="game-card" data-era="근대" href="https://gtmc-history.github.io/games/daewongun/" target="_blank">
       <div class="card-num">11</div>
       <div class="card-top">
         <span class="era-badge">개항 전후 · 1863–1873</span>
@@ -635,7 +675,7 @@
     </a>
 
     <!-- 게임 12: 강화도 협상 테이블 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/ganghwa/" target="_blank">
+    <a class="game-card" data-era="근대" href="https://gtmc-history.github.io/games/ganghwa/" target="_blank">
       <div class="card-num">12</div>
       <div class="card-top">
         <span class="era-badge">개항기 · 1876</span>
@@ -659,7 +699,7 @@
     </a>
 
     <!-- 게임 13: 개항의 갈림길 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/gaehang/" target="_blank">
+    <a class="game-card" data-era="근대" href="https://gtmc-history.github.io/games/gaehang/" target="_blank">
       <div class="card-num">13</div>
       <div class="card-top">
         <span class="era-badge">개항기 · 1875–1876</span>
@@ -683,7 +723,7 @@
     </a>
 
     <!-- 게임 14: 우정총국의 밤 -->
-    <a class="game-card" href="https://gtmc-history.github.io/games/ujeongtonguk/" target="_blank">
+    <a class="game-card" data-era="근대" href="https://gtmc-history.github.io/games/ujeongtonguk/" target="_blank">
       <div class="card-num">14</div>
       <div class="card-top">
         <span class="era-badge">개항기 · 1884</span>
@@ -706,8 +746,70 @@
       </div>
     </a>
 
+    <!-- 게임 15: 고부, 1894 -->
+    <a class="game-card" data-era="근대" href="https://gtmc-history.github.io/games/gobu1894/" target="_blank">
+      <div class="card-num">15</div>
+      <div class="card-top">
+        <span class="era-badge">동학농민운동 · 1894</span>
+        <div class="card-meta">단원 정리 · 15~20분</div>
+      </div>
+      <p class="card-title">고부, 1894</p>
+      <p class="card-subtitle">전라도 고부의 평범한 농민이 되어 4번의 선택을 내린다<br>반봉건·반외세·생존 — 정답 없는 역사적 압력을 체험하라</p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="tag">동학농민운동</span>
+          <span class="tag">선택 시뮬레이션</span>
+          <span class="tag">딜레마</span>
+        </div>
+        <div class="play-btn">
+          시작하기
+          <div class="play-arrow">
+            <svg viewBox="0 0 8 8"><polygon points="2,1 7,4 2,7"/></svg>
+          </div>
+        </div>
+      </div>
+    </a>
+
   </div>
 </div>
+
+<script>
+  // ─── 시대 탭 필터 ───
+  const ERA_ORDER = ['전체', '삼국·남북국', '고려', '조선', '근대', '일제강점기', '현대'];
+
+  function initTabs() {
+    const cards = Array.from(document.querySelectorAll('.game-card[data-era]'));
+    const usedEras = new Set(cards.map(c => c.dataset.era));
+
+    const tabsEl = document.getElementById('era-tabs');
+    ERA_ORDER.forEach(era => {
+      // 전체 탭은 항상 표시, 나머지는 게임 있을 때만
+      if (era !== '전체' && !usedEras.has(era)) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'era-tab' + (era === '전체' ? ' active' : '');
+      btn.textContent = era;
+      btn.dataset.era = era;
+      btn.addEventListener('click', () => filterEra(era));
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function filterEra(era) {
+    // 탭 active 상태
+    document.querySelectorAll('.era-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.era === era);
+    });
+
+    // 카드 show/hide
+    document.querySelectorAll('.game-card[data-era]').forEach(card => {
+      const show = era === '전체' || card.dataset.era === era;
+      card.classList.toggle('hidden', !show);
+    });
+  }
+
+  initTabs();
+</script>
 
 <footer>
   <p class="footer-logo">찰리쌤의 스마트 교무실</p>
