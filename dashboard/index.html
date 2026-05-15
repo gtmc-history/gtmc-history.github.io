@@ -1,1 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-G350VXSFGE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-G350VXSFGE');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>찰리쌤 수업 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --ink:        #090b0d;
+  --ink-card:   #1e2430;
+  --gold:       #c9a052;
+  --gold-lt:    #e8c97a;
+  --gold-dim:   rgba(201,160,82,0.15);
+  --gold-line:  rgba(201,160,82,0.25);
+  --text:       #e8dcc8;
+  --text-muted: #9a8e7a;
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans:  'Noto Sans KR', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--ink);
+  color: var(--text);
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(201,160,82,0.07) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9a052' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 2rem 5rem; }
+
+/* ── HEADER ── */
+header {
+  position: relative; z-index: 1;
+  padding: 2.5rem 2rem 2rem;
+  border-bottom: 1px solid var(--gold-line);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.site-label {
+  font-size: 0.7rem; letter-spacing: 0.3em; color: var(--gold);
+  font-family: var(--font-serif); margin-bottom: 0.4rem;
+}
+h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700; color: #f0e8d4;
+}
+.header-right { display: flex; align-items: center; gap: 0.75rem; }
+.last-updated { font-size: 0.72rem; color: var(--text-muted); }
+.btn-refresh {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: var(--gold-dim); border: 1px solid var(--gold-line);
+  color: var(--gold-lt); padding: 0.5rem 1rem; border-radius: 3px;
+  font-size: 0.78rem; cursor: pointer; transition: background 0.2s, transform 0.15s;
+}
+.btn-refresh:hover { background: rgba(201,160,82,0.25); transform: translateY(-1px); }
+.btn-refresh.spinning svg { animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: 1.25rem 0;
+}
+.filter-label {
+  font-size: 0.7rem; letter-spacing: 0.18em; color: var(--gold);
+  font-family: var(--font-serif); white-space: nowrap;
+}
+.filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filter-btn {
+  padding: 0.38rem 0.9rem; border: 1px solid var(--gold-line);
+  background: transparent; color: var(--text-muted);
+  border-radius: 3px; font-size: 0.76rem; cursor: pointer;
+  transition: all 0.16s; white-space: nowrap;
+}
+.filter-btn:hover { border-color: var(--gold); color: var(--text); }
+.filter-btn.active {
+  background: var(--gold-dim); border-color: var(--gold);
+  color: var(--gold-lt); font-weight: 500;
+}
+.filter-sep { width: 1px; height: 22px; background: var(--gold-line); flex-shrink: 0; }
+
+/* ── STATE ── */
+.state-panel { display: none; text-align: center; padding: 5rem 2rem; position: relative; z-index: 1; }
+.state-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.state-msg { font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-serif); line-height: 1.9; }
+.loader {
+  width: 34px; height: 34px; border: 3px solid var(--gold-line);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: spin 0.75s linear infinite; margin: 0 auto 1.5rem;
+}
+
+/* ── DASHBOARD ── */
+#dashboard { position: relative; z-index: 1; }
+
+/* ── SUMMARY ── */
+.summary-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem; margin: 1.5rem 0 2rem;
+}
+.s-card {
+  background: var(--ink-card); border: 1px solid var(--gold-line);
+  border-radius: 3px; padding: 1.2rem 1.4rem;
+}
+.s-label { font-size: 0.67rem; letter-spacing: 0.18em; color: var(--text-muted); display: block; margin-bottom: 0.45rem; }
+.s-val { font-size: 2rem; font-weight: 700; font-family: var(--font-serif); color: var(--gold-lt); line-height: 1; }
+.s-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-family: var(--font-serif); font-size: 0.78rem; font-weight: 600;
+  letter-spacing: 0.2em; color: var(--gold); margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--gold-line); }
+
+/* ── CHART GRID ── */
+.chart-grid {
+  display: grid; gap: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+  margin-bottom: 2rem;
+}
+.chart-card { background: var(--ink-card); border: 1px solid var(--gold-line); border-radius: 3px; padding: 1.5rem; }
+.chart-card-title {
+  font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.06em; margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.game-badge {
+  font-size: 0.63rem; padding: 2px 7px; border-radius: 2px;
+  background: var(--gold-dim); color: var(--gold);
+  border: 1px solid var(--gold-line);
+}
+
+/* ── BAR ── */
+.bar-item { margin-bottom: 0.9rem; }
+.bar-item:last-child { margin-bottom: 0; }
+.bar-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.32rem; }
+.bar-label { font-size: 0.82rem; color: var(--text); }
+.bar-right { display: flex; align-items: center; gap: 0.5rem; font-size: 0.74rem; }
+.bar-pct { font-weight: 700; font-size: 0.95rem; }
+.bar-count { color: var(--text-muted); }
+.bar-track { height: 9px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.85s cubic-bezier(0.22,1,0.36,1); }
+
+/* fill 색상 */
+.fill-c-jade  { background: linear-gradient(90deg,#2e7d5e,#3da876); }
+.fill-c-red   { background: linear-gradient(90deg,#9b2b2b,#c94040); }
+.fill-c-blue  { background: linear-gradient(90deg,#2b5a8a,#4080be); }
+.fill-c-amber { background: linear-gradient(90deg,#b87820,#d4a030); }
+.fill-c-gold  { background: linear-gradient(90deg,#8b6420,#c9a052); }
+.fill-c-muted { background: rgba(122,136,152,0.45); }
+
+/* pct 색상 */
+.pct-c-jade  { color: #3da876; } .pct-c-red   { color: #c94040; }
+.pct-c-blue  { color: #4080be; } .pct-c-amber { color: #d4a030; }
+.pct-c-gold  { color: #c9a052; } .pct-c-muted { color: #7a8898; }
+
+/* ── VERSUS ── */
+.versus-nums { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
+.vs-side { text-align: center; }
+.vs-pct { font-size: 2.8rem; font-weight: 700; font-family: var(--font-serif); line-height: 1; }
+.vs-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+.vs-sep { font-size: 0.72rem; color: var(--gold); font-family: var(--font-serif); text-align: center; }
+.vs-track { height: 8px; border-radius: 2px; overflow: hidden; display: flex; background: rgba(255,255,255,0.06); }
+.vs-left, .vs-right { height: 100%; transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
+.vs-count-row { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; }
+
+/* ── SLIDER ── */
+.slider-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+.slider-label { font-size: 0.78rem; color: var(--text-muted); min-width: 90px; }
+.slider-track { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; position: relative; }
+.slider-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg,#2e7d5e,#c9a052); transition: width 0.85s cubic-bezier(0.22,1,0.36,1); }
+.slider-dot { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 13px; height: 13px; border-radius: 50%; background: var(--gold-lt); border: 2px solid var(--ink); transition: left 0.85s cubic-bezier(0.22,1,0.36,1); }
+.slider-val { font-size: 0.86rem; font-weight: 700; color: var(--gold-lt); min-width: 32px; text-align: right; }
+.slider-note { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.6rem; }
+
+/* ── COMMENTS ── */
+.comment-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.comment-item {
+  background: var(--ink-card); border: 1px solid var(--gold-line); border-left: 3px solid var(--gold);
+  border-radius: 0 3px 3px 0; padding: 0.7rem 1rem;
+  font-size: 0.88rem; line-height: 1.65; animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);} }
+.comment-meta { font-size: 0.67rem; color: var(--text-muted); margin-top: 0.28rem; }
+.no-comment { font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 1.5rem; }
+
+/* ── QUESTIONS ── */
+.question-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+.q-card { background: var(--ink-card); border: 1px solid var(--gold-line); border-radius: 3px; padding: 1.2rem 1.5rem; display: flex; gap: 1rem; }
+.q-num { font-size: 1.15rem; font-family: var(--font-serif); font-weight: 700; color: var(--gold); opacity: 0.55; flex-shrink: 0; min-width: 1.6rem; }
+.q-text { font-size: 0.93rem; line-height: 1.75; }
+.q-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+hr.divider { border: none; height: 1px; margin: 2rem 0; background: linear-gradient(90deg,transparent,var(--gold-line),transparent); }
+
+footer { position: relative; z-index: 1; border-top: 1px solid var(--gold-line); padding: 1.5rem 2rem; text-align: center; font-size: 0.74rem; color: var(--text-muted); }
+footer a { color: var(--gold); text-decoration: none; }
+footer a:hover { color: var(--gold-lt); }
+
+@media (max-width: 600px) {
+  header { flex-direction: column; align-items: flex-start; }
+  .header-right { width: 100%; justify-content: space-between; }
+  .summary-row { grid-template-columns: repeat(2,1fr); }
+  .vs-pct { font-size: 2.1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <p class="site-label">찰리쌤의 한국사 게임실</p>
+    <h1>수업 대시보드</h1>
+  </div>
+  <div class="header-right">
+    <span class="last-updated" id="last-updated">—</span>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      새로고침
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filter-bar">
+    <span class="filter-label">◆ 게임</span>
+    <div class="filter-group" id="game-filters"></div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">◆ 반</span>
+    <div class="filter-group" id="class-filters"></div>
+  </div>
+
+  <div class="state-panel" id="s-loading"><div class="loader"></div><p class="state-msg">데이터를 불러오는 중입니다…</p></div>
+  <div class="state-panel" id="s-empty"><div class="state-icon">📭</div><p class="state-msg">선택한 조건에 해당하는 데이터가 없습니다.<br>게임 URL에 <code>?class=반이름</code>이 붙어 있는지 확인해주세요.</p></div>
+  <div class="state-panel" id="s-error"><div class="state-icon">⚠️</div><p class="state-msg" id="error-msg">데이터를 불러오지 못했습니다.</p></div>
+
+  <div id="dashboard" style="display:none">
+    <div class="summary-row" id="summary-row"></div>
+    <p class="section-title" id="chart-title" style="display:none">선택 분포</p>
+    <div class="chart-grid" id="chart-grid"></div>
+    <hr class="divider" id="div1" style="display:none">
+    <div id="comments-sec" style="display:none">
+      <p class="section-title">학생 소감</p>
+      <div class="comment-list" id="comment-list"></div>
+    </div>
+    <hr class="divider" id="div2" style="display:none">
+    <div id="questions-sec" style="display:none">
+      <p class="section-title">수업 발문 제안</p>
+      <div class="question-cards" id="question-cards"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://hischarlie.tistory.com" target="_blank">hischarlie.tistory.com</a>
+  &nbsp;·&nbsp; 찰리쌤의 한국사 게임실 &nbsp;·&nbsp; 교사 전용
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnbml3enRscmFra3JiemNma2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MDUxNTQsImV4cCI6MjA5NDE4MTE1NH0.lvYjcvKFVqt_rLQwVgUEQB5pbyQ2saRwaoH8LLuFuqw';
+const H = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let allResults = [];
+let allMeta    = {};   // { game_id: metaRow }
+let selGame    = null;
+let selClass   = 'all';
+
+// ═══════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════
+async function loadData() {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('spinning');
+  showState('loading');
+  try {
+    const [results, metaRows] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/game_results?select=*&order=timestamp.desc&limit=3000', { headers: H }).then(r => r.json()),
+      fetch(SUPABASE_URL + '/rest/v1/game_meta?select=*', { headers: H }).then(r => r.json()),
+    ]);
+
+    allResults = Array.isArray(results) ? results : [];
+    allMeta = {};
+    if (Array.isArray(metaRows)) metaRows.forEach(m => { allMeta[m.game_id] = m; });
+
+    // game_meta에 등록돼 있고 실제 데이터도 있는 게임만
+    const games = [...new Set(allResults.map(r => r.game))].filter(g => allMeta[g]);
+    if (!selGame && games.length > 0) selGame = games[0];
+
+    buildFilters(games);
+    render();
+
+    document.getElementById('last-updated').textContent =
+      new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) + ' 기준';
+  } catch (e) {
+    document.getElementById('error-msg').textContent = e.message;
+    showState('error');
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════
+function buildFilters(games) {
+  document.getElementById('game-filters').innerHTML = games.map(g => {
+    const m = allMeta[g];
+    return `<button class="filter-btn ${g === selGame ? 'active':''}" onclick="selG('${g}')">${m ? m.label : g}</button>`;
+  }).join('');
+
+  const classes = [...new Set(allResults.filter(r => r.game === selGame).map(r => r.class))]
+    .filter(c => c && c !== '미입력').sort((a,b) => a.localeCompare(b,'ko'));
+
+  document.getElementById('class-filters').innerHTML =
+    `<button class="filter-btn ${selClass==='all'?'active':''}" onclick="selC('all')">전체 반</button>` +
+    classes.map(c => `<button class="filter-btn ${c===selClass?'active':''}" onclick="selC('${c}')">${c}반</button>`).join('');
+}
+
+function selG(g) {
+  selGame = g; selClass = 'all';
+  buildFilters([...new Set(allResults.map(r => r.game)).values()].filter(g => allMeta[g]));
+  render();
+}
+function selC(c) {
+  selClass = c;
+  buildFilters([...new Set(allResults.map(r => r.game)).values()].filter(g => allMeta[g]));
+  render();
+}
+
+function getRows() {
+  return allResults.filter(r => r.game === selGame && (selClass === 'all' || r.class === selClass));
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function render() {
+  const rows = getRows();
+  if (rows.length === 0) { showState('empty'); return; }
+  showState('dashboard');
+  const meta = allMeta[selGame] || {};
+  renderSummary(rows, meta);
+  renderCharts(rows, meta);
+  renderComments(rows);
+  renderQuestions(rows, meta);
+}
+
+function renderSummary(rows, meta) {
+  const total   = rows.length;
+  const classes = [...new Set(rows.map(r => r.class).filter(c => c && c !== '미입력'))];
+  const withCmt = rows.filter(r => r.comment && r.comment.trim()).length;
+  const lastDate = new Date(rows[0].timestamp).toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
+  document.getElementById('summary-row').innerHTML = `
+    <div class="s-card"><span class="s-label">플레이 인원</span><div class="s-val">${total}</div><div class="s-sub">명</div></div>
+    <div class="s-card"><span class="s-label">참여 반</span><div class="s-val">${selClass==='all'?classes.length:1}</div>
+      <div class="s-sub">${selClass==='all'?classes.join(', ')+'반':selClass+'반'}</div></div>
+    <div class="s-card"><span class="s-label">소감 작성</span><div class="s-val">${withCmt}</div>
+      <div class="s-sub">명 · ${total>0?Math.round(withCmt/total*100):0}%</div></div>
+    <div class="s-card"><span class="s-label">최근 플레이</span><div class="s-val" style="font-size:1.25rem">${lastDate}</div>
+      <div class="s-sub">${meta.era||''}</div></div>`;
+}
+
+// ── 차트 분기 ──
+function renderCharts(rows, meta) {
+  const grid = document.getElementById('chart-grid');
+  grid.innerHTML = '';
+
+  // 렌더링할 차트 결정
+  const hasAxes    = meta.axes   && meta.axes.length > 0;
+  const hasFinal   = meta.final_key && meta.final_a && meta.final_b;
+  const hasScenes  = meta.scenes && meta.scenes.length > 0;
+  const hasSliders = meta.sliders && meta.sliders.length > 0;
+  const hasEnding  = rows.some(r => r.choices?.ending);
+
+  const any = hasAxes || hasFinal || hasScenes || hasSliders || hasEnding;
+  document.getElementById('chart-title').style.display = any ? '' : 'none';
+
+  if (hasAxes)    grid.appendChild(buildAxesCard(rows, meta));
+  if (hasFinal)   grid.appendChild(buildVersusCard(rows, meta));
+  if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
+  if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
+  if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// ① 축 비율 차트 — axes: [{key, label, color}, ...]
+function buildAxesCard(rows, meta) {
+  const axes = meta.axes;
+  // choices.axis = {A:3, B:1, C:0} 형식
+  const counts = {};
+  axes.forEach(ax => { counts[ax.key] = 0; });
+  rows.forEach(r => {
+    const axis = r.choices?.axis;
+    if (axis && typeof axis === 'object') {
+      axes.forEach(ax => { counts[ax.key] += (Number(axis[ax.key]) || 0); });
+    }
+  });
+  const grand = Object.values(counts).reduce((s,v) => s+v, 0);
+
+  const card = mkCard(meta.label, '선택 경향 분포');
+  card.innerHTML += axes.map((ax, i) => {
+    const pct = grand > 0 ? Math.round(counts[ax.key] / grand * 100) : 0;
+    return `<div class="bar-item">
+      <div class="bar-row">
+        <span class="bar-label">${ax.label}</span>
+        <div class="bar-right">
+          <span class="bar-pct pct-${ax.color}">${pct}%</span>
+          <span class="bar-count">(${counts[ax.key]}회)</span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill fill-${ax.color}" id="ax${i}" style="width:0%"></div></div>
+    </div>`;
+  }).join('') +
+  `<div class="slider-note">※ 씬별 선택이 해당 축에 누적됩니다 · 총 ${grand}회</div>`;
+
+  raf(() => axes.forEach((ax, i) => {
+    const pct = grand > 0 ? Math.round(counts[ax.key] / grand * 100) : 0;
+    setW('ax'+i, pct);
+  }));
+  return card;
+}
+
+// ② Versus — final_key, final_a/b: {key, label, color?}
+function buildVersusCard(rows, meta) {
+  const total  = rows.length;
+  const aKey   = meta.final_a.key;
+  const bKey   = meta.final_b.key;
+  const aCnt   = rows.filter(r => r.choices?.[meta.final_key] === aKey).length;
+  const bCnt   = rows.filter(r => r.choices?.[meta.final_key] === bKey).length;
+  const aPct   = total > 0 ? Math.round(aCnt/total*100) : 0;
+  const bPct   = total > 0 ? Math.round(bCnt/total*100) : 0;
+  const aCol   = meta.final_a.color || 'c-jade';
+  const bCol   = meta.final_b.color || 'c-red';
+
+  const card = mkCard(meta.label, meta.final_label || '최종 선택');
+  card.innerHTML += `
+    <div class="versus-nums">
+      <div class="vs-side">
+        <div class="vs-pct pct-${aCol}" id="vpa">0%</div>
+        <div class="vs-label">${meta.final_a.label}</div>
+      </div>
+      <div class="vs-sep">vs</div>
+      <div class="vs-side">
+        <div class="vs-pct pct-${bCol}" id="vpb">0%</div>
+        <div class="vs-label">${meta.final_b.label}</div>
+      </div>
+    </div>
+    <div class="vs-track">
+      <div class="vs-left  fill-${aCol}" id="vbl" style="width:0%"></div>
+      <div class="vs-right fill-${bCol}" id="vbr" style="width:0%"></div>
+    </div>
+    <div class="vs-count-row">
+      <span>${meta.final_a.label} ${aCnt}명</span>
+      <span>${meta.final_b.label} ${bCnt}명</span>
+    </div>`;
+
+  raf(() => {
+    setText('vpa', aPct+'%'); setText('vpb', bPct+'%');
+    setW('vbl', aPct); setW('vbr', bPct);
+  });
+  return card;
+}
+
+// ③ 씬별 막대 — scenes: [{key, label, a:{label,color}, b:{label,color}}]
+function buildScenesCard(rows, meta) {
+  const total  = rows.length;
+  const scenes = meta.scenes;
+  const card   = mkCard(meta.label, '씬별 선택 분포');
+
+  card.innerHTML += scenes.map((sc, si) => {
+    const num  = sc.key.replace(/\D/g, '');
+    const aKey = 'c' + num + 'a';
+    const bKey = 'c' + num + 'b';
+    const aCnt = rows.filter(r => r.choices?.[sc.key] === aKey).length;
+    const bCnt = rows.filter(r => r.choices?.[sc.key] === bKey).length;
+    const aPct = total > 0 ? Math.round(aCnt/total*100) : 0;
+    const bPct = total > 0 ? Math.round(bCnt/total*100) : 0;
+    const aCol = sc.a?.color || 'c-jade';
+    const bCol = sc.b?.color || 'c-red';
+    return `
+      <div class="bar-item" style="margin-bottom:1.1rem">
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.45rem">${sc.label}</div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:0.78rem">${sc.a?.label||'A'}</span>
+          <div class="bar-right"><span class="bar-pct pct-${aCol}">${aPct}%</span><span class="bar-count">${aCnt}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:5px">
+          <div class="bar-fill fill-${aCol}" id="sca${si}" style="width:0%"></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:0.78rem">${sc.b?.label||'B'}</span>
+          <div class="bar-right"><span class="bar-pct pct-${bCol}">${bPct}%</span><span class="bar-count">${bCnt}명</span></div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill fill-${bCol}" id="scb${si}" style="width:0%"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  raf(() => scenes.forEach((sc, si) => {
+    const num  = sc.key.replace(/\D/g,'');
+    const aCnt = rows.filter(r => r.choices?.[sc.key] === 'c'+num+'a').length;
+    const bCnt = rows.filter(r => r.choices?.[sc.key] === 'c'+num+'b').length;
+    setW('sca'+si, total>0?Math.round(aCnt/total*100):0);
+    setW('scb'+si, total>0?Math.round(bCnt/total*100):0);
+  }));
+  return card;
+}
+
+// ④ 슬라이더 평균 — sliders: [{key, label}]
+function buildSlidersCard(rows, meta) {
+  const card = mkCard(meta.label, '슬라이더 평균 (0–100)');
+  card.innerHTML += meta.sliders.map((sl, i) => {
+    const vals = rows.map(r => parseFloat(r.choices?.[sl.key])).filter(v => !isNaN(v));
+    const avg  = vals.length > 0 ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length) : 0;
+    return `
+      <div class="slider-row">
+        <span class="slider-label">${sl.label}</span>
+        <div class="slider-track">
+          <div class="slider-fill" id="sf${i}" style="width:0%"></div>
+          <div class="slider-dot"  id="sd${i}" style="left:0%"></div>
+        </div>
+        <span class="slider-val">${avg}</span>
+      </div>`;
+  }).join('') + `<p class="slider-note">※ 학생이 직접 조정한 슬라이더 평균값</p>`;
+
+  raf(() => meta.sliders.forEach((sl, i) => {
+    const vals = rows.map(r => parseFloat(r.choices?.[sl.key])).filter(v => !isNaN(v));
+    const avg  = vals.length > 0 ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length) : 0;
+    const f = document.getElementById('sf'+i); if(f) f.style.width = avg+'%';
+    const d = document.getElementById('sd'+i); if(d) d.style.left  = avg+'%';
+  }));
+  return card;
+}
+
+// ⑤ 엔딩 분포 — choices.ending 값으로 자동 집계
+function buildEndingsCard(rows, meta) {
+  const total  = rows.length;
+  const counts = {};
+  rows.forEach(r => {
+    const e = r.choices?.ending;
+    if (e) counts[e] = (counts[e]||0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const colors = ['c-amber','c-blue','c-jade','c-red','c-gold','c-muted'];
+
+  const card = mkCard(meta.label, '엔딩 분포');
+  card.innerHTML += sorted.map(([label, cnt], i) => {
+    const pct = total > 0 ? Math.round(cnt/total*100) : 0;
+    const col = colors[i % colors.length];
+    return `
+      <div class="bar-item">
+        <div class="bar-row">
+          <span class="bar-label">${label}</span>
+          <div class="bar-right"><span class="bar-pct pct-${col}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill fill-${col}" id="end${i}" style="width:0%"></div></div>
+      </div>`;
+  }).join('');
+
+  raf(() => sorted.forEach(([,cnt], i) => {
+    setW('end'+i, total>0?Math.round(cnt/total*100):0);
+  }));
+  return card;
+}
+
+// ── 소감 ──
+function renderComments(rows) {
+  const items = rows.filter(r => r.comment && r.comment.trim()).slice(0,10);
+  const show  = items.length > 0;
+  document.getElementById('comments-sec').style.display = show ? '' : 'none';
+  document.getElementById('div1').style.display         = show ? '' : 'none';
+  if (!show) return;
+  document.getElementById('comment-list').innerHTML = items.map((r,i) => `
+    <div class="comment-item" style="animation-delay:${i*.05}s">
+      ${esc(r.comment)}
+      <div class="comment-meta">${r.class!=='미입력'?r.class+'반 · ':''}${fmtTime(r.timestamp)}</div>
+    </div>`).join('');
+}
+
+// ── 발문 제안 ──
+function renderQuestions(rows, meta) {
+  const qs = genQuestions(rows, meta);
+  const show = qs.length > 0;
+  document.getElementById('questions-sec').style.display = show ? '' : 'none';
+  document.getElementById('div2').style.display          = show ? '' : 'none';
+  if (!show) return;
+  document.getElementById('question-cards').innerHTML = qs.map((q,i) => `
+    <div class="q-card">
+      <div class="q-num">${i+1}</div>
+      <div>
+        <div class="q-text">${q.text}</div>
+        ${q.hint?`<div class="q-hint">💡 ${q.hint}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// 발문 생성 — 데이터 기반 자동
+// ═══════════════════════════════════════════════════
+function genQuestions(rows, meta) {
+  const total = rows.length;
+  if (total === 0) return [];
+  const qs = [];
+
+  // 2택 Versus 발문
+  if (meta.final_key && meta.final_a && meta.final_b) {
+    const aCnt = rows.filter(r => r.choices?.[meta.final_key] === meta.final_a.key).length;
+    const aPct = Math.round(aCnt/total*100);
+    const bPct = 100 - aPct;
+    const aL   = meta.final_a.label;
+    const bL   = meta.final_b.label;
+    if (aPct >= 60) {
+      qs.push({
+        text: `${total}명 중 ${aPct}%가 "${aL}"을 선택했습니다. 실제 역사에서 그 선택은 어떤 결과로 이어졌나요? 결과를 알고 있었다면 선택이 달라졌을까요?`,
+        hint: '결과를 이미 아는 우리의 판단과, 모르는 채로 선택한 당시 인물의 판단은 어떻게 다를까요.'
+      });
+    } else if (bPct >= 60) {
+      qs.push({
+        text: `${bPct}%가 "${bL}"을 골랐습니다. 그런데 실제 역사의 인물들은 다른 길을 걸었습니다. 우리가 모르는 어떤 맥락이 그들의 선택을 만들었을까요?`,
+        hint: '역사적 선택에는 그 시대만의 정보·감정·관계가 작동합니다.'
+      });
+    } else {
+      qs.push({
+        text: `"${aL}" ${aPct}% vs "${bL}" ${bPct}% — 반이 거의 반반으로 갈렸습니다. 두 선택을 가른 결정적인 차이는 무엇이었을까요?`,
+        hint: '선택의 갈림은 종종 가치관의 갈림을 보여줍니다.'
+      });
+    }
+  }
+
+  // 축 발문
+  if (meta.axes && meta.axes.length > 0) {
+    const axes   = meta.axes;
+    const counts = {};
+    axes.forEach(ax => { counts[ax.key] = 0; });
+    rows.forEach(r => {
+      const axis = r.choices?.axis;
+      if (axis && typeof axis === 'object')
+        axes.forEach(ax => { counts[ax.key] += Number(axis[ax.key])||0; });
+    });
+    const grand  = Object.values(counts).reduce((s,v)=>s+v,0);
+    const sorted = axes.slice().sort((a,b) => counts[b.key]-counts[a.key]);
+    const top    = sorted[0];
+    const topPct = grand > 0 ? Math.round(counts[top.key]/grand*100) : 0;
+
+    qs.push({
+      text: `"${top.label}" 경향이 ${topPct}%로 가장 높게 나왔습니다. 당시 사람들이 이 방향으로 움직인 역사적 배경은 무엇이었을까요?`,
+      hint: '선택 경향과 시대적 구조의 연결 고리를 생각해봅니다.'
+    });
+
+    if (sorted.length >= 2) {
+      const sec    = sorted[1];
+      const secPct = grand > 0 ? Math.round(counts[sec.key]/grand*100) : 0;
+      if (Math.abs(topPct - secPct) <= 12) {
+        qs.push({
+          text: `"${top.label}"과 "${sec.label}"이 비슷한 비율로 나왔습니다. 이 두 방향은 당시 역사 속에서 어떤 긴장 관계에 있었을까요?`,
+          hint: '하나의 운동 안에서도 방향이 갈릴 때, 그 이유를 역사적으로 설명해봅니다.'
+        });
+      }
+    }
+  }
+
+  // 슬라이더 극값 발문
+  if (meta.sliders && meta.sliders.length > 0) {
+    meta.sliders.forEach(sl => {
+      const vals = rows.map(r => parseFloat(r.choices?.[sl.key])).filter(v => !isNaN(v));
+      if (!vals.length) return;
+      const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+      if (avg <= 35 || avg >= 65) {
+        qs.push({
+          text: `"${sl.label}"을 평균 ${avg}점으로 ${avg<=35?'낮게':'높게'} 평가했습니다. 실제 역사에서 이 요소는 어떻게 작용했나요?`,
+          hint: '학생의 직관적 평가와 역사적 실제 사이의 간극에서 토론이 시작됩니다.'
+        });
+      }
+    });
+  }
+
+  // 반 비교 발문
+  const classes = [...new Set(rows.map(r=>r.class).filter(c=>c&&c!=='미입력'))];
+  if (classes.length >= 2 && selClass === 'all') {
+    qs.push({
+      text: `반마다 선택 비율이 다릅니다. 같은 내용을 배웠는데 왜 다른 선택을 했을까요? 역사적 판단에서 사실 지식 외에 어떤 요소가 작동하는 걸까요?`,
+      hint: '역사 판단에는 사실 외에도 가치관·경험·감정이 함께 작동합니다.'
+    });
+  }
+
+  return qs.slice(0, 4);
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function mkCard(gameName, title) {
+  const el = document.createElement('div');
+  el.className = 'chart-card';
+  el.innerHTML = `<div class="chart-card-title"><span class="game-badge">${gameName}</span>${title}</div>`;
+  return el;
+}
+function showState(s) {
+  ['s-loading','s-empty','s-error','dashboard'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  const target = s === 'dashboard' ? 'dashboard' : 's-' + s;
+  document.getElementById(target).style.display = s === 'dashboard' ? 'block' : 'block';
+}
+function raf(fn) { requestAnimationFrame(() => setTimeout(fn, 80)); }
+function setW(id, pct) { const el=document.getElementById(id); if(el) el.style.width=pct+'%'; }
+function setText(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('ko-KR',{month:'long',day:'numeric'}) + ' ' +
+         d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── INIT ──
+loadData();
+</script>
+</body>
+</html>
