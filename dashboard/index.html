@@ -285,9 +285,10 @@ footer a:hover { color: var(--gold-lt); }
 // ═══════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnbml3enRscmFra3JiemNma2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MDUxNTQsImV4cCI6MjA5NDE4MTE1NH0.lvYjcvKFVqt_rLQwVgUEQB5pbyQ2saRwaoH8LLuFuqw';
-const H = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+// 데이터 조회 — Edge Function 경유 (service_role 키는 서버 안에만 있음)
+const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
+const DASHBOARD_TOKEN = 'charlie-dashboard-2026';
+const EDGE_H          = { 'x-dashboard-token': DASHBOARD_TOKEN, 'Content-Type': 'application/json' };
 
 // ═══════════════════════════════════════════════════
 // STATE
@@ -305,10 +306,10 @@ async function loadData() {
   btn.classList.add('spinning');
   showState('loading');
   try {
-    const [results, metaRows] = await Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/game_results?select=*&order=timestamp.desc&limit=3000', { headers: H }).then(r => r.json()),
-      fetch(SUPABASE_URL + '/rest/v1/game_meta?select=*', { headers: H }).then(r => r.json()),
-    ]);
+    // Edge Function 한 번 호출로 results + meta 동시에 받음
+    const res  = await fetch(EDGE_FN_URL, { headers: EDGE_H });
+    if (!res.ok) throw new Error('데이터 조회 실패: ' + res.status);
+    const { results, meta: metaRows } = await res.json();
 
     allResults = Array.isArray(results) ? results : [];
     allMeta = {};
