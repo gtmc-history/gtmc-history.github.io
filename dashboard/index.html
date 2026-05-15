@@ -728,11 +728,10 @@ function mkCard(gameName, title) {
   return el;
 }
 function showState(s) {
-  ['s-loading','s-empty','s-error','dashboard'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
-  });
-  const target = s === 'dashboard' ? 'dashboard' : 's-' + s;
-  document.getElementById(target).style.display = s === 'dashboard' ? 'block' : 'block';
+  document.getElementById('s-loading').style.display = s === 'loading'   ? 'block' : 'none';
+  document.getElementById('s-empty').style.display   = s === 'empty'     ? 'block' : 'none';
+  document.getElementById('s-error').style.display   = s === 'error'     ? 'block' : 'none';
+  document.getElementById('dashboard').style.display = s === 'dashboard' ? 'block' : 'none';
 }
 function raf(fn) { requestAnimationFrame(() => setTimeout(fn, 80)); }
 function setW(id, pct) { const el=document.getElementById(id); if(el) el.style.width=pct+'%'; }
