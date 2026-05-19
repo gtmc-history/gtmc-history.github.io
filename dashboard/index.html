@@ -219,11 +219,34 @@ footer { position: relative; z-index: 1; border-top: 1px solid var(--gold-line);
 footer a { color: var(--gold); text-decoration: none; }
 footer a:hover { color: var(--gold-lt); }
 
+/* ── TABS ── */
+.tab-bar {
+  display: flex; gap: 0; margin: 1.25rem 0 0;
+  border-bottom: 1px solid var(--gold-line);
+}
+.tab-btn {
+  padding: 0.65rem 1.3rem; background: transparent; border: none;
+  border-bottom: 2px solid transparent; color: var(--text-muted);
+  font-family: var(--font-sans); font-size: 0.84rem; cursor: pointer;
+  transition: color 0.18s, border-color 0.18s; margin-bottom: -1px;
+  display: flex; align-items: center; gap: 0.45rem;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--gold-lt); border-bottom-color: var(--gold); font-weight: 500; }
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--gold-dim); border: 1px solid var(--gold-line);
+  border-radius: 9px; font-size: 0.67rem; color: var(--gold); font-weight: 700;
+}
+.comment-class { color: var(--gold); font-weight: 500; }
+
 @media (max-width: 600px) {
   header { flex-direction: column; align-items: flex-start; }
   .header-right { width: 100%; justify-content: space-between; }
   .summary-row { grid-template-columns: repeat(2,1fr); }
   .vs-pct { font-size: 2.1rem; }
+  .tab-btn { padding: 0.55rem 0.9rem; font-size: 0.78rem; }
 }
 </style>
 </head>
@@ -261,17 +284,20 @@ footer a:hover { color: var(--gold-lt); }
 
   <div id="dashboard" style="display:none">
     <div class="summary-row" id="summary-row"></div>
-    <p class="section-title" id="chart-title" style="display:none">선택 분포</p>
-    <div class="chart-grid" id="chart-grid"></div>
-    <hr class="divider" id="div1" style="display:none">
-    <div id="comments-sec" style="display:none">
-      <p class="section-title">학생 소감</p>
-      <div class="comment-list" id="comment-list"></div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-btn-charts" onclick="switchTab('charts')">📊 선택 분포</button>
+      <button class="tab-btn" id="tab-btn-comments" onclick="switchTab('comments')">💬 학생 소감 <span class="tab-badge" id="comment-badge"></span></button>
     </div>
-    <hr class="divider" id="div2" style="display:none">
-    <div id="questions-sec" style="display:none">
-      <p class="section-title">수업 발문 제안</p>
-      <div class="question-cards" id="question-cards"></div>
+    <div id="tab-charts" style="padding-top:1.5rem">
+      <div class="chart-grid" id="chart-grid"></div>
+      <hr class="divider" id="div2" style="display:none">
+      <div id="questions-sec" style="display:none">
+        <p class="section-title">수업 발문 제안</p>
+        <div class="question-cards" id="question-cards"></div>
+      </div>
+    </div>
+    <div id="tab-comments" style="display:none;padding-top:1.5rem">
+      <div class="comment-list" id="comment-list"></div>
     </div>
   </div>
 </div>
@@ -351,8 +377,16 @@ function buildFilters(games) {
 
 function selG(g) {
   selGame = g; selClass = 'all';
+  switchTab('charts');
   buildFilters([...new Set(allResults.map(r => r.game)).values()].filter(g => allMeta[g]));
   render();
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-btn-charts').classList.toggle('active', tab === 'charts');
+  document.getElementById('tab-btn-comments').classList.toggle('active', tab === 'comments');
+  document.getElementById('tab-charts').style.display   = tab === 'charts'   ? '' : 'none';
+  document.getElementById('tab-comments').style.display = tab === 'comments' ? '' : 'none';
 }
 function selC(c) {
   selClass = c;
@@ -404,9 +438,6 @@ function renderCharts(rows, meta) {
   const hasScenes  = meta.scenes && meta.scenes.length > 0;
   const hasSliders = meta.sliders && meta.sliders.length > 0;
   const hasEnding  = rows.some(r => r.choices?.ending);
-
-  const any = hasAxes || hasFinal || hasScenes || hasSliders || hasEnding;
-  document.getElementById('chart-title').style.display = any ? '' : 'none';
 
   if (hasAxes)    grid.appendChild(buildAxesCard(rows, meta));
   if (hasFinal)   grid.appendChild(buildVersusCard(rows, meta));
@@ -598,16 +629,17 @@ function buildEndingsCard(rows, meta) {
 
 // ── 소감 ──
 function renderComments(rows) {
-  const items = rows.filter(r => r.comment && r.comment.trim()).slice(0,10);
-  const show  = items.length > 0;
-  document.getElementById('comments-sec').style.display = show ? '' : 'none';
-  document.getElementById('div1').style.display         = show ? '' : 'none';
-  if (!show) return;
-  document.getElementById('comment-list').innerHTML = items.map((r,i) => `
-    <div class="comment-item" style="animation-delay:${i*.05}s">
-      ${esc(r.comment)}
-      <div class="comment-meta">${r.class!=='미입력'?r.class+'반 · ':''}${fmtTime(r.timestamp)}</div>
-    </div>`).join('');
+  const items = rows.filter(r => r.comment && r.comment.trim());
+  const badge = document.getElementById('comment-badge');
+  if (badge) badge.textContent = items.length > 0 ? items.length : '';
+
+  document.getElementById('comment-list').innerHTML = items.length === 0
+    ? '<div class="no-comment">소감을 작성한 학생이 없습니다.</div>'
+    : items.map((r, i) => `
+        <div class="comment-item" style="animation-delay:${Math.min(i,20)*.04}s">
+          ${esc(r.comment)}
+          <div class="comment-meta">${r.class && r.class!=='미입력'?`<span class="comment-class">${r.class}반</span> · `:''}${fmtTime(r.timestamp)}</div>
+        </div>`).join('');
 }
 
 // ── 발문 제안 ──
