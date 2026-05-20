@@ -607,6 +607,7 @@ function buildEndingsCard(rows, meta) {
   const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
   const colors = ['c-amber','c-blue','c-jade','c-red','c-gold','c-muted'];
 
+  // 수정 후
   const card = mkCard(meta.label, '엔딩 분포');
   card.innerHTML += sorted.map(([key, cnt], i) => {
     const pct = total > 0 ? Math.round(cnt/total*100) : 0;
