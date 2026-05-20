@@ -608,13 +608,14 @@ function buildEndingsCard(rows, meta) {
   const colors = ['c-amber','c-blue','c-jade','c-red','c-gold','c-muted'];
 
   const card = mkCard(meta.label, '엔딩 분포');
-  card.innerHTML += sorted.map(([label, cnt], i) => {
+  card.innerHTML += sorted.map(([key, cnt], i) => {
     const pct = total > 0 ? Math.round(cnt/total*100) : 0;
     const col = colors[i % colors.length];
+    const endingLabel = (meta.endings || []).find(e => e.key === key)?.label || key;
     return `
       <div class="bar-item">
         <div class="bar-row">
-          <span class="bar-label">${label}</span>
+          <span class="bar-label">${endingLabel}</span>
           <div class="bar-right"><span class="bar-pct pct-${col}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
         </div>
         <div class="bar-track"><div class="bar-fill fill-${col}" id="end${i}" style="width:0%"></div></div>
@@ -629,7 +630,7 @@ function buildEndingsCard(rows, meta) {
 
 // ── 소감 ──
 function renderComments(rows) {
-  const items = rows.filter(r => r.comment && r.comment.trim());
+  const items = rows.filter(r => r.game === selGame && r.comment && r.comment.trim());
   const badge = document.getElementById('comment-badge');
   if (badge) badge.textContent = items.length > 0 ? items.length : '';
 
@@ -644,7 +645,7 @@ function renderComments(rows) {
 
 // ── 발문 제안 ──
 function renderQuestions(rows, meta) {
-  const qs = genQuestions(rows, meta);
+  const qs = genQuestions(rows.filter(r => r.game === selGame), meta);
   const show = qs.length > 0;
   document.getElementById('questions-sec').style.display = show ? '' : 'none';
   document.getElementById('div2').style.display          = show ? '' : 'none';
