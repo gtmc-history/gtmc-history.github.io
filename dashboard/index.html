@@ -608,13 +608,14 @@ function buildEndingsCard(rows, meta) {
   const colors = ['c-amber','c-blue','c-jade','c-red','c-gold','c-muted'];
 
   const card = mkCard(meta.label, '엔딩 분포');
-  card.innerHTML += sorted.map(([label, cnt], i) => {
+  card.innerHTML += sorted.map(([key, cnt], i) => {
     const pct = total > 0 ? Math.round(cnt/total*100) : 0;
     const col = colors[i % colors.length];
     return `
       <div class="bar-item">
         <div class="bar-row">
-          <span class="bar-label">${label}</span>
+          const endingLabel = (meta.endings || []).find(e => e.key === key)?.label || key;
+          <span class="bar-label">${endingLabel}</span>
           <div class="bar-right"><span class="bar-pct pct-${col}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
         </div>
         <div class="bar-track"><div class="bar-fill fill-${col}" id="end${i}" style="width:0%"></div></div>
