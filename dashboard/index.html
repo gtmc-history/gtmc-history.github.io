@@ -212,6 +212,16 @@ h1 {
 .q-num { font-size: 1.15rem; font-family: var(--font-serif); font-weight: 700; color: var(--gold); opacity: 0.55; flex-shrink: 0; min-width: 1.6rem; }
 .q-text { font-size: 0.93rem; line-height: 1.75; }
 .q-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; }
+.q-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.15rem; }
+.q-action-note { font-size: 0.74rem; color: var(--text-muted); line-height: 1.55; }
+.btn-ai {
+  background: var(--gold-dim); border: 1px solid var(--gold-line);
+  color: var(--gold-lt); border-radius: 3px; padding: 0.5rem 0.9rem;
+  font-family: var(--font-sans); font-size: 0.76rem; cursor: pointer;
+}
+.btn-ai:hover { background: rgba(201,160,82,0.25); }
+.btn-ai:disabled { opacity: 0.55; cursor: wait; }
+.q-ai-head { font-size: 0.72rem; color: var(--gold); margin-bottom: 0.35rem; font-weight: 700; }
 
 hr.divider { border: none; height: 1px; margin: 2rem 0; background: linear-gradient(90deg,transparent,var(--gold-line),transparent); }
 
@@ -313,6 +323,7 @@ footer a:hover { color: var(--gold-lt); }
 // ═══════════════════════════════════════════════════
 // 데이터 조회 — Edge Function 경유 (service_role 키는 서버 안에만 있음)
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
+const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const DASHBOARD_TOKEN = 'charlie-dashboard-2026';
 const EDGE_H          = { 'x-dashboard-token': DASHBOARD_TOKEN, 'Content-Type': 'application/json' };
 
@@ -323,6 +334,8 @@ let allResults = [];
 let allMeta    = {};   // { game_id: metaRow }
 let selGame    = null;
 let selClass   = 'all';
+let aiQuestions = null;
+let aiQuestionsKey = '';
 
 // ═══════════════════════════════════════════════════
 // FETCH
@@ -377,6 +390,7 @@ function buildFilters(games) {
 
 function selG(g) {
   selGame = g; selClass = 'all';
+  resetAiQuestions();
   switchTab('charts');
   buildFilters([...new Set(allResults.map(r => r.game)).values()].filter(g => allMeta[g]));
   render();
@@ -390,6 +404,7 @@ function switchTab(tab) {
 }
 function selC(c) {
   selClass = c;
+  resetAiQuestions();
   buildFilters([...new Set(allResults.map(r => r.game)).values()].filter(g => allMeta[g]));
   render();
 }
@@ -646,19 +661,41 @@ function renderComments(rows) {
 
 // ── 발문 제안 ──
 function renderQuestions(rows, meta) {
-  const qs = genQuestions(rows.filter(r => r.game === selGame), meta);
-  const show = qs.length > 0;
+  const scopedRows = rows.filter(r => r.game === selGame);
+  const qs = genQuestions(scopedRows, meta);
+  const show = scopedRows.length > 0;
   document.getElementById('questions-sec').style.display = show ? '' : 'none';
   document.getElementById('div2').style.display          = show ? '' : 'none';
   if (!show) return;
-  document.getElementById('question-cards').innerHTML = qs.map((q,i) => `
+
+  const currentKey = getAiKey(scopedRows);
+  const aiBlock = aiQuestions && aiQuestionsKey === currentKey
+    ? aiQuestions.map((q, i) => `
+        <div class="q-card">
+          <div class="q-num">AI-${i+1}</div>
+          <div>
+            <div class="q-ai-head">AI 확장 발문</div>
+            <div class="q-text">${esc(q.question || '')}</div>
+            ${q.intent?`<div class="q-hint">수업 의도: ${esc(q.intent)}</div>`:''}
+            ${q.followup?`<div class="q-hint">후속 질문: ${esc(q.followup)}</div>`:''}
+          </div>
+        </div>`).join('')
+    : '';
+
+  document.getElementById('question-cards').innerHTML = `
+    <div class="q-actions">
+      <div class="q-action-note">학생 선택을 먼저 해석하고, 그 판단을 역사적 조건과 연결하는 발문입니다.</div>
+      <button class="btn-ai" id="btn-ai-questions" onclick="generateAiQuestions()">AI 발문 생성</button>
+    </div>
+    ${qs.map((q,i) => `
     <div class="q-card">
       <div class="q-num">${i+1}</div>
       <div>
-        <div class="q-text">${q.text}</div>
-        ${q.hint?`<div class="q-hint">💡 ${q.hint}</div>`:''}
+        <div class="q-text">${esc(q.text)}</div>
+        ${q.hint?`<div class="q-hint">💡 ${esc(q.hint)}</div>`:''}
       </div>
-    </div>`).join('');
+    </div>`).join('')}
+    ${aiBlock}`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -710,8 +747,8 @@ function genQuestions(rows, meta) {
     const topPct = grand > 0 ? Math.round(counts[top.key]/grand*100) : 0;
 
     qs.push({
-      text: `"${top.label}" 경향이 ${topPct}%로 가장 높게 나왔습니다. 당시 사람들이 이 방향으로 움직인 역사적 배경은 무엇이었을까요?`,
-      hint: '선택 경향과 시대적 구조의 연결 고리를 생각해봅니다.'
+      text: `우리 반 선택에서 "${top.label}" 경향이 ${topPct}%로 가장 높게 나왔습니다. 학생들이 이 판단을 많이 한 이유는 무엇일까요? 이 판단은 당시 역사적 조건과 어떻게 연결될 수 있을까요?`,
+      hint: '학생 선택을 출발점으로 삼고, 그 판단을 시대적 구조와 연결해봅니다.'
     });
 
     if (sorted.length >= 2) {
@@ -734,7 +771,7 @@ function genQuestions(rows, meta) {
       const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
       if (avg <= 35 || avg >= 65) {
         qs.push({
-          text: `"${sl.label}"을 평균 ${avg}점으로 ${avg<=35?'낮게':'높게'} 평가했습니다. 실제 역사에서 이 요소는 어떻게 작용했나요?`,
+          text: `우리 반은 "${sl.label}"을 평균 ${avg}점으로 ${avg<=35?'낮게':'높게'} 평가했습니다. 학생들은 어떤 근거로 이렇게 판단했을까요? 이 평가는 실제 역사적 맥락과 어디에서 맞거나 어긋날까요?`,
           hint: '학생의 직관적 평가와 역사적 실제 사이의 간극에서 토론이 시작됩니다.'
         });
       }
@@ -751,6 +788,113 @@ function genQuestions(rows, meta) {
   }
 
   return qs.slice(0, 4);
+}
+
+async function generateAiQuestions() {
+  const rows = getRows();
+  const meta = allMeta[selGame] || {};
+  const btn = document.getElementById('btn-ai-questions');
+  if (!rows.length || !btn) return;
+
+  btn.disabled = true;
+  btn.textContent = 'AI 분석 중...';
+
+  try {
+    const summary = buildAiSummary(rows, meta);
+    const res = await fetch(AI_QUESTIONS_URL, {
+      method: 'POST',
+      headers: EDGE_H,
+      body: JSON.stringify({ summary }),
+    });
+    if (!res.ok) throw new Error(`AI 발문 생성 실패 (${res.status})`);
+    const data = await res.json();
+    aiQuestions = Array.isArray(data.questions) ? data.questions.slice(0, 4) : [];
+    aiQuestionsKey = getAiKey(rows);
+    renderQuestions(rows, meta);
+  } catch (err) {
+    aiQuestions = [{
+      question: 'AI 발문을 생성하지 못했습니다. 기본 발문을 바탕으로 수업을 진행해주세요.',
+      intent: err?.message || '일시적인 연결 문제',
+      followup: '잠시 뒤 다시 시도할 수 있습니다.',
+    }];
+    aiQuestionsKey = getAiKey(rows);
+    renderQuestions(rows, meta);
+  }
+}
+
+function resetAiQuestions() {
+  aiQuestions = null;
+  aiQuestionsKey = '';
+}
+
+function getAiKey(rows) {
+  return `${selGame}|${selClass}|${rows.length}|${rows[0]?.timestamp || ''}`;
+}
+
+function buildAiSummary(rows, meta) {
+  const total = rows.length;
+  const classLabel = selClass === 'all'
+    ? [...new Set(rows.map(r => r.class).filter(c => c && c !== '미입력'))].join(', ') || '전체'
+    : selClass;
+
+  const summary = {
+    game: selGame,
+    gameLabel: meta.label || selGame,
+    era: meta.era || '',
+    class: classLabel,
+    total,
+    comments: rows.filter(r => r.comment && r.comment.trim()).slice(0, 5).map(r => r.comment.trim()),
+    axes: [],
+    scenes: [],
+    endings: [],
+  };
+
+  if (meta.axes?.length) {
+    const counts = {};
+    meta.axes.forEach(ax => { counts[ax.key] = 0; });
+    rows.forEach(r => {
+      const axis = r.choices?.axis;
+      if (axis && typeof axis === 'object')
+        meta.axes.forEach(ax => { counts[ax.key] += Number(axis[ax.key]) || 0; });
+    });
+    const grand = Object.values(counts).reduce((s, v) => s + v, 0);
+    summary.axes = meta.axes.map(ax => ({
+      key: ax.key,
+      label: ax.label,
+      count: counts[ax.key],
+      pct: grand ? Math.round(counts[ax.key] / grand * 100) : 0,
+    }));
+  }
+
+  if (meta.scenes?.length) {
+    summary.scenes = meta.scenes.map(sc => {
+      const num = sc.key.replace(/\D/g, '');
+      const options = ['a','b','c'].map(letter => {
+        const opt = sc[letter];
+        if (!opt) return null;
+        const key = `c${num}${letter}`;
+        const count = rows.filter(r => r.choices?.[sc.key] === key).length;
+        return { key, label: opt.label, count, pct: total ? Math.round(count / total * 100) : 0 };
+      }).filter(Boolean);
+      return { key: sc.key, label: sc.label, options };
+    });
+  }
+
+  if (rows.some(r => r.choices?.ending)) {
+    const counts = {};
+    rows.forEach(r => {
+      const key = r.choices?.ending;
+      if (key) counts[key] = (counts[key] || 0) + 1;
+    });
+    summary.endings = Object.entries(counts).map(([key, count]) => ({
+      key,
+      label: (meta.endings || []).find(e => e.key === key)?.label || key,
+      count,
+      pct: total ? Math.round(count / total * 100) : 0,
+    }));
+  }
+
+  return summary;
 }
 
 // ═══════════════════════════════════════════════════
