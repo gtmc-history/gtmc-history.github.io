@@ -447,18 +447,69 @@ function renderCharts(rows, meta) {
   const grid = document.getElementById('chart-grid');
   grid.innerHTML = '';
 
-  // 렌더링할 차트 결정
-  const hasAxes    = meta.axes   && meta.axes.length > 0;
+  // 사료판단 게임: choices 값이 pos/neg/hold이고 axes에 color 없음
+  const hasSrcCards = meta.axes && meta.axes.length > 0 &&
+    !meta.axes[0]?.color &&
+    rows.some(r => r.choices && Object.values(r.choices).some(v => v === 'pos' || v === 'neg' || v === 'hold'));
+
+  const hasAxes    = !hasSrcCards && meta.axes && meta.axes.length > 0;
   const hasFinal   = meta.final_key && meta.final_a && meta.final_b;
   const hasScenes  = meta.scenes && meta.scenes.length > 0;
   const hasSliders = meta.sliders && meta.sliders.length > 0;
   const hasEnding  = rows.some(r => r.choices?.ending);
 
+  if (hasSrcCards) grid.appendChild(buildSrcCardsCard(rows, meta));
   if (hasAxes)    grid.appendChild(buildAxesCard(rows, meta));
   if (hasFinal)   grid.appendChild(buildVersusCard(rows, meta));
   if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
   if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
   if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// ⓪ 사료판단 차트 — choices: {key: 'pos'|'neg'|'hold'}, axes: [{key, label}]
+function buildSrcCardsCard(rows, meta) {
+  const total = rows.length;
+  const cards = meta.axes;
+  const JUDGE = [
+    {key:'pos',  label:'긍정',    col:'c-jade'},
+    {key:'neg',  label:'부정',    col:'c-red'},
+    {key:'hold', label:'판단유보', col:'c-muted'},
+  ];
+
+  const card = mkCard(meta.label, '사료별 판단 분포');
+  card.innerHTML += cards.map((c, ci) => {
+    const cnts = {};
+    JUDGE.forEach(j => { cnts[j.key] = 0; });
+    rows.forEach(r => { const v = r.choices?.[c.key]; if (v && cnts[v] !== undefined) cnts[v]++; });
+    const resp = Object.values(cnts).reduce((s, v) => s + v, 0);
+    return `<div class="bar-item" style="margin-bottom:1.1rem">
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.45rem">${c.label}</div>
+      ${JUDGE.map((j, ji) => {
+        const pct = resp > 0 ? Math.round(cnts[j.key] / resp * 100) : 0;
+        return `<div class="bar-row" style="margin-bottom:0.25rem">
+          <span class="bar-label" style="font-size:0.76rem">${j.label}</span>
+          <div class="bar-right"><span class="bar-pct pct-${j.col}">${pct}%</span><span class="bar-count">${cnts[j.key]}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:4px">
+          <div class="bar-fill fill-${j.col}" id="src${ci}_${ji}" style="width:0%"></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('') + `<div class="slider-note">※ 각 사료 카드에 대한 학생 판단 분포 · 총 ${total}명</div>`;
+
+  raf(() => {
+    const JUDGE_KEYS = ['pos', 'neg', 'hold'];
+    cards.forEach((c, ci) => {
+      const cnts = {};
+      JUDGE_KEYS.forEach(k => { cnts[k] = 0; });
+      rows.forEach(r => { const v = r.choices?.[c.key]; if (v && cnts[v] !== undefined) cnts[v]++; });
+      const resp = Object.values(cnts).reduce((s, v) => s + v, 0);
+      JUDGE_KEYS.forEach((k, ji) => {
+        setW(`src${ci}_${ji}`, resp > 0 ? Math.round(cnts[k] / resp * 100) : 0);
+      });
+    });
+  });
+  return card;
 }
 
 // ① 축 비율 차트 — axes: [{key, label, color}, ...]
@@ -833,6 +884,7 @@ function getAiKey(rows) {
 
 function buildAiSummary(rows, meta) {
   const total = rows.length;
+  const commentsCount = rows.filter(r => r.comment && r.comment.trim()).length;
   const classLabel = selClass === 'all'
     ? [...new Set(rows.map(r => r.class).filter(c => c && c !== '미입력'))].join(', ') || '전체'
     : selClass;
@@ -843,7 +895,10 @@ function buildAiSummary(rows, meta) {
     era: meta.era || '',
     class: classLabel,
     total,
-    comments: rows.filter(r => r.comment && r.comment.trim()).slice(0, 5).map(r => r.comment.trim()),
+    commentsCount,
+    commentSignal: commentsCount < 5
+      ? '소감 수가 적어 대표성 낮음'
+      : '소감이 충분해 보조 참고 가능',
     axes: [],
     scenes: [],
     endings: [],
