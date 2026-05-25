@@ -100,6 +100,30 @@ h1 {
 }
 .filter-sep { width: 1px; height: 22px; background: var(--gold-line); flex-shrink: 0; }
 
+/* ── GAME SELECT ── */
+.game-select {
+  background: var(--ink-card);
+  border: 1px solid var(--gold-line);
+  color: var(--text);
+  padding: 0.42rem 2rem 0.42rem 0.8rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  min-width: 200px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23c9a052' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 8px 5px;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.game-select:hover { border-color: var(--gold); }
+.game-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,160,82,0.15); }
+.game-select option { background: #1e2430; color: var(--text); }
+
 /* ── STATE ── */
 .state-panel { display: none; text-align: center; padding: 5rem 2rem; position: relative; z-index: 1; }
 .state-icon { font-size: 2.5rem; margin-bottom: 1rem; }
@@ -282,7 +306,7 @@ footer a:hover { color: var(--gold-lt); }
 <div class="wrap">
   <div class="filter-bar">
     <span class="filter-label">◆ 게임</span>
-    <div class="filter-group" id="game-filters"></div>
+    <select class="game-select" id="game-select" onchange="selG(this.value)"></select>
     <div class="filter-sep"></div>
     <span class="filter-label">◆ 반</span>
     <div class="filter-group" id="class-filters"></div>
@@ -375,9 +399,10 @@ async function loadData() {
 // FILTERS
 // ═══════════════════════════════════════════════════
 function buildFilters(games) {
-  document.getElementById('game-filters').innerHTML = games.map(g => {
+  const sel = document.getElementById('game-select');
+  sel.innerHTML = games.map(g => {
     const m = allMeta[g];
-    return `<button class="filter-btn ${g === selGame ? 'active':''}" onclick="selG('${g}')">${m ? m.label : g}</button>`;
+    return `<option value="${g}" ${g === selGame ? 'selected' : ''}>${m ? m.label : g}</option>`;
   }).join('');
 
   const classes = [...new Set(allResults.filter(r => r.game === selGame).map(r => r.class))]
