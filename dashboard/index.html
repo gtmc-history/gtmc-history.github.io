@@ -472,6 +472,8 @@ function renderCharts(rows, meta) {
   const grid = document.getElementById('chart-grid');
   grid.innerHTML = '';
 
+  const hasEuibyeong = isEuibyeongRows(rows, meta);
+
   // 사료판단 게임: choices 값이 pos/neg/hold이고 axes에 color 없음
   const hasSrcCards = meta.axes && meta.axes.length > 0 &&
     !meta.axes[0]?.color &&
@@ -483,12 +485,156 @@ function renderCharts(rows, meta) {
   const hasSliders = meta.sliders && meta.sliders.length > 0;
   const hasEnding  = rows.some(r => r.choices?.ending);
 
+  if (hasEuibyeong) {
+    buildEuibyeongCards(rows, meta).forEach(card => grid.appendChild(card));
+    return;
+  }
   if (hasSrcCards) grid.appendChild(buildSrcCardsCard(rows, meta));
   if (hasAxes)    grid.appendChild(buildAxesCard(rows, meta));
   if (hasFinal)   grid.appendChild(buildVersusCard(rows, meta));
   if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
   if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
   if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// 의병 1907 — choices: [{era, recruits[], strategy, fight, heart, carry}, ...]
+const EUIBYEONG_RECRUITS = {
+  scholar: '유생',
+  farmer: '농민 의병',
+  commoner: '포수·보부상',
+  soldier: '해산 군인',
+};
+const EUIBYEONG_STRATEGIES = {
+  guerrilla: { label: '밤길 습격', color: 'c-blue' },
+  frontal: { label: '정면 결전', color: 'c-red' },
+  mountain: { label: '산속 근거지 구축', color: 'c-jade' },
+  diplomatic: { label: '외국 공사관 도움 요청', color: 'c-amber' },
+};
+const EUIBYEONG_METRICS = [
+  { key: 'fight', label: '전투력', color: 'c-red' },
+  { key: 'heart', label: '민심', color: 'c-blue' },
+  { key: 'carry', label: '지속성', color: 'c-jade' },
+];
+
+function isEuibyeongRows(rows, meta) {
+  return meta?.game_id === 'euibyeong1907' ||
+    rows.some(r => Array.isArray(r.choices) && r.choices.some(c => c?.recruits && c?.strategy));
+}
+
+function getEuibyeongRounds(rows) {
+  const byEra = {};
+  rows.forEach(r => {
+    if (!Array.isArray(r.choices)) return;
+    r.choices.forEach((round, idx) => {
+      const key = round.era || ['을미의병', '을사의병', '정미의병'][idx] || `시기 ${idx + 1}`;
+      if (!byEra[key]) byEra[key] = [];
+      byEra[key].push(round);
+    });
+  });
+  return byEra;
+}
+
+function buildEuibyeongCards(rows, meta) {
+  const byEra = getEuibyeongRounds(rows);
+  return [
+    buildEuibyeongStrategyCard(byEra, meta),
+    buildEuibyeongRecruitCard(byEra, meta),
+    buildEuibyeongMetricCard(byEra, meta),
+  ];
+}
+
+function buildEuibyeongStrategyCard(byEra, meta) {
+  const card = mkCard(meta.label, '시기별 작전 선택');
+  card.innerHTML += Object.entries(byEra).map(([era, rounds], eraIdx) => {
+    const counts = {};
+    rounds.forEach(r => { counts[r.strategy] = (counts[r.strategy] || 0) + 1; });
+    const total = rounds.length;
+    const items = Object.entries(EUIBYEONG_STRATEGIES).map(([key, info], i) => {
+      const cnt = counts[key] || 0;
+      const pct = total ? Math.round(cnt / total * 100) : 0;
+      return `<div class="bar-row" style="margin-bottom:0.25rem">
+        <span class="bar-label" style="font-size:0.76rem">${info.label}</span>
+        <div class="bar-right"><span class="bar-pct pct-${info.color}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
+      </div>
+      <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${info.color}" id="eui_st_${eraIdx}_${i}" style="width:0%"></div></div>`;
+    }).join('');
+    return `<div class="bar-item" style="margin-bottom:1.2rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">${era}</div>
+      ${items}
+    </div>`;
+  }).join('');
+
+  raf(() => Object.entries(byEra).forEach(([era, rounds], eraIdx) => {
+    const counts = {};
+    rounds.forEach(r => { counts[r.strategy] = (counts[r.strategy] || 0) + 1; });
+    const total = rounds.length;
+    Object.keys(EUIBYEONG_STRATEGIES).forEach((key, i) => {
+      setW(`eui_st_${eraIdx}_${i}`, total ? Math.round((counts[key] || 0) / total * 100) : 0);
+    });
+  }));
+  return card;
+}
+
+function buildEuibyeongRecruitCard(byEra, meta) {
+  const card = mkCard(meta.label, '시기별 병력 참여');
+  card.innerHTML += Object.entries(byEra).map(([era, rounds], eraIdx) => {
+    const counts = {};
+    rounds.forEach(r => (r.recruits || []).forEach(id => { counts[id] = (counts[id] || 0) + 1; }));
+    const total = rounds.length;
+    const items = Object.entries(EUIBYEONG_RECRUITS).map(([key, label], i) => {
+      const cnt = counts[key] || 0;
+      const pct = total ? Math.round(cnt / total * 100) : 0;
+      const color = ['c-gold','c-jade','c-blue','c-red'][i];
+      return `<div class="bar-row" style="margin-bottom:0.25rem">
+        <span class="bar-label" style="font-size:0.76rem">${label}</span>
+        <div class="bar-right"><span class="bar-pct pct-${color}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
+      </div>
+      <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${color}" id="eui_rc_${eraIdx}_${i}" style="width:0%"></div></div>`;
+    }).join('');
+    return `<div class="bar-item" style="margin-bottom:1.2rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">${era}</div>
+      ${items}
+    </div>`;
+  }).join('');
+
+  raf(() => Object.entries(byEra).forEach(([era, rounds], eraIdx) => {
+    const counts = {};
+    rounds.forEach(r => (r.recruits || []).forEach(id => { counts[id] = (counts[id] || 0) + 1; }));
+    const total = rounds.length;
+    Object.keys(EUIBYEONG_RECRUITS).forEach((key, i) => {
+      setW(`eui_rc_${eraIdx}_${i}`, total ? Math.round((counts[key] || 0) / total * 100) : 0);
+    });
+  }));
+  return card;
+}
+
+function buildEuibyeongMetricCard(byEra, meta) {
+  const card = mkCard(meta.label, '평균 결과 지표');
+  card.innerHTML += Object.entries(byEra).map(([era, rounds], eraIdx) => {
+    const metrics = EUIBYEONG_METRICS.map((m, i) => {
+      const vals = rounds.map(r => Number(r[m.key])).filter(v => !isNaN(v));
+      const avg = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length * 10) / 10 : 0;
+      const pct = Math.round(avg / 3 * 100);
+      return `<div class="slider-row">
+        <span class="slider-label">${m.label}</span>
+        <div class="slider-track"><div class="slider-fill fill-${m.color}" id="eui_mt_${eraIdx}_${i}" style="width:0%"></div></div>
+        <span class="slider-val">${avg}</span>
+      </div>`;
+    }).join('');
+    return `<div class="bar-item" style="margin-bottom:1.2rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">${era}</div>
+      ${metrics}
+    </div>`;
+  }).join('');
+
+  raf(() => Object.entries(byEra).forEach(([era, rounds], eraIdx) => {
+    EUIBYEONG_METRICS.forEach((m, i) => {
+      const vals = rounds.map(r => Number(r[m.key])).filter(v => !isNaN(v));
+      const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+      setW(`eui_mt_${eraIdx}_${i}`, Math.round(avg / 3 * 100));
+    });
+  }));
+  return card;
 }
 
 // ⓪ 사료판단 차트 — choices: {key: 'pos'|'neg'|'hold'}, axes: [{key, label}]
