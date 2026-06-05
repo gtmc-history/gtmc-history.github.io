@@ -473,6 +473,7 @@ function renderCharts(rows, meta) {
   grid.innerHTML = '';
 
   const hasEuibyeong = isEuibyeongRows(rows, meta);
+  const hasGukchae = isGukchaeRows(rows, meta);
 
   // 사료판단 게임: choices 값이 pos/neg/hold이고 axes에 color 없음
   const hasSrcCards = meta.axes && meta.axes.length > 0 &&
@@ -489,12 +490,116 @@ function renderCharts(rows, meta) {
     buildEuibyeongCards(rows, meta).forEach(card => grid.appendChild(card));
     return;
   }
+  if (hasGukchae) {
+    buildGukchaeCards(rows, meta).forEach(card => grid.appendChild(card));
+    return;
+  }
   if (hasSrcCards) grid.appendChild(buildSrcCardsCard(rows, meta));
   if (hasAxes)    grid.appendChild(buildAxesCard(rows, meta));
   if (hasFinal)   grid.appendChild(buildVersusCard(rows, meta));
   if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
   if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
   if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// 대한신문 1907 — choices: {angles: ['a'|'b', ...], headline, censor}
+const GUKCHAE_FIELDS = [
+  { label: '방곡령', a: '민생 관점', b: '조약 구조 관점' },
+  { label: '황국중앙총상회', a: '저항 관점', b: '구조 관점' },
+  { label: '이권 침탈', a: '상실 관점', b: '저항 관점' },
+  { label: '국채보상운동', a: '국민 연대 관점', b: '참여 확산 관점' },
+];
+const GUKCHAE_HEADLINES = {
+  resist: { label: '조선 사람들은 가만히 있지 않았다', color: 'c-jade' },
+  structure: { label: '노력했지만, 불평등한 구조에 막혔다', color: 'c-red' },
+  unity: { label: '국민이 함께 나라를 지키려 했다', color: 'c-blue' },
+};
+const GUKCHAE_CENSOR = {
+  blocked: { label: '게재 금지', color: 'c-red' },
+  partial: { label: '일부 삭제', color: 'c-amber' },
+  passed: { label: '게재 허가', color: 'c-jade' },
+};
+
+function isGukchaeRows(rows, meta) {
+  return meta?.game_id === 'gukchae1907' ||
+    rows.some(r => r.game === 'gukchae1907' || Array.isArray(r.choices?.angles) || r.choices?.censor);
+}
+
+function buildGukchaeCards(rows, meta) {
+  return [
+    buildGukchaeAngleCard(rows, meta),
+    buildGukchaeHeadlineCard(rows, meta),
+    buildGukchaeCensorCard(rows, meta),
+  ];
+}
+
+function buildGukchaeAngleCard(rows, meta) {
+  const total = rows.length;
+  const card = mkCard(meta.label || '대한신문 1907', '취재 관점 선택');
+  card.innerHTML += GUKCHAE_FIELDS.map((field, i) => {
+    const aCnt = rows.filter(r => r.choices?.angles?.[i] === 'a').length;
+    const bCnt = rows.filter(r => r.choices?.angles?.[i] === 'b').length;
+    const aPct = total ? Math.round(aCnt / total * 100) : 0;
+    const bPct = total ? Math.round(bCnt / total * 100) : 0;
+    return `
+      <div class="bar-item" style="margin-bottom:1.1rem">
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.45rem">${field.label}</div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:0.78rem">${field.a}</span>
+          <div class="bar-right"><span class="bar-pct pct-c-jade">${aPct}%</span><span class="bar-count">${aCnt}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:5px">
+          <div class="bar-fill fill-c-jade" id="gka${i}" style="width:0%"></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label" style="font-size:0.78rem">${field.b}</span>
+          <div class="bar-right"><span class="bar-pct pct-c-blue">${bPct}%</span><span class="bar-count">${bCnt}명</span></div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill fill-c-blue" id="gkb${i}" style="width:0%"></div>
+        </div>
+      </div>`;
+  }).join('') + `<div class="slider-note">※ 각 취재 현장에서 학생들이 택한 기사 관점입니다 · 총 ${total}명</div>`;
+
+  raf(() => GUKCHAE_FIELDS.forEach((field, i) => {
+    const aCnt = rows.filter(r => r.choices?.angles?.[i] === 'a').length;
+    const bCnt = rows.filter(r => r.choices?.angles?.[i] === 'b').length;
+    setW('gka'+i, total ? Math.round(aCnt / total * 100) : 0);
+    setW('gkb'+i, total ? Math.round(bCnt / total * 100) : 0);
+  }));
+  return card;
+}
+
+function buildGukchaeHeadlineCard(rows, meta) {
+  return buildChoiceBars(meta.label || '대한신문 1907', '1면 헤드라인 선택', rows, 'headline', GUKCHAE_HEADLINES);
+}
+
+function buildGukchaeCensorCard(rows, meta) {
+  return buildChoiceBars(meta.label || '대한신문 1907', '검열 결과 분포', rows, 'censor', GUKCHAE_CENSOR);
+}
+
+function buildChoiceBars(gameName, title, rows, key, defs) {
+  const total = rows.length;
+  const entries = Object.entries(defs);
+  const card = mkCard(gameName, title);
+  card.innerHTML += entries.map(([value, def], i) => {
+    const cnt = rows.filter(r => r.choices?.[key] === value).length;
+    const pct = total ? Math.round(cnt / total * 100) : 0;
+    return `
+      <div class="bar-item">
+        <div class="bar-row">
+          <span class="bar-label">${def.label}</span>
+          <div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${cnt}명</span></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill fill-${def.color}" id="gk${key}${i}" style="width:0%"></div></div>
+      </div>`;
+  }).join('');
+
+  raf(() => entries.forEach(([value], i) => {
+    const cnt = rows.filter(r => r.choices?.[key] === value).length;
+    setW('gk'+key+i, total ? Math.round(cnt / total * 100) : 0);
+  }));
+  return card;
 }
 
 // 의병 1907 — choices: [{era, recruits[], strategy, fight, heart, carry}, ...]
@@ -928,6 +1033,27 @@ function genQuestions(rows, meta) {
   if (total === 0) return [];
   const qs = [];
 
+  if (isGukchaeRows(rows, meta)) {
+    const censorCounts = countChoice(rows, 'censor');
+    const topCensor = topChoice(censorCounts, GUKCHAE_CENSOR);
+    const structureCnt = rows.filter(r => r.choices?.headline === 'structure').length;
+    const structurePct = Math.round(structureCnt / total * 100);
+
+    qs.push({
+      text: `우리 반에서 가장 많이 나온 검열 결과는 "${topCensor.label}"입니다. 학생들의 기사 관점 선택이 왜 이런 결과로 이어졌을까요?`,
+      hint: '검열은 내용의 옳고 그름보다 권력이 위험하다고 여기는 표현을 통제하는 장치였습니다.'
+    });
+    qs.push({
+      text: `"불평등한 구조"를 직접 드러내는 헤드라인은 ${structurePct}%였습니다. 구조를 말하는 글은 왜 검열에 더 취약했을까요?`,
+      hint: '경제 구국 운동의 한계가 개인의 의지 부족인지, 제도와 권력 관계의 문제인지 따져봅니다.'
+    });
+    qs.push({
+      text: `국채보상운동처럼 많은 사람이 참여한 운동도 왜 경제 주권을 지키는 데 한계를 가졌을까요?`,
+      hint: '민중의 자발성과 식민 지배 구조의 압력을 함께 놓고 생각해봅니다.'
+    });
+    return qs.slice(0, 4);
+  }
+
   // 2택 Versus 발문
   if (meta.final_key && meta.final_a && meta.final_b) {
     const aCnt = rows.filter(r => r.choices?.[meta.final_key] === meta.final_a.key).length;
@@ -1012,6 +1138,20 @@ function genQuestions(rows, meta) {
   return qs.slice(0, 4);
 }
 
+function countChoice(rows, key) {
+  const counts = {};
+  rows.forEach(r => {
+    const value = r.choices?.[key];
+    if (value) counts[value] = (counts[value] || 0) + 1;
+  });
+  return counts;
+}
+
+function topChoice(counts, defs) {
+  const [key] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || [];
+  return defs[key] || { label: key || '데이터 없음' };
+}
+
 async function generateAiQuestions() {
   const rows = getRows();
   const meta = allMeta[selGame] || {};
@@ -1090,6 +1230,38 @@ function buildAiSummary(rows, meta) {
       count: counts[ax.key],
       pct: grand ? Math.round(counts[ax.key] / grand * 100) : 0,
     }));
+  }
+
+  if (isGukchaeRows(rows, meta)) {
+    summary.scenes = GUKCHAE_FIELDS.map((field, i) => {
+      const aCount = rows.filter(r => r.choices?.angles?.[i] === 'a').length;
+      const bCount = rows.filter(r => r.choices?.angles?.[i] === 'b').length;
+      return {
+        key: `field${i + 1}`,
+        label: field.label,
+        options: [
+          { key: 'a', label: field.a, count: aCount, pct: total ? Math.round(aCount / total * 100) : 0 },
+          { key: 'b', label: field.b, count: bCount, pct: total ? Math.round(bCount / total * 100) : 0 },
+        ],
+      };
+    });
+
+    const headlineCounts = countChoice(rows, 'headline');
+    const censorCounts = countChoice(rows, 'censor');
+    summary.endings = [
+      ...Object.entries(headlineCounts).map(([key, count]) => ({
+        key: `headline:${key}`,
+        label: `헤드라인 - ${GUKCHAE_HEADLINES[key]?.label || key}`,
+        count,
+        pct: total ? Math.round(count / total * 100) : 0,
+      })),
+      ...Object.entries(censorCounts).map(([key, count]) => ({
+        key: `censor:${key}`,
+        label: `검열 결과 - ${GUKCHAE_CENSOR[key]?.label || key}`,
+        count,
+        pct: total ? Math.round(count / total * 100) : 0,
+      })),
+    ];
   }
 
   if (meta.scenes?.length) {
