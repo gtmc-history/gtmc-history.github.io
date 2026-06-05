@@ -351,6 +351,21 @@ const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/d
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const DASHBOARD_TOKEN = 'charlie-dashboard-2026';
 const EDGE_H          = { 'x-dashboard-token': DASHBOARD_TOKEN, 'Content-Type': 'application/json' };
+const FALLBACK_META = {
+  gukchae1907: {
+    game_id: 'gukchae1907',
+    label: '대한신문 1907',
+    era: '경제 구국 · 1907',
+    axes: [],
+    scenes: [],
+    sliders: [],
+    endings: [
+      { key: 'blocked', label: '게재 금지' },
+      { key: 'partial', label: '일부 삭제' },
+      { key: 'passed', label: '게재 허가' },
+    ],
+  },
+};
 
 // ═══════════════════════════════════════════════════
 // STATE
@@ -375,8 +390,8 @@ async function loadData() {
     if (!res.ok) throw new Error('데이터 조회 실패: ' + res.status);
     const { results, meta: metaRows } = await res.json();
 
-    allResults = Array.isArray(results) ? results : [];
-    allMeta = {};
+    allResults = normalizeResults(Array.isArray(results) ? results : []);
+    allMeta = { ...FALLBACK_META };
     if (Array.isArray(metaRows)) metaRows.forEach(m => { allMeta[m.game_id] = m; });
 
     // game_meta에 등록돼 있고 실제 데이터도 있는 게임만
@@ -437,6 +452,55 @@ function selC(c) {
 
 function getRows() {
   return allResults.filter(r => r.game === selGame && (selClass === 'all' || r.class === selClass));
+}
+
+function normalizeResults(rows) {
+  const normalRows = rows.map(normalizeResultRow);
+  const out = [];
+  const byAttempt = new Map();
+
+  normalRows.forEach(row => {
+    const key = getAttemptKey(row);
+    if (!key) {
+      out.push(row);
+      return;
+    }
+
+    const prev = byAttempt.get(key);
+    byAttempt.set(key, prev ? mergeAttemptRows(prev, row) : row);
+  });
+
+  return [...out, ...byAttempt.values()]
+    .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+}
+
+function normalizeResultRow(row) {
+  let choices = row.choices;
+  if (typeof choices === 'string') {
+    try { choices = JSON.parse(choices); } catch { choices = {}; }
+  }
+  return { ...row, choices: choices && typeof choices === 'object' ? choices : {} };
+}
+
+function getAttemptKey(row) {
+  const id = row.choices?.result_id || row.choices?.attempt_id || row.choices?.submission_id;
+  return id ? `${row.game || ''}|${row.class || ''}|${id}` : '';
+}
+
+function mergeAttemptRows(a, b) {
+  const aTime = new Date(a.timestamp || 0).getTime();
+  const bTime = new Date(b.timestamp || 0).getTime();
+  const newer = bTime >= aTime ? b : a;
+  const older = bTime >= aTime ? a : b;
+  const aComment = (a.comment || '').trim();
+  const bComment = (b.comment || '').trim();
+  const comment = bComment || aComment;
+
+  return {
+    ...newer,
+    choices: { ...older.choices, ...newer.choices },
+    comment,
+  };
 }
 
 // ═══════════════════════════════════════════════════
@@ -1136,7 +1200,7 @@ function buildGukchaeQuestions(rows, meta) {
   const topHeadline = topChoice(countChoice(rows, 'headline'), GUKCHAE_HEADLINES);
   const structureCnt = rows.filter(r => r.choices?.headline === 'structure').length;
   const structurePct = Math.round(structureCnt / total * 100);
-  const topField = getGukchaeTopField(rows);
+  const focusField = getGukchaeFocusField(rows);
 
   const secondQuestion = structurePct >= 45
     ? `"불평등한 구조"를 직접 드러내는 헤드라인이 ${structurePct}%입니다. 학생들은 왜 경제 침탈을 개인의 노력보다 조약·통감부·이권 같은 구조의 문제로 읽었을까요?`
@@ -1155,7 +1219,9 @@ function buildGukchaeQuestions(rows, meta) {
     },
     {
       stage: '맥락',
-      text: `${topField.label} 장면에서 "${topField.choice}" 관점이 두드러졌습니다. 이 관점으로 보면 국채보상운동의 한계는 민중의 힘 부족이었을까요, 식민 지배 구조의 압력이었을까요?`,
+      text: focusField.split
+        ? `${focusField.label} 장면에서 "${focusField.a}"와 "${focusField.b}" 판단이 갈렸습니다. 같은 사건을 두 관점으로 읽게 만든 역사적 조건은 무엇이었을까요?`
+        : `${focusField.label} 장면에서 "${focusField.choice}" 관점이 두드러졌습니다. 이 관점으로 보면 국채보상운동의 한계는 민중의 힘 부족이었을까요, 식민 지배 구조의 압력이었을까요?`,
       hint: '방곡령, 상권 수호, 이권 침탈, 국채보상운동을 하나의 경제 주권 문제로 묶어봅니다.'
     },
     {
@@ -1208,17 +1274,26 @@ function buildDoingHistoryFallback(rows, meta) {
   ];
 }
 
-function getGukchaeTopField(rows) {
+function getGukchaeFocusField(rows) {
   const ranked = GUKCHAE_FIELDS.map((field, i) => {
     const aCount = rows.filter(r => r.choices?.angles?.[i] === 'a').length;
     const bCount = rows.filter(r => r.choices?.angles?.[i] === 'b').length;
+    const answered = aCount + bCount;
+    const splitGap = answered ? Math.abs(aCount - bCount) / answered : 1;
     return {
       label: field.label,
+      a: field.a,
+      b: field.b,
       choice: aCount >= bCount ? field.a : field.b,
       count: Math.max(aCount, bCount),
+      split: answered > 0 && splitGap <= 0.25,
+      splitGap,
     };
-  }).sort((a, b) => b.count - a.count);
-  return ranked[0] || { label: '국채보상운동', choice: '경제 주권' };
+  }).sort((a, b) => {
+    if (a.split !== b.split) return a.split ? -1 : 1;
+    return a.splitGap - b.splitGap || b.count - a.count;
+  });
+  return ranked[0] || { label: '국채보상운동', a: '국민 연대 관점', b: '참여 확산 관점', choice: '경제 주권', split: false };
 }
 
 function getMainQuestionSignal(rows, meta) {

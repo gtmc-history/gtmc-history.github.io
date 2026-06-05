@@ -24,6 +24,15 @@ type MetaRow = {
   final_b?: unknown;
 };
 
+type ResultRow = {
+  game?: string;
+  class?: string;
+  timestamp?: string;
+  comment?: string;
+  choices?: unknown;
+  [key: string]: unknown;
+};
+
 const FALLBACK_META: MetaRow[] = [
   {
     game_id: "gukchae1907",
@@ -62,7 +71,7 @@ Deno.serve(async (req: Request) => {
     ]);
 
     return json({
-      results: Array.isArray(results) ? results : [],
+      results: Array.isArray(results) ? normalizeResults(results as ResultRow[]) : [],
       meta: mergeFallbackMeta(Array.isArray(meta) ? meta : []),
     });
   } catch (error) {
@@ -88,6 +97,64 @@ async function fetchTable(table: string, query: string) {
   }
 
   return await resp.json();
+}
+
+function normalizeResults(rows: ResultRow[]) {
+  const out: ResultRow[] = [];
+  const byAttempt = new Map<string, ResultRow>();
+
+  rows.map(normalizeResultRow).forEach((row) => {
+    const key = getAttemptKey(row);
+    if (!key) {
+      out.push(row);
+      return;
+    }
+
+    const prev = byAttempt.get(key);
+    byAttempt.set(key, prev ? mergeAttemptRows(prev, row) : row);
+  });
+
+  return [...out, ...byAttempt.values()]
+    .sort((a, b) => new Date(String(b.timestamp || 0)).getTime() - new Date(String(a.timestamp || 0)).getTime());
+}
+
+function normalizeResultRow(row: ResultRow) {
+  let choices = row.choices;
+  if (typeof choices === "string") {
+    try {
+      choices = JSON.parse(choices);
+    } catch {
+      choices = {};
+    }
+  }
+
+  return {
+    ...row,
+    choices: choices && typeof choices === "object" ? choices as Record<string, unknown> : {},
+  };
+}
+
+function getAttemptKey(row: ResultRow) {
+  const choices = row.choices as Record<string, unknown>;
+  const id = choices?.result_id || choices?.attempt_id || choices?.submission_id;
+  return id ? `${row.game || ""}|${row.class || ""}|${String(id)}` : "";
+}
+
+function mergeAttemptRows(a: ResultRow, b: ResultRow) {
+  const aTime = new Date(String(a.timestamp || 0)).getTime();
+  const bTime = new Date(String(b.timestamp || 0)).getTime();
+  const newer = bTime >= aTime ? b : a;
+  const older = bTime >= aTime ? a : b;
+  const comment = String(b.comment || "").trim() || String(a.comment || "").trim();
+
+  return {
+    ...newer,
+    choices: {
+      ...(older.choices as Record<string, unknown>),
+      ...(newer.choices as Record<string, unknown>),
+    },
+    comment,
+  };
 }
 
 function mergeFallbackMeta(meta: MetaRow[]) {
