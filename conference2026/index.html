@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>질문이 탐구로 자라는 한국사 수행평가</title>
+<meta name="description" content="학기 내내 질문을 만들고 고친 기록이 평가 산출물이 되는 한국사 수행평가 — 활동지, 질문 프레임 카드, 탐구보고서 양식">
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --navy:#10233F; --navy-deep:#0A1830; --ink:#1B2B4B;
+    --sky:#3FA8E0;          /* 장식·면 */
+    --sky-text:#176F9D;     /* 흰 배경 위 텍스트 (대비 5.5:1) */
+    --sky-soft:#E4F2FB; --amber-soft:#FCF1DA;
+    --gray:#5B6676; --line:#D8DFE8; --base:#F7F9FC; --border:#B9C8DA;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"KERIS BAEUM R","케리스 배움체 R","Pretendard","Apple SD Gothic Neo","Noto Sans KR","맑은 고딕","Malgun Gothic",sans-serif;color:var(--ink);background:#fff;line-height:1.65}
+  .hero{background:var(--navy);color:#fff;padding:56px 24px 48px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-120px;top:-140px;width:420px;height:420px;border:1px solid rgba(63,168,224,.4);border-radius:50%}
+  .hero::before,.hero::after{pointer-events:none}
+  .hero::before{content:"";position:absolute;right:-60px;top:-80px;width:300px;height:300px;border:1px solid rgba(63,168,224,.2);border-radius:50%}
+  .wrap{max-width:760px;margin:0 auto;position:relative;z-index:1}
+  .eyebrow{color:#7FC4EC;font-size:14px;letter-spacing:.06em;font-weight:700;margin-bottom:14px}
+  h1{font-family:"KERIS BAEUM EB","케리스 배움체 EB","Pretendard",sans-serif;font-size:clamp(26px,5vw,38px);line-height:1.3;font-weight:800}
+  .hero p{color:#C9D7E8;margin-top:14px;font-size:16px}
+  .hah{margin-top:22px}
+  .hah .flow{display:flex;align-items:center;gap:10px}
+  .hah .flow span{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;font-weight:700;font-size:13px;flex-shrink:0}
+  .hah .flow em{font-style:normal;color:#9FB2CC}
+  .hah .h{background:#fff;color:var(--navy)} .hah .a{background:var(--sky);color:var(--navy)}
+  .hah .cap{display:block;margin-top:10px;font-size:13px;color:#C9D7E8}
+  .cta{display:inline-block;margin-top:24px;background:#fff;color:var(--navy);font-weight:700;font-size:14px;text-decoration:none;padding:11px 20px;border-radius:999px}
+  .cta:hover,.cta:focus-visible{background:var(--sky-soft)}
+  main{padding:40px 24px 24px}
+  section{margin-bottom:40px;scroll-margin-top:20px}
+  h2{font-family:"KERIS BAEUM B","케리스 배움체 B","Pretendard",sans-serif;font-size:19px;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  h2 .tag{font-size:11px;background:var(--sky-soft);color:var(--sky-text);border-radius:999px;padding:3px 10px;font-weight:700}
+
+  .intro p{font-size:15px;margin-bottom:12px}
+  .intro p:last-of-type{margin-bottom:0}
+  .intro .lead{font-family:"KERIS BAEUM B","케리스 배움체 B","Pretendard",sans-serif;font-size:17px;color:var(--navy);line-height:1.6}
+  .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .facts span{font-size:12.5px;background:var(--base);border:1px solid var(--border);border-radius:999px;padding:5px 12px}
+
+  ol.steps{list-style:none;counter-reset:step;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  ol.steps li{counter-increment:step;background:var(--base);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  ol.steps li::before{content:"Step " counter(step) ".";display:block;font-size:12px;font-weight:700;color:var(--sky-text);margin-bottom:4px}
+  ol.steps .st{font-weight:700;font-size:15px;display:block}
+  ol.steps .sd{font-size:12.5px;color:var(--gray);margin-top:3px;display:block}
+  ol.steps li:last-child{background:var(--sky-soft);border-color:#BFDFF4}
+
+  ul.files{list-style:none;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  ul.files li+li{border-top:1px solid var(--line)}
+  ul.files a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;text-decoration:none;color:var(--ink);transition:background .15s}
+  ul.files a>span:first-child{display:flex;flex-direction:column;min-width:0;flex:1}
+  .name,.desc{display:block}
+  ul.files a:hover,ul.files a:focus-visible{background:var(--sky-soft)}
+  ul.files a:focus-visible{outline:2px solid var(--sky-text);outline-offset:-2px}
+  .name{font-weight:700;font-size:15px}
+  .desc{color:var(--gray);font-size:12.5px;margin-top:2px}
+  .type{flex-shrink:0;font-size:11px;font-weight:700;color:var(--navy);background:var(--amber-soft);border-radius:6px;padding:4px 9px}
+  ul.files .alt{display:block;padding:0 18px 12px;font-size:12px;color:var(--sky-text);text-decoration:underline;text-underline-offset:2px}
+  .note{background:var(--base);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;margin-top:12px}
+  .note strong{font-weight:700}
+  footer{background:var(--navy-deep);color:#A9BACE;padding:28px 24px;font-size:13px;text-align:center}
+  footer a{color:#C9D7E8}
+  @media (max-width:520px){
+    .hero{padding:44px 18px 36px}
+    main{padding:30px 16px 16px}
+    ol.steps{grid-template-columns:1fr}
+    ul.files a{padding:13px 14px;gap:10px}
+    .name{font-size:14px}
+    .desc{font-size:12px;line-height:1.5}
+    .type{font-size:10px;padding:3px 7px}
+    h2{font-size:17px}
+    .intro .lead{font-size:16px}
+    .hah .flow span{width:38px;height:38px;font-size:12px}
+    .note{font-size:12.5px;padding:12px 14px}
+    footer{font-size:12px}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .hero .wrap{animation:rise .5s ease-out}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">고등학교 한국사 · 수행평가 운영 자료</div>
+    <h1>질문이 탐구로 자라는<br>한국사 수행평가</h1>
+    <p>학기 내내 만들고 고친 질문이 포트폴리오로 쌓이고, 그중 하나가 탐구보고서로 완결됩니다.</p>
+    <div class="hah">
+      <div class="flow"><span class="h">사람</span><em>→</em><span class="a">AI</span><em>→</em><span class="h">사람</span></div>
+      <span class="cap">학생이 질문을 시작하고, AI가 단서를 제공하며, 학생이 근거를 바탕으로 판단을 완성합니다</span>
+    </div>
+    <a class="cta" href="#download">자료 바로 받기 ↓</a>
+  </div>
+</header>
+<main class="wrap">
+
+  <section class="intro">
+    <h2>이 수업의 출발 <span class="tag">소개</span></h2>
+    <p class="lead">이 수업을 설계하기 전에는 학습지를 걷어 도장을 찍었고, 학기말에 남은 것은 도장의 개수였습니다.</p>
+    <p>그래서 도장 대신 질문과 수정 이력이 쌓이도록 바꾸었습니다. 학생은 질문을 만들고, AI의 답을 교과서·사료와 대조하며, 피드백을 반영해 질문을 다시 제출합니다. 학기 내내 쌓인 질문 중 하나는 탐구보고서로 이어지고, 즉시 피드백은 AI가, 최종 판단은 교사가 맡습니다.</p>
+    <div class="facts">
+      <span>고등학교 1학년</span>
+      <span>질문 포트폴리오 10점 · 수업 후반 10분</span>
+      <span>탐구보고서 20점 · 1차시</span>
+      <span>질문 승인선 2.0점 · 재제출 무제한</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>어떻게 굴러가는가 <span class="tag">운영 흐름</span></h2>
+    <ol class="steps">
+      <li><span class="st">질문 만들기</span><span class="sd">수업 후반 10분, 프레임 4종으로 초안</span></li>
+      <li><span class="st">AI에 묻고 검증하기</span><span class="sd">답을 교과서·사료와 대조해 의심 지점 기록</span></li>
+      <li><span class="st">피드백 받고 고치기</span><span class="sd">제출 즉시 판정·피드백 후 재제출</span></li>
+      <li><span class="st">탐구보고서로 완결</span><span class="sd">누적 질문 중 하나로 한 차시 작성</span></li>
+    </ol>
+  </section>
+
+  <section id="download">
+    <h2>바로 쓰는 자료 <span class="tag">내려받기</span></h2>
+    <ul class="files">
+      <li><a href="./질문탐구활동지.pdf"><span><span class="name">질문 탐구 활동지</span><span class="desc">질문 만들기 · 레벨 확인 · AI 탐구와 교과서 대조 · 성찰 — 학기 내내 반복하는 한 장 서식</span></span><span class="type">PDF</span></a><a class="alt" href="./질문탐구활동지.docx">DOCX 편집용 내려받기</a></li>
+      <li><a href="./질문프레임카드_4종_콘퍼런스에디션.pdf"><span><span class="name">질문 프레임 카드 4종</span><span class="desc">원인·이유 / 비교·평가 / 만약에 / 현재 연결 — 앞면 질문 틀과 제출 전 점검, 뒷면 실제 수정 사례와 교사 팁 · A5 인쇄용</span></span><span class="type">PDF</span></a></li>
+      <li><a href="./질문탐구보고서_양식.pdf"><span><span class="name">질문 탐구보고서 양식</span><span class="desc">질문 · 자료 수집과 사료 분석 · 전개와 결론 · AI 활용 기록 · 성찰 — 양식이 곧 루브릭</span></span><span class="type">PDF</span></a><a class="alt" href="./질문탐구보고서_양식.docx">DOCX 편집용 내려받기</a></li>
+    </ul>
+    <div class="note"><strong>발표 슬라이드는 파일로 배포하지 않습니다.</strong> 학생의 활동 장면과 산출물이 포함되어 있어 현장 발표에서만 사용합니다. 수업을 재현하는 데 필요한 서식은 위 세 가지로 모두 제공합니다.</div>
+  </section>
+
+  <section>
+    <h2>더 보기</h2>
+    <ul class="files">
+      <li><a href="https://gtmc-history.github.io" target="_blank" rel="noopener noreferrer"><span><span class="name">한국사 학습 웹게임 모음</span><span class="desc">역사적 선택 상황을 체험하는 도입·정리 활동 자료</span></span><span class="type">웹</span></a></li>
+      <li><a href="https://hischarlie.tistory.com" target="_blank" rel="noopener noreferrer"><span><span class="name">블로그 — 찰리쌤의 스마트 교무실</span><span class="desc">수업과 에듀테크 활용 자료</span></span><span class="type">블로그</span></a></li>
+    </ul>
+  </section>
+</main>
+<footer>
+  이명철 · 복정고등학교 · <a href="mailto:gtmc@gtmc.kr">gtmc@gtmc.kr</a><br>
+  업무는 AI에게, 시간은 학생에게
+</footer>
+</body>
+</html>
