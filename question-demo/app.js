@@ -1,15 +1,18 @@
 const CONFIG = window.QUESTION_DEMO_CONFIG || {};
 const STORAGE_KEY = "questionGrowing3min:v1";
 const STEPS = ["START", "MATERIAL", "INITIAL", "FEEDBACK", "REVISION", "COMPARISON", "RESOURCES"];
+const RULE_ENGINE_ID = "PROVISIONAL_RULE_ENGINE";
 
 let content;
-let activeRequestId = null;
+let activeRequest = null;
 let delayedLoadingTimer = null;
 
-const defaultState = () => ({
+const sourceFromUrl = () => new URLSearchParams(location.search).get("source")?.trim() || "direct";
+const defaultState = ({ source = sourceFromUrl(), contentId = "", contentVersion = "" } = {}) => ({
   sessionId: crypto.randomUUID(),
-  source: new URLSearchParams(location.search).get("source") || "direct",
-  contentId: "",
+  source,
+  contentId,
+  contentVersion,
   currentStep: "START",
   originalQuestion: "",
   firstFeedback: null,
@@ -32,7 +35,13 @@ async function init() {
     if (!r.ok) throw new Error("CONTENT_LOAD_FAILED");
     return r.json();
   });
-  state.contentId = content.contentId;
+  const contentIdentity = getContentIdentity(content);
+  if (!matchesContentIdentity(state, contentIdentity)) {
+    discardStoredState();
+    state = defaultState({ source: sourceFromUrl(), ...contentIdentity });
+  } else {
+    state = { ...state, source: sourceFromUrl(), ...contentIdentity };
+  }
   saveState();
 
   $("materialText").textContent = content.material;
@@ -46,7 +55,7 @@ async function init() {
 
 function bindEvents() {
   $("startButton").addEventListener("click", () => {
-    state = { ...defaultState(), source: state.source, contentId: content.contentId, currentStep: "MATERIAL" };
+    state = { ...defaultState({ source: state.source, ...getContentIdentity(content) }), currentStep: "MATERIAL" };
     saveState();
     trackEvent("demo_started");
     renderStep("MATERIAL");
@@ -122,7 +131,7 @@ function updateQuestionField(kind) {
   count.textContent = `${textarea.value.length} / 150`;
   const result = validateQuestion(value, isInitial ? null : state.originalQuestion);
   error.textContent = value && !result.ok ? result.message : "";
-  button.disabled = !result.ok;
+  button.disabled = Boolean(activeRequest) || !result.ok;
 }
 
 function validateQuestion(question, originalQuestion = null) {
@@ -152,31 +161,33 @@ async function submitInitial() {
   if (!validation.ok) return updateQuestionField("initial");
   state.originalQuestion = question;
   saveState();
-  $("analyzeInitial").disabled = true;
-  showLoading("질문에서 탐구 대상을 찾고 있습니다.");
+  const requestId = beginRequest("initial", "질문에서 탐구 대상을 찾고 있습니다.");
   trackEvent("initial_submitted");
+  let completionError = "";
 
-  const requestId = crypto.randomUUID();
-  activeRequestId = requestId;
   try {
     const response = await analyze({ stage: "initial", question, requestId });
-    if (activeRequestId !== requestId) return;
+    if (!isCurrentRequest(requestId)) return;
     state.firstFeedback = response;
     saveState();
     renderFeedback(response);
     trackEvent("initial_feedback_shown", response);
     goTo("FEEDBACK");
   } catch (error) {
-    console.error("초기 질문 분석 실패", error);
-    const fallback = buildLocalInitialFeedback(question, true);
+    if (!isCurrentRequest(requestId)) return;
+    console.error("초기 질문 분석 실패", safeClientErrorCode(error));
+    if (error?.serverResponded) {
+      completionError = "분석 서버의 응답을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+      return;
+    }
+    const fallback = buildLocalInitialFeedback(question, requestId, true);
     state.firstFeedback = fallback;
     saveState();
     renderFeedback(fallback);
     trackEvent("api_fallback", fallback);
     goTo("FEEDBACK");
   } finally {
-    hideLoading();
-    updateQuestionField("initial");
+    finishRequest(requestId, completionError);
   }
 }
 
@@ -186,31 +197,33 @@ async function submitRevision() {
   if (!validation.ok) return updateQuestionField("revision");
   state.revisedQuestion = question;
   saveState();
-  $("analyzeRevision").disabled = true;
-  showLoading("두 질문 사이의 변화를 찾고 있습니다.");
+  const requestId = beginRequest("revision", "두 질문 사이의 변화를 찾고 있습니다.");
   trackEvent("revision_submitted");
+  let completionError = "";
 
-  const requestId = crypto.randomUUID();
-  activeRequestId = requestId;
   try {
     const response = await analyze({ stage: "revision", question, originalQuestion: state.originalQuestion, requestId });
-    if (activeRequestId !== requestId) return;
+    if (!isCurrentRequest(requestId)) return;
     state.comparison = response;
     saveState();
     renderComparison(response);
     trackEvent("comparison_shown", response);
     goTo("COMPARISON");
   } catch (error) {
-    console.error("수정 질문 분석 실패", error);
-    const fallback = buildLocalComparison(state.originalQuestion, question, true);
+    if (!isCurrentRequest(requestId)) return;
+    console.error("수정 질문 분석 실패", safeClientErrorCode(error));
+    if (error?.serverResponded) {
+      completionError = "분석 서버의 응답을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+      return;
+    }
+    const fallback = buildLocalComparison(state.originalQuestion, question, requestId, true);
     state.comparison = fallback;
     saveState();
     renderComparison(fallback);
     trackEvent("api_fallback", fallback);
     goTo("COMPARISON");
   } finally {
-    hideLoading();
-    updateQuestionField("revision");
+    finishRequest(requestId, completionError);
   }
 }
 
@@ -218,8 +231,8 @@ async function analyze(payload) {
   if (CONFIG.demoMode || !CONFIG.apiBaseUrl) {
     await sleep(850);
     return payload.stage === "initial"
-      ? buildLocalInitialFeedback(payload.question, true)
-      : buildLocalComparison(payload.originalQuestion, payload.question, true);
+      ? buildLocalInitialFeedback(payload.question, payload.requestId, true)
+      : buildLocalComparison(payload.originalQuestion, payload.question, payload.requestId, true);
   }
 
   const endpoint = `${CONFIG.apiBaseUrl.replace(/\/$/, "")}/${CONFIG.analyzeFunction}`;
@@ -240,12 +253,18 @@ async function analyze(payload) {
         requestId: payload.requestId,
         source: state.source,
         contentId: content.contentId,
-        material: content.material,
         ...payload
       })
     });
-    if (!response.ok) throw new Error(`API_${response.status}`);
-    return await response.json();
+    if (!response.ok) throw serverResponseError(`API_${response.status}`);
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw serverResponseError("INVALID_SERVER_JSON");
+    }
+    if (data?.requestId !== payload.requestId) throw serverResponseError("REQUEST_ID_MISMATCH");
+    return data;
   } finally {
     clearTimeout(timeout);
   }
@@ -276,13 +295,13 @@ function renderComparison(result) {
   }));
 }
 
-function buildLocalInitialFeedback(question, fallbackUsed = false) {
+function buildLocalInitialFeedback(question, requestId, fallbackUsed = false) {
   const analysis = ruleAnalyze(question);
   const copy = {
     L1: {
-      strength: "사건의 핵심 내용을 확인하려는 출발점이 드러납니다.",
-      nextStep: "질문의 대상과 시기, 행위자 중 하나를 더 분명히 해 보세요.",
-      rewriteHint: "누가 · 언제 · 어떤 조건에서 중 하나를 골라 추가해 보세요."
+      strength: "자료에 제시된 구체적인 사실에 주목했습니다.",
+      nextStep: "행방을 확인하는 데서 나아가, 그 선택의 이유나 이후의 영향으로 탐구 범위를 넓혀 보세요.",
+      rewriteHint: "‘합류한 이유’와 ‘합류 이후의 변화’ 중 한 요소를 골라 반영해 보세요."
     },
     L2: {
       strength: "사건의 원인이나 영향을 연결해 보려는 방향이 드러납니다.",
@@ -295,16 +314,17 @@ function buildLocalInitialFeedback(question, fallbackUsed = false) {
       rewriteHint: "비교 기준 · 자료 근거 · 관점 중 하나를 선택해 정교화해 보세요."
     }
   }[analysis.levelCode];
-  return { requestId: activeRequestId, ...analysis, ...copy, fallbackUsed };
+  return { requestId, ruleEngine: RULE_ENGINE_ID, ...analysis, ...copy, fallbackUsed };
 }
 
-function buildLocalComparison(original, revised, fallbackUsed = false) {
+function buildLocalComparison(original, revised, requestId, fallbackUsed = false) {
   const before = ruleAnalyze(original);
   const after = ruleAnalyze(revised);
   const changeTags = detectChanges(original, revised);
   const positive = changeTags.length ? changeTags.join(", ") : "표현이 정리됨";
   return {
-    requestId: activeRequestId,
+    requestId,
+    ruleEngine: RULE_ENGINE_ID,
     initialLevelCode: before.levelCode,
     initialLevelLabel: before.levelLabel,
     revisedLevelCode: after.levelCode,
@@ -316,16 +336,44 @@ function buildLocalComparison(original, revised, fallbackUsed = false) {
   };
 }
 
+// PROVISIONAL_RULE_ENGINE: 박람회 현장 데모용 임시 규칙입니다.
 function ruleAnalyze(question) {
   const q = normalized(question);
-  const relation = /(왜|원인|이유|영향|결과|어떻게|과정|변화|관계|합류|해산)/.test(q);
-  const higher = /(비교|차이|공통|평가|타당|관점|근거|자료|사료|기록|만약|가정|오늘날|현재|의미|한계|정당)/.test(q);
-  const specific = /(1907|고종|한일신협약|대한제국|군대|해산군인|의병|정미의병|일제)/.test(q);
+  const directMaterialAnswer = asksForDirectFact(q) && hasMaterialAnchor(q);
   let levelCode = "L1";
-  if (higher && (relation || specific || q.length >= 28)) levelCode = "L3";
-  else if (relation) levelCode = "L2";
-  const labels = { L1: "정보 확인형", L2: "관계 탐색형", L3: "근거 기반 탐구형" };
+  if (asksForComparisonOrJudgement(q)) levelCode = "L3";
+  else if (directMaterialAnswer) levelCode = "L1";
+  else if (asksForCauseOrRelation(q)) levelCode = "L2";
+  const labels = { L1: "사실·정보 확인형", L2: "관계 탐색형", L3: "비교·평가·해석형" };
   return { levelCode, levelLabel: labels[levelCode] };
+}
+
+function asksForDirectFact(q) {
+  return /(누가|언제|어디로갔|어디에갔|어디에서|어디인가|몇명|무슨일|어떤일|행방|무엇을했|어떻게되었|결과는무엇)/.test(q);
+}
+
+function hasMaterialAnchor(q) {
+  return Boolean(content?.keywords?.some((keyword) => q.includes(normalized(keyword))));
+}
+
+function asksForCauseOrRelation(q) {
+  const cause = /(왜|이유|원인|때문)/.test(q);
+  const influence = /(어떤영향|영향을?주|영향을?미치|효과가|결과로|초래|이어지|관계가)/.test(q);
+  const change = /(어떻게.*(?:바꾸|변화|달라)|시간.*(?:변화|달라)|전후.*(?:변화|달라))/.test(q);
+  const actionAndResult = /(조건|선택|행동).*(결과|영향|변화)/.test(q);
+  return cause || influence || change || actionAndResult;
+}
+
+function asksForComparisonOrJudgement(q) {
+  const comparison = /(비교하면|비교했을때|차이점|공통점)/.test(q)
+    || /(?:와|과).+중.+더(?:큰|많은|적은|중요한|효과적인)?/.test(q);
+  const evaluation = /(얼마나|어느정도).*(효과적|타당|정당|성공|실패|중요|기여)/.test(q)
+    || /(효과적|타당|정당).*(평가|판단|볼수|이었을까|인가)/.test(q);
+  const interpretation = /(역사적의미|의미와한계|의미는무엇|한계는무엇)/.test(q);
+  const perspective = /(관점|입장|이해관계).*(비교|평가|판단|다르)/.test(q);
+  const counterfactual = /(만약.+(?:다면|했을까|되었을까)|않았다면|없었다면|대안은)/.test(q);
+  const evidenceJudgement = /(근거|자료|사료).*(판단|평가|타당|해석)/.test(q);
+  return comparison || evaluation || interpretation || perspective || counterfactual || evidenceJudgement;
 }
 
 function detectChanges(original, revised) {
@@ -347,9 +395,9 @@ function detectChanges(original, revised) {
 
 function levelDescription(levelCode) {
   return {
-    L1: "사실·명칭·결과를 확인하는 질문입니다. 다음에는 대상·시기·행위자를 더 분명히 해 볼 수 있습니다.",
+    L1: "자료에서 직접 확인할 수 있는 사실·정보를 묻는 질문입니다. 다음에는 그 선택의 이유나 이후의 영향으로 확장할 수 있습니다.",
     L2: "원인·영향·선택·변화를 연결하려는 질문입니다. 다음에는 조건·관점·근거를 명료하게 해 볼 수 있습니다.",
-    L3: "대상·관계·조건이 드러나며 자료를 통해 탐구 가능한 질문입니다. 비교 범위와 근거 기준을 더 정교화할 수 있습니다."
+    L3: "비교·평가·해석을 위해 여러 대상과 판단 기준을 연결한 질문입니다. 근거 자료와 비교 기준을 더 정교화할 수 있습니다."
   }[levelCode] || "질문의 탐구 방향을 확인했습니다.";
 }
 
@@ -382,10 +430,44 @@ function hideLoading() {
   $("loadingLayer").hidden = true;
 }
 
+function beginRequest(stage, loadingText) {
+  const requestId = crypto.randomUUID();
+  activeRequest = { requestId, stage };
+  updateQuestionField("initial");
+  updateQuestionField("revision");
+  showLoading(loadingText);
+  return requestId;
+}
+
+function isCurrentRequest(requestId) {
+  return activeRequest?.requestId === requestId;
+}
+
+function finishRequest(requestId, message = "") {
+  if (!isCurrentRequest(requestId)) return;
+  const stage = activeRequest.stage;
+  activeRequest = null;
+  hideLoading();
+  updateQuestionField("initial");
+  updateQuestionField("revision");
+  if (message) $(stage === "initial" ? "initialError" : "revisionError").textContent = message;
+}
+
+function serverResponseError(code) {
+  const error = new Error(code);
+  error.serverResponded = true;
+  return error;
+}
+
+function safeClientErrorCode(error) {
+  const message = error instanceof Error ? error.message : "UNKNOWN";
+  return /^[A-Z0-9_]+$/.test(message) ? message : "REQUEST_FAILED";
+}
+
 function restartDemo() {
   const source = state.source;
-  sessionStorage.removeItem(STORAGE_KEY);
-  state = { ...defaultState(), source, contentId: content.contentId };
+  discardStoredState();
+  state = defaultState({ source, ...getContentIdentity(content) });
   $("initialQuestion").value = "";
   $("revisedQuestion").value = "";
   updateQuestionField("initial");
@@ -396,6 +478,7 @@ function restartDemo() {
 
 async function trackEvent(eventType, detail = {}) {
   if (!CONFIG.apiBaseUrl || CONFIG.demoMode || !CONFIG.trackFunction) return;
+  const requestId = crypto.randomUUID();
   const endpoint = `${CONFIG.apiBaseUrl.replace(/\/$/, "")}/${CONFIG.trackFunction}`;
   const headers = { "Content-Type": "application/json" };
   if (CONFIG.supabasePublishableKey) {
@@ -413,19 +496,41 @@ async function trackEvent(eventType, detail = {}) {
       method: "POST",
       headers,
       keepalive: true,
-      body: JSON.stringify({ sessionId: state.sessionId, source: state.source, contentId: content.contentId, eventType, ...safeDetail })
+      body: JSON.stringify({ requestId, sessionId: state.sessionId, source: state.source, contentId: content.contentId, eventType, ...safeDetail })
     });
   } catch { /* 체험 흐름에 영향을 주지 않음 */ }
 }
 
 function loadState() {
+  const source = sourceFromUrl();
   try {
     const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY));
-    return saved?.sessionId ? { ...defaultState(), ...saved } : defaultState();
-  } catch { return defaultState(); }
+    if (!saved?.sessionId || saved.source !== source) {
+      discardStoredState();
+      return defaultState({ source });
+    }
+    return { ...defaultState({ source }), ...saved, source };
+  } catch {
+    discardStoredState();
+    return defaultState({ source });
+  }
 }
 function saveState() {
   try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* 메모리 모드 */ }
+}
+function discardStoredState() {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* 메모리 모드 */ }
+}
+function getContentIdentity(value) {
+  return {
+    contentId: String(value?.contentId || ""),
+    contentVersion: String(value?.contentVersion || "")
+  };
+}
+function matchesContentIdentity(savedState, identity) {
+  return Boolean(identity.contentId && identity.contentVersion)
+    && savedState.contentId === identity.contentId
+    && savedState.contentVersion === identity.contentVersion;
 }
 function normalized(value) { return value.replace(/\s+/g, "").replace(/[?？!.。,]/g, "").toLowerCase(); }
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
