@@ -25,6 +25,62 @@ export type ClaudeAnalysisContext = {
 export const CLAUDE_MODEL_ID = "claude-haiku-4-5-20251001";
 export const CLAUDE_TIMEOUT_MS = 7000;
 
+export const ANTHROPIC_DIAGNOSTIC_CODES = [
+  "ANTHROPIC_KEY_MISSING",
+  "ANTHROPIC_HTTP_400",
+  "ANTHROPIC_HTTP_401",
+  "ANTHROPIC_HTTP_403",
+  "ANTHROPIC_HTTP_404",
+  "ANTHROPIC_HTTP_429",
+  "ANTHROPIC_HTTP_500",
+  "ANTHROPIC_HTTP_504",
+  "ANTHROPIC_HTTP_529",
+  "ANTHROPIC_TIMEOUT",
+  "ANTHROPIC_NETWORK_ERROR",
+  "ANTHROPIC_INVALID_JSON",
+  "ANTHROPIC_UNSAFE_OUTPUT",
+  "ANTHROPIC_REQUEST_ID_MISMATCH",
+  "ANTHROPIC_UNKNOWN_ERROR",
+] as const;
+
+export type AnthropicDiagnosticCode = typeof ANTHROPIC_DIAGNOSTIC_CODES[number];
+export type AnthropicDiagnostic = {
+  diagnosticCode: AnthropicDiagnosticCode;
+  httpStatus: number | null;
+};
+
+class AnthropicFailure extends Error {
+  diagnosticCode: AnthropicDiagnosticCode;
+  httpStatus: number | null;
+  retryAfterMs: number | null;
+
+  constructor(
+    diagnosticCode: AnthropicDiagnosticCode,
+    httpStatus: number | null = null,
+    retryAfterMs: number | null = null,
+  ) {
+    super(diagnosticCode);
+    this.name = "AnthropicFailure";
+    this.diagnosticCode = diagnosticCode;
+    this.httpStatus = httpStatus;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+export function getAnthropicDiagnostic(error: unknown): AnthropicDiagnostic {
+  if (error instanceof AnthropicFailure) {
+    return { diagnosticCode: error.diagnosticCode, httpStatus: error.httpStatus };
+  }
+  const knownMessage = error instanceof Error ? error.message : "";
+  if (["CLAUDE_CONTAINS_ANSWER", "CLAUDE_CONTAINS_FULL_REWRITE", "CLAUDE_INVALID_SAFETY"].includes(knownMessage)) {
+    return { diagnosticCode: "ANTHROPIC_UNSAFE_OUTPUT", httpStatus: 200 };
+  }
+  if (["REQUEST_ID_MISMATCH", "ANTHROPIC_REQUEST_ID_MISMATCH"].includes(knownMessage)) {
+    return { diagnosticCode: "ANTHROPIC_REQUEST_ID_MISMATCH", httpStatus: 200 };
+  }
+  return { diagnosticCode: "ANTHROPIC_UNKNOWN_ERROR", httpStatus: null };
+}
+
 const FEATURE_PROPERTIES = {
   directlyAnswerable: { type: "boolean" },
   hasCause: { type: "boolean" },
@@ -108,14 +164,14 @@ export async function analyzeWithClaude(
   options: { fetchImpl?: FetchLike } = {},
 ): Promise<ClaudeAnalysis> {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey) throw new Error("MISSING_ANTHROPIC_API_KEY");
+  if (!apiKey) throw new AnthropicFailure("ANTHROPIC_KEY_MISSING");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CLAUDE_TIMEOUT_MS);
   try {
     return await requestWithOneRetry(context, apiKey, options.fetchImpl ?? fetch, controller.signal);
   } catch (error) {
-    if (controller.signal.aborted) throw new Error("ANTHROPIC_TIMEOUT");
+    if (controller.signal.aborted) throw new AnthropicFailure("ANTHROPIC_TIMEOUT");
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -133,13 +189,13 @@ async function requestWithOneRetry(
       return await requestClaude(context, apiKey, fetchImpl, signal);
     } catch (error) {
       if (attempt > 0 || !isRetryable(error)) throw error;
-      const delayMs = error instanceof ClaudeHttpError && error.retryAfterMs !== null
+      const delayMs = error instanceof AnthropicFailure && error.retryAfterMs !== null
         ? error.retryAfterMs
         : 250;
       await wait(delayMs, signal);
     }
   }
-  throw new Error("ANTHROPIC_RETRY_EXHAUSTED");
+  throw new AnthropicFailure("ANTHROPIC_UNKNOWN_ERROR");
 }
 
 async function requestClaude(
@@ -148,50 +204,60 @@ async function requestClaude(
   fetchImpl: FetchLike,
   signal: AbortSignal,
 ): Promise<ClaudeAnalysis> {
-  const response = await fetchImpl("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    signal,
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL_ID,
-      max_tokens: 700,
-      system: CLAUDE_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildUserPrompt(context) }],
-      output_config: {
-        format: {
-          type: "json_schema",
-          schema: CLAUDE_OUTPUT_SCHEMA,
-        },
+  let response: Response;
+  try {
+    response = await fetchImpl("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: CLAUDE_MODEL_ID,
+        max_tokens: 700,
+        system: CLAUDE_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: buildUserPrompt(context) }],
+        output_config: {
+          format: {
+            type: "json_schema",
+            schema: CLAUDE_OUTPUT_SCHEMA,
+          },
+        },
+      }),
+    });
+  } catch {
+    if (signal.aborted) throw new AnthropicFailure("ANTHROPIC_TIMEOUT");
+    throw new AnthropicFailure("ANTHROPIC_NETWORK_ERROR");
+  }
 
   if (!response.ok) {
-    throw new ClaudeHttpError(response.status, parseRetryAfter(response.headers.get("retry-after")));
+    throw new AnthropicFailure(
+      diagnosticForHttpStatus(response.status),
+      response.status,
+      parseRetryAfter(response.headers.get("retry-after")),
+    );
   }
 
   let data: Record<string, unknown>;
   try {
     data = await response.json();
   } catch {
-    throw new Error("ANTHROPIC_INVALID_JSON");
+    throw new AnthropicFailure("ANTHROPIC_INVALID_JSON", 200);
   }
   if (data.stop_reason === "refusal" || data.stop_reason === "max_tokens") {
-    throw new Error(`ANTHROPIC_STOP_${String(data.stop_reason).toUpperCase()}`);
+    throw new AnthropicFailure("ANTHROPIC_UNKNOWN_ERROR", 200);
   }
   const blocks = Array.isArray(data.content) ? data.content : [];
   const text = blocks.find((block) => isRecord(block) && block.type === "text" && typeof block.text === "string")?.text;
-  if (typeof text !== "string") throw new Error("ANTHROPIC_EMPTY_TEXT");
+  if (typeof text !== "string") throw new AnthropicFailure("ANTHROPIC_INVALID_JSON", 200);
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error("ANTHROPIC_INVALID_JSON");
+    throw new AnthropicFailure("ANTHROPIC_INVALID_JSON", 200);
   }
   return validateClaudeAnalysis(parsed, context.stage);
 }
@@ -204,26 +270,26 @@ function buildUserPrompt(context: ClaudeAnalysisContext) {
 }
 
 function validateClaudeAnalysis(value: unknown, stage: "initial" | "revision"): ClaudeAnalysis {
-  if (!isRecord(value)) throw new Error("ANTHROPIC_INVALID_OUTPUT");
+  if (!isRecord(value)) throw invalidOutput();
   const normalizedLevel = typeof value.levelCode === "string" ? value.levelCode.toUpperCase() : "";
-  if (!(["L1", "L2", "L3"] as string[]).includes(normalizedLevel)) throw new Error("ANTHROPIC_INVALID_OUTPUT");
+  if (!(["L1", "L2", "L3"] as string[]).includes(normalizedLevel)) throw invalidOutput();
   if (!isRecord(value.features) || !Object.keys(FEATURE_PROPERTIES).every((key) => typeof value.features[key] === "boolean")) {
-    throw new Error("ANTHROPIC_INVALID_OUTPUT");
+    throw invalidOutput();
   }
   if (![value.strength, value.nextStep, value.rewriteHint, value.comparison].every((item) => typeof item === "string")) {
-    throw new Error("ANTHROPIC_INVALID_OUTPUT");
+    throw invalidOutput();
   }
   if (!String(value.strength).trim() || !String(value.nextStep).trim() || !String(value.rewriteHint).trim()) {
-    throw new Error("ANTHROPIC_INVALID_OUTPUT");
+    throw invalidOutput();
   }
-  if (stage === "revision" && !String(value.comparison).trim()) throw new Error("ANTHROPIC_INVALID_OUTPUT");
+  if (stage === "revision" && !String(value.comparison).trim()) throw invalidOutput();
   if (!Array.isArray(value.changeTags) || !value.changeTags.every((item) => typeof item === "string")) {
-    throw new Error("ANTHROPIC_INVALID_OUTPUT");
+    throw invalidOutput();
   }
   if (!isRecord(value.safety)
     || typeof value.safety.containsAnswer !== "boolean"
     || typeof value.safety.containsFullRewrite !== "boolean") {
-    throw new Error("ANTHROPIC_INVALID_OUTPUT");
+    throw invalidOutput();
   }
 
   const levelCode = normalizedLevel as LevelCode;
@@ -248,19 +314,26 @@ function validateClaudeAnalysis(value: unknown, stage: "initial" | "revision"): 
   };
 }
 
-class ClaudeHttpError extends Error {
-  status: number;
-  retryAfterMs: number | null;
-
-  constructor(status: number, retryAfterMs: number | null) {
-    super(`ANTHROPIC_${status}`);
-    this.status = status;
-    this.retryAfterMs = retryAfterMs;
-  }
+function invalidOutput() {
+  return new AnthropicFailure("ANTHROPIC_INVALID_JSON", 200);
 }
 
 function isRetryable(error: unknown) {
-  return error instanceof ClaudeHttpError && [429, 500, 504, 529].includes(error.status);
+  return error instanceof AnthropicFailure && error.httpStatus !== null && [429, 500, 504, 529].includes(error.httpStatus);
+}
+
+function diagnosticForHttpStatus(status: number): AnthropicDiagnosticCode {
+  const supported: Record<number, AnthropicDiagnosticCode> = {
+    400: "ANTHROPIC_HTTP_400",
+    401: "ANTHROPIC_HTTP_401",
+    403: "ANTHROPIC_HTTP_403",
+    404: "ANTHROPIC_HTTP_404",
+    429: "ANTHROPIC_HTTP_429",
+    500: "ANTHROPIC_HTTP_500",
+    504: "ANTHROPIC_HTTP_504",
+    529: "ANTHROPIC_HTTP_529",
+  };
+  return supported[status] ?? "ANTHROPIC_UNKNOWN_ERROR";
 }
 
 function parseRetryAfter(value: string | null): number | null {

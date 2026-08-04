@@ -12,7 +12,12 @@ import {
   validateClaudeSafety,
   validateQuestion,
 } from "../_shared/security.ts";
-import { analyzeWithClaude, type ClaudeAnalysis } from "../_shared/anthropic.ts";
+import {
+  analyzeWithClaude,
+  getAnthropicDiagnostic,
+  type AnthropicDiagnosticCode,
+  type ClaudeAnalysis,
+} from "../_shared/anthropic.ts";
 import { consumeRateLimit, insertEvent } from "../_shared/db.ts";
 
 export default {
@@ -54,7 +59,7 @@ export default {
       if (!allowed) return json({ requestId, error: "RATE_LIMITED" }, 429, corsHeaders);
 
       let fallbackUsed = false;
-      let fallbackReason: string | null = null;
+      let diagnosticCode: AnthropicDiagnosticCode | null = null;
       let result: Record<string, unknown>;
       try {
         const ai = await analyzeWithClaude({
@@ -87,8 +92,13 @@ export default {
         }
       } catch (error) {
         fallbackUsed = true;
-        fallbackReason = safeErrorCode(error);
-        console.error(JSON.stringify({ requestId, errorCode: fallbackReason }));
+        const diagnostic = getAnthropicDiagnostic(error);
+        diagnosticCode = diagnostic.diagnosticCode;
+        console.error("question_analysis_fallback", {
+          requestId,
+          diagnosticCode,
+          httpStatus: diagnostic.httpStatus,
+        });
         if (stage === "initial") {
           const rules = analyzeByRules(question, content);
           result = {
@@ -102,6 +112,7 @@ export default {
             comparison: "",
             safety: { containsAnswer: false, containsFullRewrite: false },
             fallbackUsed: true,
+            diagnosticCode,
           };
         } else {
           const before = analyzeByRules(originalQuestion, content);
@@ -121,6 +132,7 @@ export default {
             revisedLevelCode: after.levelCode,
             revisedLevelLabel: after.levelLabel,
             fallbackUsed: true,
+            diagnosticCode,
           };
         }
       }
@@ -135,12 +147,11 @@ export default {
         revised_level: stage === "revision" ? result.revisedLevelCode : null,
         processing_ms: Date.now() - startedAt,
         fallback_used: fallbackUsed,
-        error_code: fallbackReason,
+        error_code: diagnosticCode,
       });
 
       return json(result, 200, corsHeaders);
-    } catch (error) {
-      console.error(JSON.stringify({ requestId, errorCode: safeErrorCode(error) }));
+    } catch {
       return json({ requestId, error: "INTERNAL_ERROR" }, 500, corsHeaders);
     }
   },
@@ -162,11 +173,6 @@ function clipAnalysis(ai: ClaudeAnalysis) {
 
 function clip(value: unknown, max: number) {
   return String(value ?? "").trim().slice(0, max);
-}
-
-function safeErrorCode(error: unknown) {
-  const message = error instanceof Error ? error.message : "UNKNOWN";
-  return /^[A-Z0-9_]+$/.test(message) ? message.slice(0, 80) : "CLAUDE_FAILURE";
 }
 
 function json(data: unknown, status: number, corsHeaders: Record<string, string>) {

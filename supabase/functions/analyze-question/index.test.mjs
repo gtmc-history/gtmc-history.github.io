@@ -82,6 +82,17 @@ async function callEndpoint(fetchImpl, body = {}) {
   }
 }
 
+async function captureConsoleError(operation) {
+  const calls = [];
+  const originalError = console.error;
+  console.error = (...args) => calls.push(args);
+  try {
+    return { value: await operation(), calls };
+  } finally {
+    console.error = originalError;
+  }
+}
+
 test("analyze-question Claude contract and fallback regressions", async (t) => {
   await t.test("five regression questions classify L1, L2, L2, L3, L3", () => {
     for (const [question, expected] of QUESTION_CASES) {
@@ -99,6 +110,7 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     assert.equal(result.response.status, 200);
     assert.equal(result.data.requestId, result.requestId);
     assert.equal(result.data.fallbackUsed, false);
+    assert.equal(Object.hasOwn(result.data, "diagnosticCode"), false);
     for (const field of ["levelCode", "levelLabel", "features", "strength", "nextStep", "rewriteHint", "changeTags", "comparison", "safety"]) {
       assert.ok(Object.hasOwn(result.data, field), field);
     }
@@ -117,6 +129,7 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     })));
     assert.equal(result.data.fallbackUsed, true);
     assert.equal(result.data.ruleEngine, rules.PROVISIONAL_RULE_ENGINE_ID);
+    assert.equal(result.data.diagnosticCode, "ANTHROPIC_UNSAFE_OUTPUT");
   });
 
   await t.test("blocks an historical answer", async () => {
@@ -125,6 +138,7 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     })));
     assert.equal(result.data.fallbackUsed, true);
     assert.equal(result.data.safety.containsAnswer, false);
+    assert.equal(result.data.diagnosticCode, "ANTHROPIC_UNSAFE_OUTPUT");
   });
 
   await t.test("invalid Claude JSON falls back", async () => {
@@ -134,6 +148,7 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     }), { status: 200 }));
     assert.equal(result.data.fallbackUsed, true);
     assert.equal(result.data.levelCode, "L1");
+    assert.equal(result.data.diagnosticCode, "ANTHROPIC_INVALID_JSON");
   });
 
   await t.test("aborts Claude at seven seconds and falls back", async () => {
@@ -143,6 +158,7 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     }));
     const elapsed = Date.now() - startedAt;
     assert.equal(result.data.fallbackUsed, true);
+    assert.equal(result.data.diagnosticCode, "ANTHROPIC_TIMEOUT");
     assert.ok(elapsed >= 6800, `elapsed=${elapsed}`);
     assert.ok(elapsed < 8500, `elapsed=${elapsed}`);
     assert.equal(anthropic.CLAUDE_TIMEOUT_MS, 7000);
@@ -186,20 +202,109 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     assert.equal(result.response.status, 200);
     assert.equal(result.data.fallbackUsed, true);
     assert.equal(result.data.levelCode, "L1");
+    assert.equal(result.data.diagnosticCode, "ANTHROPIC_HTTP_401");
+  });
+
+  await t.test("revision fallback also includes a diagnostic code", async () => {
+    const captured = await captureConsoleError(() => callEndpoint(
+      async () => new Response("forbidden", { status: 403 }),
+      {
+        stage: "revision",
+        originalQuestion: "해산된 군인은 어디로 갔을까?",
+        question: "해산 군인들이 의병에 합류한 이유는 무엇일까?",
+      },
+    ));
+    assert.equal(captured.value.data.fallbackUsed, true);
+    assert.equal(captured.value.data.diagnosticCode, "ANTHROPIC_HTTP_403");
+    assert.equal(captured.value.data.revisedLevelCode, "L2");
+  });
+
+  await t.test("maps every supported Anthropic HTTP status without exposing its body", async () => {
+    for (const status of [400, 401, 403, 404, 429, 500, 504, 529]) {
+      let fetchCalls = 0;
+      const secretBody = `SECRET_ANTHROPIC_BODY_${status}`;
+      const captured = await captureConsoleError(() => callEndpoint(async () => {
+        fetchCalls += 1;
+        return new Response(secretBody, { status, headers: { "retry-after": "0" } });
+      }));
+      const { data } = captured.value;
+      assert.equal(data.diagnosticCode, `ANTHROPIC_HTTP_${status}`);
+      assert.doesNotMatch(JSON.stringify(data), new RegExp(secretBody));
+      assert.equal(fetchCalls, [429, 500, 504, 529].includes(status) ? 2 : 1);
+      assert.equal(captured.calls.length, 1);
+      assert.equal(captured.calls[0][1].httpStatus, status);
+      assert.doesNotMatch(JSON.stringify(captured.calls), new RegExp(secretBody));
+    }
+  });
+
+  await t.test("maps a missing API key, network error, requestId mismatch, and unknown error", async () => {
+    const apiKey = env.get("ANTHROPIC_API_KEY");
+    env.delete("ANTHROPIC_API_KEY");
+    try {
+      const missing = await captureConsoleError(() => callEndpoint(async () => {
+        throw new Error("fetch must not run");
+      }));
+      assert.equal(missing.value.data.diagnosticCode, "ANTHROPIC_KEY_MISSING");
+      assert.equal(missing.calls[0][1].httpStatus, null);
+    } finally {
+      env.set("ANTHROPIC_API_KEY", apiKey);
+    }
+
+    const network = await captureConsoleError(() => callEndpoint(async () => {
+      throw new TypeError("private transport detail");
+    }));
+    assert.equal(network.value.data.diagnosticCode, "ANTHROPIC_NETWORK_ERROR");
+    assert.doesNotMatch(JSON.stringify(network.calls), /private transport detail/);
+
+    assert.deepEqual(anthropic.getAnthropicDiagnostic(new Error("REQUEST_ID_MISMATCH")), {
+      diagnosticCode: "ANTHROPIC_REQUEST_ID_MISMATCH",
+      httpStatus: 200,
+    });
+    assert.deepEqual(anthropic.getAnthropicDiagnostic(new Error("private unknown detail")), {
+      diagnosticCode: "ANTHROPIC_UNKNOWN_ERROR",
+      httpStatus: null,
+    });
+  });
+
+  await t.test("exports only the approved diagnostic code allowlist", () => {
+    assert.deepEqual([...anthropic.ANTHROPIC_DIAGNOSTIC_CODES], [
+      "ANTHROPIC_KEY_MISSING",
+      "ANTHROPIC_HTTP_400",
+      "ANTHROPIC_HTTP_401",
+      "ANTHROPIC_HTTP_403",
+      "ANTHROPIC_HTTP_404",
+      "ANTHROPIC_HTTP_429",
+      "ANTHROPIC_HTTP_500",
+      "ANTHROPIC_HTTP_504",
+      "ANTHROPIC_HTTP_529",
+      "ANTHROPIC_TIMEOUT",
+      "ANTHROPIC_NETWORK_ERROR",
+      "ANTHROPIC_INVALID_JSON",
+      "ANTHROPIC_UNSAFE_OUTPUT",
+      "ANTHROPIC_REQUEST_ID_MISMATCH",
+      "ANTHROPIC_UNKNOWN_ERROR",
+    ]);
   });
 
   await t.test("does not write the raw question to console logs", async () => {
     const rawQuestion = "해산 군인들의 행방을 자료에서 확인하면 무엇일까?";
-    const captured = [];
-    const originalError = console.error;
-    console.error = (...args) => captured.push(args.join(" "));
-    try {
-      await callEndpoint(async () => new Response("unauthorized", { status: 401 }), { question: rawQuestion });
-    } finally {
-      console.error = originalError;
-    }
-    assert.ok(captured.length > 0);
-    assert.doesNotMatch(captured.join("\n"), new RegExp(rawQuestion));
+    const sessionId = "private-session-id";
+    const captured = await captureConsoleError(() => callEndpoint(
+      async () => new Response("private Anthropic response", { status: 401 }),
+      { question: rawQuestion, sessionId },
+    ));
+    assert.equal(captured.calls.length, 1);
+    assert.equal(captured.calls[0][0], "question_analysis_fallback");
+    assert.deepEqual(Object.keys(captured.calls[0][1]), ["requestId", "diagnosticCode", "httpStatus"]);
+    assert.deepEqual(captured.calls[0][1], {
+      requestId: captured.value.requestId,
+      diagnosticCode: "ANTHROPIC_HTTP_401",
+      httpStatus: 401,
+    });
+    const logged = JSON.stringify(captured.calls);
+    assert.doesNotMatch(logged, new RegExp(rawQuestion));
+    assert.doesNotMatch(logged, new RegExp(sessionId));
+    assert.doesNotMatch(logged, /private Anthropic response|test-api-key|1907년 일제/);
   });
 
   await t.test("front end omits material and distinguishes server responses", async () => {
