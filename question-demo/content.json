@@ -14,5 +14,23 @@
     {"id":"frame", "title":"질문 프레임 카드", "description":"질문을 시작하는 네 가지 프레임", "url":"/expo2026/03_질문프레임카드_A6_4종.pdf"},
     {"id":"worksheet", "title":"질문 탐구 활동지", "description":"첫 질문과 수정 질문 기록", "url":"/expo2026/질문탐구활동지.pdf"},
     {"id":"report", "title":"질문 탐구 보고서", "description":"탐구 결과와 성찰 양식", "url":"/expo2026/질문탐구보고서_양식.pdf"}
-  ]
+  ],
+  "resourceSources": {
+    "expo2026": {
+      "resourceUrls": {
+        "frame": "/expo2026/03_질문프레임카드_A6_4종.pdf",
+        "worksheet": "/expo2026/질문탐구활동지.pdf",
+        "report": "/expo2026/질문탐구보고서_양식.pdf"
+      },
+      "returnLink": {"title":"수업 전체 구조와 자료 보기", "url":"/expo2026/#download"}
+    },
+    "conference2026": {
+      "resourceUrls": {
+        "frame": "/conference2026/질문프레임카드_4종_콘퍼런스에디션.pdf",
+        "worksheet": "/conference2026/질문탐구활동지.pdf",
+        "report": "/conference2026/질문탐구보고서_양식.pdf"
+      },
+      "returnLink": {"title":"컨퍼런스 수업 구조와 자료 보기", "url":"/conference2026/#download"}
+    }
+  }
 }

@@ -402,11 +402,14 @@ function levelDescription(levelCode) {
 }
 
 function renderResources() {
+  const sourceConfig = content.resourceSources?.[state.source] || {};
+  const resourceUrls = sourceConfig.resourceUrls || {};
   const nodes = content.resources.map((resource) => {
     const link = document.createElement("a");
-    const available = resource.url && resource.url !== "#";
+    const url = resourceUrls[resource.id] ?? resource.url;
+    const available = url && url !== "#";
     link.className = `resource-card${available ? "" : " disabled"}`;
-    link.href = available ? resource.url : "#";
+    link.href = available ? url : "#";
     link.target = available ? "_blank" : "_self";
     link.rel = "noopener noreferrer";
     link.innerHTML = `<span><strong>${escapeHtml(resource.title)}</strong><small>${escapeHtml(available ? resource.description : "링크 입력 필요")}</small></span><span class="resource-arrow">→</span>`;
@@ -414,6 +417,11 @@ function renderResources() {
     return link;
   });
   $("resourceList").replaceChildren(...nodes);
+  const returnLink = sourceConfig.returnLink;
+  if (returnLink?.title && returnLink.url && returnLink.url !== "#") {
+    $("resourceReturnLink").textContent = returnLink.title;
+    $("resourceReturnLink").href = returnLink.url;
+  }
 }
 
 function showLoading(initialText) {
