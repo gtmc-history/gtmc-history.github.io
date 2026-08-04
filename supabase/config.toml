@@ -1,0 +1,10 @@
+project_id = "question-demo"
+
+[functions.analyze-question]
+verify_jwt = false
+
+[functions.health]
+verify_jwt = false
+
+[functions.track-event]
+verify_jwt = false

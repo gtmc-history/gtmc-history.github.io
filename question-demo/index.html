@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f766e" />
+  <title>질문이 자라는 3분</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="질문이 자라는 3분 처음으로">
+      <span class="brand-mark" aria-hidden="true">Q</span>
+      <span>질문이 자라는 3분</span>
+    </a>
+    <span id="sourceBadge" class="source-badge">체험</span>
+  </header>
+
+  <main id="app" class="app-shell" aria-live="polite">
+    <div class="progress-wrap" aria-label="체험 진행 단계">
+      <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+    </div>
+
+    <section class="screen" data-step="START" aria-labelledby="startTitle">
+      <p class="eyebrow">AI 질문 코칭 체험</p>
+      <h1 id="startTitle">질문이 자라는 3분</h1>
+      <p class="lead">역사 자료를 보고 질문을 한 문장으로 작성해 보세요.</p>
+      <p>AI 피드백을 받은 뒤 질문을 다시 쓰며 무엇이 달라졌는지 확인합니다.</p>
+
+      <div class="notice compact">
+        <strong>약 3분</strong>
+        <span>로그인 없음</span>
+        <span>이름·이메일·학교명 미수집</span>
+      </div>
+
+      <button id="startButton" class="primary-button" type="button">체험 시작하기</button>
+      <button id="privacyOpen" class="text-button" type="button">AI·데이터 처리 안내 보기</button>
+    </section>
+
+    <section class="screen" data-step="MATERIAL" hidden aria-labelledby="materialTitle">
+      <p class="step-label">1 / 5 · 자료 읽기</p>
+      <h2 id="materialTitle">먼저, 역사 자료를 읽어보세요</h2>
+      <article class="material-card">
+        <p id="materialText"></p>
+      </article>
+      <p id="materialPrompt" class="guide-text"></p>
+      <button id="materialNext" class="primary-button" type="button">내 질문 쓰기</button>
+    </section>
+
+    <section class="screen" data-step="INITIAL" hidden aria-labelledby="initialTitle">
+      <p class="step-label">2 / 5 · 첫 질문</p>
+      <h2 id="initialTitle">내가 궁금한 것을 한 문장으로 써보세요</h2>
+      <p class="guide-text">모범 질문은 보여드리지 않습니다. 먼저 내 생각을 기록해 보세요.</p>
+      <label for="initialQuestion">첫 질문</label>
+      <textarea id="initialQuestion" rows="5" maxlength="150" placeholder="자료를 읽고 떠오른 질문을 적어보세요"></textarea>
+      <div class="field-meta">
+        <span id="initialError" class="field-error" role="alert"></span>
+        <span id="initialCount">0 / 150</span>
+      </div>
+      <p class="privacy-inline">개인정보(이름·이메일·전화번호·학교명)는 입력하지 마세요.</p>
+      <button id="analyzeInitial" class="primary-button" type="button" disabled>내 질문 분석하기</button>
+    </section>
+
+    <section class="screen" data-step="FEEDBACK" hidden aria-labelledby="feedbackTitle">
+      <p class="step-label">3 / 5 · 피드백</p>
+      <h2 id="feedbackTitle">질문의 다음 방향을 확인해 보세요</h2>
+      <div class="level-card">
+        <span class="card-kicker">현재 질문의 위치</span>
+        <strong id="initialLevel"></strong>
+        <p id="initialLevelDescription"></p>
+      </div>
+      <div class="feedback-grid">
+        <article class="feedback-card">
+          <span class="card-kicker">잘된 점</span>
+          <p id="strengthText"></p>
+        </article>
+        <article class="feedback-card">
+          <span class="card-kicker">더 생각할 점</span>
+          <p id="nextStepText"></p>
+        </article>
+        <article class="feedback-card hint-card">
+          <span class="card-kicker">다시 쓰기 힌트</span>
+          <p id="hintText"></p>
+        </article>
+      </div>
+      <p id="fallbackNote" class="fallback-note" hidden>기본 분석으로 안내했습니다. 질문을 다시 쓰는 체험은 계속할 수 있습니다.</p>
+      <button id="goRevision" class="primary-button" type="button">피드백을 반영해 다시 써보기</button>
+    </section>
+
+    <section class="screen" data-step="REVISION" hidden aria-labelledby="revisionTitle">
+      <p class="step-label">4 / 5 · 다시 쓰기</p>
+      <h2 id="revisionTitle">무엇을 더 분명하게 만들 수 있을까요?</h2>
+      <div class="original-box">
+        <span class="card-kicker">처음 질문</span>
+        <p id="originalQuestionView"></p>
+      </div>
+      <label for="revisedQuestion">수정 질문</label>
+      <textarea id="revisedQuestion" rows="5" maxlength="150" placeholder="피드백에서 고른 한 가지를 반영해 다시 써보세요."></textarea>
+      <div class="field-meta">
+        <span id="revisionError" class="field-error" role="alert"></span>
+        <span id="revisionCount">0 / 150</span>
+      </div>
+      <button id="analyzeRevision" class="primary-button" type="button" disabled>달라진 질문 확인하기</button>
+    </section>
+
+    <section class="screen" data-step="COMPARISON" hidden aria-labelledby="comparisonTitle">
+      <p class="step-label">5 / 5 · 전후 비교</p>
+      <h2 id="comparisonTitle">질문에 생각이 들어간 지점을 확인해 보세요</h2>
+      <div class="comparison-grid">
+        <article class="question-card before">
+          <span class="card-kicker">처음 질문</span>
+          <p id="compareOriginal"></p>
+          <span id="compareOriginalLevel" class="level-chip"></span>
+        </article>
+        <article class="question-card after">
+          <span class="card-kicker">수정 질문</span>
+          <p id="compareRevised"></p>
+          <span id="compareRevisedLevel" class="level-chip"></span>
+        </article>
+      </div>
+      <div id="changeTags" class="tag-list" aria-label="질문 변화"></div>
+      <article class="comparison-summary">
+        <span class="card-kicker">무엇이 달라졌나요?</span>
+        <p id="comparisonText"></p>
+        <p id="nextTryText" class="next-try"></p>
+      </article>
+      <button id="goResources" class="primary-button" type="button">수업 자료 가져가기</button>
+    </section>
+
+    <section class="screen" data-step="RESOURCES" hidden aria-labelledby="resourcesTitle">
+      <p class="eyebrow">교사용 자료</p>
+      <h2 id="resourcesTitle">내 수업으로 가져가세요</h2>
+      <p class="guide-text">Google Form은 별도의 교사용 문항 템플릿입니다. 체험에서 쓴 질문은 자동으로 전송되지 않습니다.</p>
+      <div id="resourceList" class="resource-list"></div>
+      <button id="restartButton" class="secondary-button" type="button">다시 체험하기</button>
+      <a class="text-button" href="/expo2026/#download">수업 전체 구조와 자료 보기</a>
+    </section>
+
+    <div id="loadingLayer" class="loading-layer" hidden aria-live="assertive" aria-busy="true">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loadingText">질문에서 탐구 대상을 찾고 있습니다.</p>
+    </div>
+  </main>
+
+  <dialog id="privacyDialog">
+    <div class="dialog-content">
+      <h2>AI·데이터 처리 안내</h2>
+      <p>현재 박람회 체험은 브라우저 안의 기본 규칙으로 피드백을 만듭니다.</p>
+      <p>작성한 질문은 외부 AI나 데이터베이스로 전송되지 않습니다.</p>
+      <p>탭을 닫으면 브라우저의 임시 체험 데이터도 사라집니다.</p>
+      <p>체험에서 작성한 질문은 교사용 Google Form으로 자동 전송되지 않습니다.</p>
+      <p><strong>개인정보를 질문에 입력하지 마세요.</strong></p>
+      <button id="privacyClose" class="primary-button" type="button">확인</button>
+    </div>
+  </dialog>
+
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
