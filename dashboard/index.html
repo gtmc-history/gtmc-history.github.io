@@ -276,6 +276,36 @@ footer a:hover { color: var(--gold-lt); }
 }
 .comment-class { color: var(--gold); font-weight: 500; }
 
+/* ── OPERATOR TOKEN ── */
+.token-dialog {
+  width: min(92vw, 430px); margin: auto; padding: 0;
+  border: 1px solid var(--gold-line); border-radius: 4px;
+  background: var(--ink-card); color: var(--text);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+.token-dialog::backdrop { background: rgba(3,5,8,0.82); backdrop-filter: blur(3px); }
+.token-form { padding: 1.8rem; }
+.token-title {
+  font-family: var(--font-serif); font-size: 1.15rem;
+  color: var(--gold-lt); margin-bottom: 0.65rem;
+}
+.token-help { color: var(--text-muted); font-size: 0.8rem; line-height: 1.7; margin-bottom: 1.1rem; }
+.token-input {
+  width: 100%; padding: 0.75rem 0.85rem;
+  background: #11151c; color: var(--text);
+  border: 1px solid var(--gold-line); border-radius: 3px;
+  font: 0.9rem var(--font-sans); outline: none;
+}
+.token-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,160,82,0.15); }
+.token-error { min-height: 1.3rem; margin-top: 0.55rem; color: #e8a0a0; font-size: 0.75rem; }
+.token-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.8rem; }
+.token-btn {
+  padding: 0.55rem 1rem; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--gold-line); font: 0.78rem var(--font-sans);
+}
+.token-btn-cancel { background: transparent; color: var(--text-muted); }
+.token-btn-submit { background: var(--gold-dim); color: var(--gold-lt); }
+
 @media (max-width: 600px) {
   header { flex-direction: column; align-items: flex-start; }
   .header-right { width: 100%; justify-content: space-between; }
@@ -286,6 +316,29 @@ footer a:hover { color: var(--gold-lt); }
 </style>
 </head>
 <body>
+
+<dialog class="token-dialog" id="dashboard-token-dialog" aria-labelledby="dashboard-token-title">
+  <form class="token-form" id="dashboard-token-form" autocomplete="off" novalidate>
+    <h2 class="token-title" id="dashboard-token-title">운영자 인증</h2>
+    <p class="token-help">운영자용 대시보드 토큰을 입력하세요. 토큰은 이 페이지의 메모리에만 유지되며 새로고침하면 사라집니다.</p>
+    <input
+      class="token-input"
+      id="dashboard-token-input"
+      type="password"
+      autocomplete="off"
+      autocapitalize="none"
+      spellcheck="false"
+      data-1p-ignore="true"
+      data-lpignore="true"
+      aria-label="대시보드 인증 토큰"
+    >
+    <p class="token-error" id="dashboard-token-error" aria-live="polite"></p>
+    <div class="token-actions">
+      <button class="token-btn token-btn-cancel" id="dashboard-token-cancel" type="button">취소</button>
+      <button class="token-btn token-btn-submit" type="submit">확인</button>
+    </div>
+  </form>
+</dialog>
 
 <header>
   <div>
@@ -349,8 +402,6 @@ footer a:hover { color: var(--gold-lt); }
 // 데이터 조회 — Edge Function 경유 (service_role 키는 서버 안에만 있음)
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
-const DASHBOARD_TOKEN = 'charlie-dashboard-2026';
-const EDGE_H          = { 'x-dashboard-token': DASHBOARD_TOKEN, 'Content-Type': 'application/json' };
 const FALLBACK_META = {
   gukchae1907: {
     game_id: 'gukchae1907',
@@ -376,18 +427,114 @@ let selGame    = null;
 let selClass   = 'all';
 let aiQuestions = null;
 let aiQuestionsKey = '';
+let dashboardToken = '';
+let tokenPromptPromise = null;
+let resolveTokenPrompt = null;
+let rejectTokenPrompt = null;
 
 // ═══════════════════════════════════════════════════
 // FETCH
 // ═══════════════════════════════════════════════════
+async function requestDashboardToken(message = '') {
+  if (dashboardToken) return dashboardToken;
+  if (tokenPromptPromise) return await tokenPromptPromise;
+
+  const dialog = document.getElementById('dashboard-token-dialog');
+  const input = document.getElementById('dashboard-token-input');
+  const error = document.getElementById('dashboard-token-error');
+  input.value = '';
+  error.textContent = message;
+
+  tokenPromptPromise = new Promise((resolve, reject) => {
+    resolveTokenPrompt = resolve;
+    rejectTokenPrompt = reject;
+  });
+
+  dialog.showModal();
+  requestAnimationFrame(() => input.focus());
+
+  try {
+    return await tokenPromptPromise;
+  } finally {
+    tokenPromptPromise = null;
+  }
+}
+
+function submitDashboardToken(event) {
+  event.preventDefault();
+  const dialog = document.getElementById('dashboard-token-dialog');
+  const input = document.getElementById('dashboard-token-input');
+  const error = document.getElementById('dashboard-token-error');
+  const token = input.value.trim();
+  input.value = '';
+
+  if (!token) {
+    error.textContent = '토큰을 입력해 주세요.';
+    input.focus();
+    return;
+  }
+
+  dashboardToken = token;
+  const resolve = resolveTokenPrompt;
+  resolveTokenPrompt = null;
+  rejectTokenPrompt = null;
+  dialog.close();
+  resolve?.(token);
+}
+
+function cancelDashboardToken() {
+  const dialog = document.getElementById('dashboard-token-dialog');
+  const input = document.getElementById('dashboard-token-input');
+  input.value = '';
+  const reject = rejectTokenPrompt;
+  resolveTokenPrompt = null;
+  rejectTokenPrompt = null;
+  if (dialog.open) dialog.close();
+  reject?.(new Error('운영자 인증 토큰 입력이 취소되었습니다.'));
+}
+
+function clearDashboardToken() {
+  dashboardToken = '';
+  document.getElementById('dashboard-token-input').value = '';
+}
+
+async function dashboardFetch(url, options = {}) {
+  let response;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const promptMessage = attempt === 0 ? '' : '토큰이 올바르지 않습니다. 다시 입력해 주세요.';
+    const token = await requestDashboardToken(promptMessage);
+    const headers = new Headers(options.headers || {});
+    headers.set('x-dashboard-token', token);
+    if (options.body != null && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    response = await fetch(url, { ...options, headers, cache: 'no-store' });
+    if (response.status !== 401) return response;
+    clearDashboardToken();
+  }
+
+  return response;
+}
+
+function dashboardResponseError(response, action) {
+  const messages = {
+    401: '인증 토큰을 확인해 주세요.',
+    403: '현재 페이지 origin은 대시보드 접근이 허용되지 않았습니다.',
+    503: '대시보드 서버 인증 환경이 설정되지 않았습니다.',
+  };
+  return new Error(`${action}: ${messages[response.status] || `HTTP ${response.status}`}`);
+}
+
 async function loadData() {
   const btn = document.getElementById('btn-refresh');
   btn.classList.add('spinning');
   showState('loading');
   try {
     // Edge Function 한 번 호출로 results + meta 동시에 받음
-    const res  = await fetch(EDGE_FN_URL, { headers: EDGE_H });
-    if (!res.ok) throw new Error('데이터 조회 실패: ' + res.status);
+    const res = await dashboardFetch(EDGE_FN_URL);
+    if (!res.ok) throw dashboardResponseError(res, '데이터 조회 실패');
     const { results, meta: metaRows } = await res.json();
 
     allResults = normalizeResults(Array.isArray(results) ? results : []);
@@ -1351,12 +1498,11 @@ async function generateAiQuestions() {
 
   try {
     const summary = buildAiSummary(rows, meta);
-    const res = await fetch(AI_QUESTIONS_URL, {
+    const res = await dashboardFetch(AI_QUESTIONS_URL, {
       method: 'POST',
-      headers: EDGE_H,
       body: JSON.stringify({ summary }),
     });
-    if (!res.ok) throw new Error(`AI 발문 생성 실패 (${res.status})`);
+    if (!res.ok) throw dashboardResponseError(res, 'AI 발문 생성 실패');
     const data = await res.json();
     aiQuestions = Array.isArray(data.questions) ? data.questions.slice(0, 4) : [];
     aiQuestionsKey = getAiKey(rows);
@@ -1509,6 +1655,13 @@ function fmtTime(iso) {
 }
 
 // ── INIT ──
+document.getElementById('dashboard-token-form').addEventListener('submit', submitDashboardToken);
+document.getElementById('dashboard-token-cancel').addEventListener('click', cancelDashboardToken);
+document.getElementById('dashboard-token-dialog').addEventListener('cancel', event => {
+  event.preventDefault();
+  cancelDashboardToken();
+});
+window.addEventListener('pagehide', clearDashboardToken);
 loadData();
 </script>
 </body>
