@@ -30,8 +30,14 @@
   .hah .flow em{font-style:normal;color:#9FB2CC}
   .hah .h{background:#fff;color:var(--navy)} .hah .a{background:var(--sky);color:var(--navy)}
   .hah .cap{display:block;margin-top:10px;font-size:13px;color:#C9D7E8}
-  .cta{display:inline-block;margin-top:24px;background:#fff;color:var(--navy);font-weight:700;font-size:14px;text-decoration:none;padding:11px 20px;border-radius:999px}
-  .cta:hover,.cta:focus-visible{background:var(--sky-soft)}
+  .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:24px}
+  .cta{display:inline-flex;align-items:center;justify-content:center;min-height:46px;color:var(--navy);font-weight:700;font-size:14px;text-align:center;text-decoration:none;padding:10px 20px;border:2px solid transparent;border-radius:999px;overflow-wrap:anywhere}
+  .cta-primary{background:#fff}
+  .cta-primary:hover{background:var(--sky-soft)}
+  .cta-secondary{background:transparent;border-color:rgba(255,255,255,.5);color:#E4EEF8;font-weight:600}
+  .cta-secondary:hover{background:rgba(255,255,255,.1)}
+  .cta:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  .hero .cta-note{flex-basis:100%;margin-top:0;color:#B8C9DD;font-size:12.5px}
   main{padding:40px 24px 24px}
   section{margin-bottom:40px;scroll-margin-top:20px}
   h2{font-family:"KERIS BAEUM B","케리스 배움체 B","Pretendard",sans-serif;font-size:19px;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -67,6 +73,8 @@
   footer a{color:#C9D7E8}
   @media (max-width:520px){
     .hero{padding:44px 18px 36px}
+    .hero-actions{flex-direction:column;align-items:stretch}
+    .cta{width:100%;padding:11px 16px}
     main{padding:30px 16px 16px}
     ol.steps{grid-template-columns:1fr}
     ul.files a{padding:13px 14px;gap:10px}
@@ -93,9 +101,13 @@
     <p>학기 내내 만들고 고친 질문이 포트폴리오로 쌓이고, 그중 하나가 탐구보고서로 완결됩니다.</p>
     <div class="hah">
       <div class="flow"><span class="h">사람</span><em>→</em><span class="a">AI</span><em>→</em><span class="h">사람</span></div>
-      <span class="cap">학생이 질문을 시작하고, AI가 단서를 제공하며, 학생이 근거를 바탕으로 판단을 완성합니다</span>
+      <span class="cap">학생이 질문을 시작하고, AI가 질문의 방향을 되돌려주며, 학생이 근거를 바탕으로 판단을 완성합니다</span>
     </div>
-    <a class="cta" href="#download">자료 바로 받기 ↓</a>
+    <div class="hero-actions" aria-label="주요 메뉴">
+      <a class="cta cta-primary" href="#download">수업 자료 바로 받기</a>
+      <a class="cta cta-secondary" href="/question-demo/?source=conference2026">질문 성장 3분 체험하기</a>
+      <p class="cta-note">실제 3차시 수업 중 첫 질문–피드백–다시 쓰기–변화 확인 구간을 3분으로 압축했습니다.</p>
+    </div>
   </div>
 </header>
 <main class="wrap">
@@ -108,7 +120,7 @@
       <span>고등학교 1학년</span>
       <span>질문 포트폴리오 10점 · 수업 후반 10분</span>
       <span>탐구보고서 20점 · 1차시</span>
-      <span>질문 승인선 2.0점 · 재제출 무제한</span>
+      <span>피드백 확인 후 수정·재제출</span>
     </div>
   </section>
 
@@ -125,11 +137,11 @@
   <section id="download">
     <h2>바로 쓰는 자료 <span class="tag">내려받기</span></h2>
     <ul class="files">
+      <li><a href="https://docs.google.com/forms/d/1hUo8ne2wNl15irOWx90WElV4d-BVKpudFBBuz-FsJqU/copy" target="_blank" rel="noopener noreferrer"><span><span class="name">교사용 질문 포트폴리오 설문 템플릿</span><span class="desc">Google Form 사본을 내 드라이브에 저장한 뒤 단원과 문항을 수정해 활용합니다.</span></span><span class="type">FORM</span></a></li>
       <li><a href="./질문탐구활동지.pdf"><span><span class="name">질문 탐구 활동지</span><span class="desc">질문 만들기 · 레벨 확인 · AI 탐구와 교과서 대조 · 성찰 — 학기 내내 반복하는 한 장 서식</span></span><span class="type">PDF</span></a><a class="alt" href="./질문탐구활동지.docx">DOCX 편집용 내려받기</a></li>
       <li><a href="./질문프레임카드_4종_콘퍼런스에디션.pdf"><span><span class="name">질문 프레임 카드 4종</span><span class="desc">원인·이유 / 비교·평가 / 만약에 / 현재 연결 — 앞면 질문 틀과 제출 전 점검, 뒷면 실제 수정 사례와 교사 팁 · A5 인쇄용</span></span><span class="type">PDF</span></a></li>
       <li><a href="./질문탐구보고서_양식.pdf"><span><span class="name">질문 탐구보고서 양식</span><span class="desc">질문 · 자료 수집과 사료 분석 · 전개와 결론 · AI 활용 기록 · 성찰 — 양식이 곧 루브릭</span></span><span class="type">PDF</span></a><a class="alt" href="./질문탐구보고서_양식.docx">DOCX 편집용 내려받기</a></li>
     </ul>
-    <div class="note"><strong>발표 슬라이드는 파일로 배포하지 않습니다.</strong> 학생의 활동 장면과 산출물이 포함되어 있어 현장 발표에서만 사용합니다. 수업을 재현하는 데 필요한 서식은 위 세 가지로 모두 제공합니다.</div>
   </section>
 
   <section>
