@@ -1,14 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import {
+  dashboardJson,
+  guardDashboardRequest,
+} from "../_shared/dashboard-security.ts";
 
-const DASHBOARD_TOKEN = Deno.env.get("DASHBOARD_TOKEN") || "charlie-dashboard-2026";
 const PROJECT_URL = Deno.env.get("SUPABASE_URL") || "https://xgniwztlrakkrbzcfklb.supabase.co";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-dashboard-token",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
 
 type MetaRow = {
   game_id: string;
@@ -49,20 +46,17 @@ const FALLBACK_META: MetaRow[] = [
   },
 ];
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
-  });
-}
-
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+  const guard = await guardDashboardRequest(req, ["GET"]);
+  if (!guard.ok) return guard.response;
 
-  const token = req.headers.get("x-dashboard-token");
-  if (token !== DASHBOARD_TOKEN) return json({ error: "unauthorized" }, 401);
-  if (!SERVICE_ROLE_KEY) return json({ error: "service_role_key_missing" }, 500);
+  if (!SERVICE_ROLE_KEY) {
+    return dashboardJson(
+      { error: "service_role_key_missing" },
+      500,
+      guard.headers,
+    );
+  }
 
   try {
     const [results, meta] = await Promise.all([
@@ -70,14 +64,24 @@ Deno.serve(async (req: Request) => {
       fetchTable("game_meta", "select=*"),
     ]);
 
-    return json({
-      results: Array.isArray(results) ? normalizeResults(results as ResultRow[]) : [],
-      meta: mergeFallbackMeta(Array.isArray(meta) ? meta : []),
-    });
+    return dashboardJson(
+      {
+        results: Array.isArray(results)
+          ? normalizeResults(results as ResultRow[])
+          : [],
+        meta: mergeFallbackMeta(Array.isArray(meta) ? meta : []),
+      },
+      200,
+      guard.headers,
+    );
   } catch (error) {
     console.error(error);
     const detail = error instanceof Error ? error.message : String(error);
-    return json({ error: "dashboard_data_failed", detail }, 500);
+    return dashboardJson(
+      { error: "dashboard_data_failed", detail },
+      500,
+      guard.headers,
+    );
   }
 });
 

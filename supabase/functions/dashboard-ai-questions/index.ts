@@ -1,11 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
-const DASHBOARD_TOKEN = "charlie-dashboard-2026";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-dashboard-token",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import {
+  dashboardJson,
+  guardDashboardRequest,
+} from "../_shared/dashboard-security.ts";
 
 type Summary = {
   game?: string;
@@ -19,13 +16,6 @@ type Summary = {
   commentsCount?: number;
   commentSignal?: string;
 };
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
-  });
-}
 
 function sanitizeSummary(summary: Summary) {
   return {
@@ -77,22 +67,23 @@ function fallbackQuestion(summary: ReturnType<typeof sanitizeSummary>) {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-
-  const token = req.headers.get("x-dashboard-token");
-  if (token !== DASHBOARD_TOKEN) return json({ error: "unauthorized" }, 401);
+  const guard = await guardDashboardRequest(req, ["POST"]);
+  if (!guard.ok) return guard.response;
 
   let payload: { summary?: Summary };
   try {
     payload = await req.json();
   } catch {
-    return json({ error: "invalid_json" }, 400);
+    return dashboardJson({ error: "invalid_json" }, 400, guard.headers);
   }
 
   const summary = sanitizeSummary(payload.summary || {});
   if (!summary.game || !summary.total) {
-    return json({ questions: fallbackQuestion(summary), source: "fallback" });
+    return dashboardJson(
+      { questions: fallbackQuestion(summary), source: "fallback" },
+      200,
+      guard.headers,
+    );
   }
 
   const provider = (Deno.env.get("AI_PROVIDER") || "gemini").toLowerCase();
@@ -123,11 +114,19 @@ ${JSON.stringify(summary, null, 2)}
       ? parsed.questions.slice(0, 4)
       : fallbackQuestion(summary);
 
-    return json({ questions, source: provider === "openai" ? "openai" : "gemini" });
+    return dashboardJson(
+      { questions, source: provider === "openai" ? "openai" : "gemini" },
+      200,
+      guard.headers,
+    );
   } catch (error) {
     console.error(error);
     const warning = error instanceof Error ? error.message : String(error);
-    return json({ questions: fallbackQuestion(summary), source: "fallback", warning });
+    return dashboardJson(
+      { questions: fallbackQuestion(summary), source: "fallback", warning },
+      200,
+      guard.headers,
+    );
   }
 });
 
