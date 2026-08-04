@@ -1,0 +1,18 @@
+{
+  "contentId": "demo-uibyeong-01",
+  "title": "1907년 대한제국 군대 해산과 정미의병",
+  "material": "1907년 일제는 고종을 강제로 퇴위시키고 한일 신협약을 체결한 뒤 대한제국 군대를 해산하였다. 해산 군인 일부는 무기를 들고 의병에 합류하였다.",
+  "prompt": "이 자료를 읽고 더 알아보고 싶은 점을 질문 한 문장으로 작성해 보세요.",
+  "keywords": ["1907", "일제", "고종", "한일 신협약", "대한제국", "군대", "해산", "군인", "의병", "정미의병"],
+  "sourceLabels": {
+    "expo2026": "천재교육박람회",
+    "conference2026": "컨퍼런스"
+  },
+  "resources": [
+    {"id":"form", "title":"교사용 Google 설문 템플릿", "description":"질문 제출 문항 사본", "url":"#"},
+    {"id":"frame", "title":"질문 프레임 카드", "description":"질문을 시작하는 네 가지 프레임", "url":"#"},
+    {"id":"worksheet", "title":"질문 탐구 활동지", "description":"첫 질문과 수정 질문 기록", "url":"#"},
+    {"id":"report", "title":"질문 탐구 보고서", "description":"탐구 결과와 성찰 양식", "url":"#"},
+    {"id":"structure", "title":"수업 운영 구조", "description":"질문-피드백-재작성 흐름", "url":"#"}
+  ]
+}
