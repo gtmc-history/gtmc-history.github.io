@@ -10,10 +10,11 @@ const env = new Map([
 ]);
 globalThis.Deno = { env: { get: (key) => env.get(key) } };
 
-const [{ default: handler }, rules, anthropic] = await Promise.all([
+const [{ default: handler }, rules, anthropic, security] = await Promise.all([
   import("./index.ts"),
   import("../_shared/rules.ts"),
   import("../_shared/anthropic.ts"),
+  import("../_shared/security.ts"),
 ]);
 
 const QUESTION_CASES = [
@@ -43,7 +44,7 @@ function claudeOutput(overrides = {}) {
     features: BASE_FEATURES,
     strength: "자료의 구체적 사실에 주목했습니다.",
     nextStep: "선택의 이유나 이후 영향으로 범위를 넓혀 보세요.",
-    rewriteHint: "선택 이유 또는 이후 영향",
+    rewriteHint: "선택 이유 · 이후 영향",
     changeTags: [],
     comparison: "",
     safety: { containsAnswer: false, containsFullRewrite: false },
@@ -118,6 +119,9 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     assert.equal(sentBody.model, "claude-haiku-4-5-20251001");
     assert.equal(sentBody.output_config.format.type, "json_schema");
     assert.deepEqual(sentBody.output_config.format.schema, anthropic.CLAUDE_OUTPUT_SCHEMA);
+    assert.equal(sentBody.output_config.format.schema.properties.rewriteHint.maxLength, 40);
+    assert.match(sentBody.system, /반드시 공백을 포함한 ' · '로 구분/);
+    assert.match(sentBody.system, /사용자 질문을 그대로 복사하거나 조금만 바꿔 쓰지 않는다/);
     assert.match(sentBody.messages[0].content, /1907년 일제는 고종을 강제로 퇴위/);
     assert.doesNotMatch(sentBody.messages[0].content, /악성 클라이언트 자료/);
     for (const [question] of QUESTION_CASES) assert.match(sentBody.system, new RegExp(question.replace(/[?]/g, "\\?")));
@@ -130,6 +134,48 @@ test("analyze-question Claude contract and fallback regressions", async (t) => {
     assert.equal(result.data.fallbackUsed, true);
     assert.equal(result.data.ruleEngine, rules.PROVISIONAL_RULE_ENGINE_ID);
     assert.equal(result.data.diagnosticCode, "ANTHROPIC_UNSAFE_OUTPUT");
+    assert.equal(result.data.rewriteHint, "합류 이유 · 합류 이후의 변화");
+  });
+
+  await t.test("blocks the observed quoted full-question rewriteHint even when Claude safety is false", async () => {
+    const observed = "'왜 그곳으로 갔는가', '그들의 선택 배경은 무엇인가' 같은 원인 또는 동기 요소를 추가";
+    const captured = await captureConsoleError(() => callEndpoint(async () => claudeResponse(claudeOutput({
+      rewriteHint: observed,
+      safety: { containsAnswer: false, containsFullRewrite: false },
+    }))));
+    assert.equal(captured.value.data.fallbackUsed, true);
+    assert.equal(captured.value.data.diagnosticCode, "ANTHROPIC_UNSAFE_OUTPUT");
+    assert.equal(captured.value.data.rewriteHint, "합류 이유 · 합류 이후의 변화");
+    assert.doesNotMatch(JSON.stringify(captured.value.data), new RegExp(observed));
+  });
+
+  await t.test("accepts a short noun-phrase rewriteHint", async () => {
+    const result = await callEndpoint(async () => claudeResponse(claudeOutput({
+      rewriteHint: "합류 이유 · 선택 배경",
+      safety: { containsAnswer: false, containsFullRewrite: false },
+    })));
+    assert.equal(result.data.fallbackUsed, false);
+    assert.equal(result.data.rewriteHint, "합류 이유 · 선택 배경");
+    assert.equal(Object.hasOwn(result.data, "diagnosticCode"), false);
+  });
+
+  await t.test("rewriteHint validator rejects punctuation, endings, quotes, length, sentences, and question copies", () => {
+    const question = "해산된 군인은 어디로 갔을까?";
+    assert.equal(security.isSafeRewriteHint("합류 이유 · 선택 배경", question), true);
+    for (const invalid of [
+      "합류 이유?",
+      "왜 그곳으로 갔는가",
+      "그들의 선택 배경은 무엇인가",
+      "'왜 그곳으로 갔는가'",
+      "가".repeat(41),
+      "합류 이유. 이후 변화를 살펴본다",
+      question,
+      "해산된 군인은 어디로 감",
+      "합류 이유·선택 배경",
+      "합류 이유 · 선택 배경 · 이후 변화 · 판단 근거",
+    ]) {
+      assert.equal(security.isSafeRewriteHint(invalid, question), false, invalid);
+    }
   });
 
   await t.test("blocks an historical answer", async () => {

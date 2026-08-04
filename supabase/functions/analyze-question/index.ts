@@ -68,7 +68,7 @@ export default {
           question,
           originalQuestion: stage === "revision" ? originalQuestion : undefined,
         });
-        const safety = validateClaudeSafety(ai, content.blockedAnswerPhrases);
+        const safety = validateClaudeSafety(ai, content.blockedAnswerPhrases, question);
         if (!safety.ok) throw new Error(safety.code);
 
         if (stage === "initial") {
@@ -86,7 +86,7 @@ export default {
             initialLevelLabel: before.levelLabel,
             revisedLevelCode: ai.levelCode,
             revisedLevelLabel: ai.levelLabel,
-            nextTry: clip(ai.rewriteHint, 120),
+            nextTry: clip(ai.rewriteHint, 40),
             fallbackUsed: false,
           };
         }
@@ -108,6 +108,7 @@ export default {
             levelLabel: rules.levelLabel,
             features: rules.features,
             ...rules.fallback,
+            rewriteHint: fallbackRewriteHint(rules.levelCode),
             changeTags: [],
             comparison: "",
             safety: { containsAnswer: false, containsFullRewrite: false },
@@ -125,6 +126,7 @@ export default {
             levelLabel: after.levelLabel,
             features: after.features,
             ...after.fallback,
+            rewriteHint: fallbackRewriteHint(after.levelCode),
             safety: { containsAnswer: false, containsFullRewrite: false },
             ...comparison,
             initialLevelCode: before.levelCode,
@@ -164,11 +166,20 @@ function clipAnalysis(ai: ClaudeAnalysis) {
     features: ai.features,
     strength: clip(ai.strength, 120),
     nextStep: clip(ai.nextStep, 140),
-    rewriteHint: clip(ai.rewriteHint, 120),
+    rewriteHint: clip(ai.rewriteHint, 40),
     changeTags: ai.changeTags.map((tag) => clip(tag, 30)).filter(Boolean).slice(0, 4),
     comparison: clip(ai.comparison, 240),
     safety: ai.safety,
   };
+}
+
+function fallbackRewriteHint(levelCode: string) {
+  const hints: Record<string, string> = {
+    L1: "합류 이유 · 합류 이후의 변화",
+    L2: "행위자 · 조건 · 영향 범위",
+    L3: "비교 기준 · 자료 근거 · 관점",
+  };
+  return hints[levelCode] ?? hints.L1;
 }
 
 function clip(value: unknown, max: number) {

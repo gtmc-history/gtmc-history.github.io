@@ -106,7 +106,11 @@ export const CLAUDE_OUTPUT_SCHEMA = {
     },
     strength: { type: "string", description: "질문의 강점 한 문장. 역사 정답을 포함하지 않는다." },
     nextStep: { type: "string", description: "다음 탐구 방향 한 문장. 완성 질문을 대신 쓰지 않는다." },
-    rewriteHint: { type: "string", description: "핵심어 또는 문장 요소만 제시한다. 완성 질문을 쓰지 않는다." },
+    rewriteHint: {
+      type: "string",
+      maxLength: 40,
+      description: "40자 이내의 명사구 또는 짧은 탐구 요소 1~3개. 여러 요소는 정확히 ' · '로 구분한다. 물음표, 따옴표, 문장 종결 표현, 완성 의문문을 포함하지 않는다.",
+    },
     changeTags: { type: "array", items: { type: "string" }, description: "수정 단계의 변화 태그. 최초 질문이면 빈 배열." },
     comparison: { type: "string", description: "수정 단계의 전후 변화 설명. 최초 질문이면 빈 문자열." },
     safety: {
@@ -152,7 +156,13 @@ export const CLAUDE_SYSTEM_PROMPT = `당신은 고등학교 한국사 질문 코
 안전 규칙:
 - 역사 정답이나 해설을 반환하지 않는다.
 - 사용자를 대신한 완성 질문을 반환하지 않는다.
-- rewriteHint는 핵심어·조건·관점 같은 요소만 제시한다.
+- rewriteHint는 전체 40자 이내의 명사구 또는 짧은 탐구 요소 1~3개만 쓴다.
+- rewriteHint의 여러 요소는 반드시 공백을 포함한 ' · '로 구분한다.
+- rewriteHint에 물음표, 따옴표, 여러 문장, 문장 종결 표현을 쓰지 않는다.
+- rewriteHint에 '왜 ~했는가', '무엇인가', '어떻게 달라졌는가' 같은 완성형 의문문을 쓰지 않는다.
+- rewriteHint에 사용자 질문을 그대로 복사하거나 조금만 바꿔 쓰지 않는다.
+- 허용 예: '합류 이유 · 이후 변화', '선택 배경 · 의병 운동에 미친 영향', '두 사건의 영향 비교 · 판단 근거'.
+- 금지 예: '왜 그곳으로 갔는가', '그들의 선택 배경은 무엇인가'.
 - containsAnswer와 containsFullRewrite를 보수적으로 판정한다.
 - 질문 원문을 그대로 반복하지 않는다.
 - 지정된 JSON Schema만 반환한다.`;
