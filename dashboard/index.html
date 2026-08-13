@@ -375,6 +375,7 @@ footer a:hover { color: var(--gold-lt); }
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-btn-charts" onclick="switchTab('charts')">📊 선택 분포</button>
       <button class="tab-btn" id="tab-btn-comments" onclick="switchTab('comments')">💬 학생 소감 <span class="tab-badge" id="comment-badge"></span></button>
+      <button class="tab-btn" id="tab-btn-walls" onclick="switchTab('walls')">📌 벽보 관리</button>
     </div>
     <div id="tab-charts" style="padding-top:1.5rem">
       <div class="chart-grid" id="chart-grid"></div>
@@ -387,6 +388,9 @@ footer a:hover { color: var(--gold-lt); }
     <div id="tab-comments" style="display:none;padding-top:1.5rem">
       <div class="comment-list" id="comment-list"></div>
     </div>
+    <div id="tab-walls" style="display:none;padding-top:1.5rem">
+      <section id="wall-tab"></section>
+    </div>
   </div>
 </div>
 
@@ -395,6 +399,7 @@ footer a:hover { color: var(--gold-lt); }
   &nbsp;·&nbsp; 찰리쌤의 한국사 게임실 &nbsp;·&nbsp; 교사 전용
 </footer>
 
+<script src="/games/dashboard/wall-manager.js"></script>
 <script>
 // ═══════════════════════════════════════════════════
 // CONFIG
@@ -403,6 +408,15 @@ footer a:hover { color: var(--gold-lt); }
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const FALLBACK_META = {
+  geunal1945: {
+    game_id: 'geunal1945',
+    label: '그날, 아무도 몰랐다 — 1945',
+    era: '일제강점기',
+    axes: [],
+    scenes: [],
+    sliders: [],
+    endings: [],
+  },
   gukchae1907: {
     game_id: 'gukchae1907',
     label: '대한신문 1907',
@@ -431,6 +445,7 @@ let dashboardToken = '';
 let tokenPromptPromise = null;
 let resolveTokenPrompt = null;
 let rejectTokenPrompt = null;
+let wallManagerMounted = false;
 
 // ═══════════════════════════════════════════════════
 // FETCH
@@ -587,8 +602,18 @@ function selG(g) {
 function switchTab(tab) {
   document.getElementById('tab-btn-charts').classList.toggle('active', tab === 'charts');
   document.getElementById('tab-btn-comments').classList.toggle('active', tab === 'comments');
+  document.getElementById('tab-btn-walls').classList.toggle('active', tab === 'walls');
   document.getElementById('tab-charts').style.display   = tab === 'charts'   ? '' : 'none';
   document.getElementById('tab-comments').style.display = tab === 'comments' ? '' : 'none';
+  document.getElementById('tab-walls').style.display = tab === 'walls' ? '' : 'none';
+  if (tab === 'walls' && !wallManagerMounted) {
+    if (!window.GeunalWallManager) {
+      document.getElementById('wall-tab').textContent = '벽보 관리 모듈을 불러오지 못했습니다.';
+      return;
+    }
+    window.GeunalWallManager.mount('#wall-tab');
+    wallManagerMounted = true;
+  }
 }
 function selC(c) {
   selClass = c;
@@ -599,6 +624,11 @@ function selC(c) {
 
 function getRows() {
   return allResults.filter(r => r.game === selGame && (selClass === 'all' || r.class === selClass));
+}
+
+function getAnalysisRows(rows = getRows()) {
+  if (selGame !== 'geunal1945') return rows;
+  return rows.filter(r => !(r.comment || '').trim());
 }
 
 function normalizeResults(rows) {
@@ -654,21 +684,22 @@ function mergeAttemptRows(a, b) {
 // RENDER
 // ═══════════════════════════════════════════════════
 function render() {
-  const rows = getRows();
-  if (rows.length === 0) { showState('empty'); return; }
+  const scopedRows = getRows();
+  if (scopedRows.length === 0) { showState('empty'); return; }
+  const rows = getAnalysisRows(scopedRows);
   showState('dashboard');
   const meta = allMeta[selGame] || {};
-  renderSummary(rows, meta);
+  renderSummary(rows, meta, scopedRows);
   renderCharts(rows, meta);
-  renderComments(rows);
+  renderComments(scopedRows);
   renderQuestions(rows, meta);
 }
 
-function renderSummary(rows, meta) {
+function renderSummary(rows, meta, scopedRows = rows) {
   const total   = rows.length;
   const classes = [...new Set(rows.map(r => r.class).filter(c => c && c !== '미입력'))];
-  const withCmt = rows.filter(r => r.comment && r.comment.trim()).length;
-  const lastDate = new Date(rows[0].timestamp).toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
+  const withCmt = scopedRows.filter(r => r.comment && r.comment.trim()).length;
+  const lastDate = new Date((rows[0] || scopedRows[0]).timestamp).toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
   document.getElementById('summary-row').innerHTML = `
     <div class="s-card"><span class="s-label">플레이 인원</span><div class="s-val">${total}</div><div class="s-sub">명</div></div>
     <div class="s-card"><span class="s-label">참여 반</span><div class="s-val">${selClass==='all'?classes.length:1}</div>
@@ -1488,7 +1519,7 @@ function topChoice(counts, defs) {
 }
 
 async function generateAiQuestions() {
-  const rows = getRows();
+  const rows = getAnalysisRows();
   const meta = allMeta[selGame] || {};
   const btn = document.getElementById('btn-ai-questions');
   if (!rows.length || !btn) return;
