@@ -32,6 +32,15 @@ type ResultRow = {
 
 const FALLBACK_META: MetaRow[] = [
   {
+    game_id: "haebang1945",
+    label: "도둑같이 온 해방 — 1945",
+    era: "일제강점기",
+    axes: [],
+    scenes: [],
+    sliders: [],
+    endings: [],
+  },
+  {
     game_id: "gukchae1907",
     label: "대한신문 1907",
     era: "경제 구국 · 1907",

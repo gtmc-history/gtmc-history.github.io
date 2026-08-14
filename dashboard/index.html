@@ -219,6 +219,15 @@ h1 {
 .slider-val { font-size: 0.86rem; font-weight: 700; color: var(--gold-lt); min-width: 32px; text-align: right; }
 .slider-note { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.6rem; }
 
+/* ── ATTEMPT DETAIL ── */
+.attempt-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.attempt-item { padding: 0.85rem 0; border-top: 1px solid var(--gold-line); }
+.attempt-item:first-child { padding-top: 0; border-top: 0; }
+.attempt-head { display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.55rem; font-size: 0.72rem; color: var(--text-muted); }
+.attempt-rounds { display: grid; gap: 0.42rem; }
+.attempt-round { font-size: 0.78rem; line-height: 1.55; color: var(--text); }
+.attempt-round strong { color: var(--gold-lt); font-weight: 600; margin-right: 0.35rem; }
+
 /* ── COMMENTS ── */
 .comment-list { display: flex; flex-direction: column; gap: 0.55rem; }
 .comment-item {
@@ -408,6 +417,15 @@ footer a:hover { color: var(--gold-lt); }
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const FALLBACK_META = {
+  haebang1945: {
+    game_id: 'haebang1945',
+    label: '도둑같이 온 해방 — 1945',
+    era: '일제강점기',
+    axes: [],
+    scenes: [],
+    sliders: [],
+    endings: [],
+  },
   geunal1945: {
     game_id: 'geunal1945',
     label: '그날, 아무도 몰랐다 — 1945',
@@ -627,8 +645,9 @@ function getRows() {
 }
 
 function getAnalysisRows(rows = getRows()) {
-  if (selGame !== 'geunal1945') return rows;
-  return rows.filter(r => !(r.comment || '').trim());
+  if (selGame === 'haebang1945') return rows.filter(isHaebangResultRow);
+  if (selGame === 'geunal1945') return rows.filter(r => !(r.comment || '').trim());
+  return rows;
 }
 
 function normalizeResults(rows) {
@@ -717,6 +736,7 @@ function renderCharts(rows, meta) {
 
   const hasEuibyeong = isEuibyeongRows(rows, meta);
   const hasGukchae = isGukchaeRows(rows, meta);
+  const hasHaebang = isHaebangRows(rows, meta);
 
   // 사료판단 게임: choices 값이 pos/neg/hold이고 axes에 color 없음
   const hasSrcCards = meta.axes && meta.axes.length > 0 &&
@@ -729,6 +749,10 @@ function renderCharts(rows, meta) {
   const hasSliders = meta.sliders && meta.sliders.length > 0;
   const hasEnding  = rows.some(r => r.choices?.ending);
 
+  if (hasHaebang) {
+    buildHaebangCards(rows, meta).forEach(card => grid.appendChild(card));
+    return;
+  }
   if (hasEuibyeong) {
     buildEuibyeongCards(rows, meta).forEach(card => grid.appendChild(card));
     return;
@@ -743,6 +767,105 @@ function renderCharts(rows, meta) {
   if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
   if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
   if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// 도둑같이 온 해방 — choices: {record_type:'result', r1..r4:{path,judge}}
+const HAEBANG_ROUNDS = ['8월 15일 정오', '8월 15일 오후', '8월 15일 저녁', '8월 16일'];
+const HAEBANG_PATHS = {
+  radio: '라디오',
+  paper: '신문',
+  street: '거리',
+  rumor: '입소문',
+};
+const HAEBANG_SPOKEN = {
+  1: '“아직은… 무슨 일인지 잘 모르겠어.”',
+  2: '“전쟁에 큰 변화가 생긴 것 같아.”',
+  3: '“일본이… 진 것 같아.”',
+  4: '“우리도 이제 일본의 지배에서 벗어날 가능성이 큰 것 같아.”',
+};
+
+function isHaebangResultRow(row) {
+  const choices = row?.choices || {};
+  if (choices.record_type === 'comment') return false;
+  return choices.record_type === 'result' || HAEBANG_ROUNDS.some((_, i) => choices[`r${i + 1}`]);
+}
+
+function isHaebangRows(rows, meta) {
+  return meta?.game_id === 'haebang1945' ||
+    rows.some(r => r.game === 'haebang1945' || isHaebangResultRow(r));
+}
+
+function buildHaebangCards(rows, meta) {
+  return [
+    buildHaebangPathCard(rows, meta),
+    buildHaebangSpokenCard(rows, meta),
+    buildHaebangAttemptCard(rows, meta),
+  ];
+}
+
+function buildHaebangPathCard(rows, meta) {
+  const total = rows.length;
+  const entries = Object.entries(HAEBANG_PATHS);
+  const card = mkCard(meta.label || '도둑같이 온 해방 — 1945', '라운드별 정보 경로');
+  card.innerHTML += HAEBANG_ROUNDS.map((round, ri) => `
+    <div class="bar-item" style="margin-bottom:1.2rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">R${ri + 1} · ${round}</div>
+      ${entries.map(([key, label], pi) => {
+        const count = rows.filter(r => r.choices?.[`r${ri + 1}`]?.path === key).length;
+        const pct = total ? Math.round(count / total * 100) : 0;
+        const color = ['c-gold', 'c-blue', 'c-jade', 'c-amber'][pi];
+        return `<div class="bar-row"><span class="bar-label">${label}</span><div class="bar-right"><span class="bar-pct pct-${color}">${pct}%</span><span class="bar-count">${count}명</span></div></div>
+          <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${color}" id="hb_path_${ri}_${pi}" style="width:0%"></div></div>`;
+      }).join('')}
+    </div>`).join('') + `<div class="slider-note">학생이 각 시점에 확인한 정보 경로 · 결과 ${total}건</div>`;
+
+  raf(() => HAEBANG_ROUNDS.forEach((_, ri) => entries.forEach(([key], pi) => {
+    const count = rows.filter(r => r.choices?.[`r${ri + 1}`]?.path === key).length;
+    setW(`hb_path_${ri}_${pi}`, total ? Math.round(count / total * 100) : 0);
+  })));
+  return card;
+}
+
+function buildHaebangSpokenCard(rows, meta) {
+  const total = rows.length;
+  const entries = Object.entries(HAEBANG_SPOKEN);
+  const card = mkCard(meta.label || '도둑같이 온 해방 — 1945', '라운드별 동생에게 한 말');
+  card.innerHTML += HAEBANG_ROUNDS.map((round, ri) => `
+    <div class="bar-item" style="margin-bottom:1.2rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">R${ri + 1} · ${round}</div>
+      ${entries.map(([judge, statement], ji) => {
+        const count = rows.filter(r => Number(r.choices?.[`r${ri + 1}`]?.judge) === Number(judge)).length;
+        const pct = total ? Math.round(count / total * 100) : 0;
+        const color = ['c-muted', 'c-blue', 'c-amber', 'c-jade'][ji];
+        return `<div class="bar-row"><span class="bar-label" style="font-size:0.76rem">${statement}</span><div class="bar-right"><span class="bar-pct pct-${color}">${pct}%</span><span class="bar-count">${count}명</span></div></div>
+          <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${color}" id="hb_spoken_${ri}_${ji}" style="width:0%"></div></div>`;
+      }).join('')}
+    </div>`).join('') + `<div class="slider-note">숫자 판단값을 학생에게 노출하지 않고 실제 발화문으로 집계합니다.</div>`;
+
+  raf(() => HAEBANG_ROUNDS.forEach((_, ri) => entries.forEach(([judge], ji) => {
+    const count = rows.filter(r => Number(r.choices?.[`r${ri + 1}`]?.judge) === Number(judge)).length;
+    setW(`hb_spoken_${ri}_${ji}`, total ? Math.round(count / total * 100) : 0);
+  })));
+  return card;
+}
+
+function buildHaebangAttemptCard(rows, meta) {
+  const recent = [...rows]
+    .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+    .slice(0, 20);
+  const card = mkCard(meta.label || '도둑같이 온 해방 — 1945', '개별 판단 경로');
+  card.innerHTML += recent.length ? `<div class="attempt-list">${recent.map(row => {
+    const className = row.class && row.class !== '미입력' ? `${esc(String(row.class))}반` : '반 미입력';
+    const rounds = HAEBANG_ROUNDS.map((round, ri) => {
+      const choice = row.choices?.[`r${ri + 1}`] || {};
+      const path = HAEBANG_PATHS[choice.path] || '경로 미확인';
+      const spoken = HAEBANG_SPOKEN[Number(choice.judge)] || '발화 미확인';
+      return `<div class="attempt-round"><strong>R${ri + 1}</strong>${round} · ${path} · ${spoken}</div>`;
+    }).join('');
+    return `<div class="attempt-item"><div class="attempt-head"><span>${className}</span><span>${fmtTime(row.timestamp)}</span></div><div class="attempt-rounds">${rounds}</div></div>`;
+  }).join('')}</div>` : '<div class="no-comment">표시할 결과가 없습니다.</div>';
+  card.innerHTML += `<div class="slider-note">최근 ${recent.length}건까지 표시합니다. 소감 전용 행은 제외됩니다.</div>`;
+  return card;
 }
 
 // 대한신문 1907 — choices: {angles: ['a'|'b', ...], headline, censor}
