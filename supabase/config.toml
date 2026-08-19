@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.track-event]
 verify_jwt = false
+
+[functions.dashboard-data]
+verify_jwt = false

@@ -32,6 +32,40 @@ type ResultRow = {
 
 const FALLBACK_META: MetaRow[] = [
   {
+    game_id: "balhae",
+    label: "발해에서 고구려의 DNA를 찾아라",
+    era: "남북국 시대",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
+    game_id: "gaehang",
+    label: "개항의 갈림길 — 1876년 전야",
+    era: "개항기",
+    axes: [], scenes: [], sliders: [], endings: [],
+    final_key: "stance",
+    final_label: "개항에 대한 최종 입장",
+    final_a: { key: "cheokhwa", label: "왜양일체론·척화", color: "c-red" },
+    final_b: { key: "gaehwa", label: "통상개화론·개화", color: "c-blue" },
+  },
+  {
+    game_id: "gendarme1910",
+    label: "어느 기관의 일입니까?",
+    era: "일제강점기 · 1910년대",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
+    game_id: "geunal1945",
+    label: "그날, 아무도 몰랐다 — 1945",
+    era: "일제강점기",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
+    game_id: "goryeo-debate",
+    label: "고려 말 대논쟁 — 정몽주 vs 정도전",
+    era: "고려 말",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
     game_id: "haebang1945",
     label: "도둑같이 온 해방 — 1945",
     era: "일제강점기",
@@ -54,6 +88,10 @@ const FALLBACK_META: MetaRow[] = [
     ],
   },
 ];
+
+const GAME_ID_ALIASES: Record<string, string> = {
+  gabo1894: "gabo-reform",
+};
 
 Deno.serve(async (req: Request) => {
   const guard = await guardDashboardRequest(req, ["GET"]);
@@ -141,8 +179,10 @@ function normalizeResultRow(row: ResultRow) {
     }
   }
 
+  const game = GAME_ID_ALIASES[String(row.game || "")] || row.game;
   return {
     ...row,
+    game,
     choices: choices && typeof choices === "object" ? choices as Record<string, unknown> : {},
   };
 }
@@ -173,7 +213,10 @@ function mergeAttemptRows(a: ResultRow, b: ResultRow) {
 function mergeFallbackMeta(meta: MetaRow[]) {
   const byId = new Map<string, MetaRow>();
   meta.forEach((row) => {
-    if (row?.game_id) byId.set(row.game_id, row);
+    if (!row?.game_id) return;
+    const gameId = GAME_ID_ALIASES[row.game_id] || row.game_id;
+    if (row.game_id !== gameId && byId.has(gameId)) return;
+    byId.set(gameId, { ...row, game_id: gameId });
   });
   FALLBACK_META.forEach((row) => {
     if (!byId.has(row.game_id)) byId.set(row.game_id, row);

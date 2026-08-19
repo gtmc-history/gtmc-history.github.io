@@ -417,6 +417,34 @@ footer a:hover { color: var(--gold-lt); }
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const FALLBACK_META = {
+  balhae: {
+    game_id: 'balhae',
+    label: '발해에서 고구려의 DNA를 찾아라',
+    era: '남북국 시대',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  gaehang: {
+    game_id: 'gaehang',
+    label: '개항의 갈림길 — 1876년 전야',
+    era: '개항기',
+    axes: [], scenes: [], sliders: [], endings: [],
+    final_key: 'stance',
+    final_label: '개항에 대한 최종 입장',
+    final_a: { key: 'cheokhwa', label: '왜양일체론·척화', color: 'c-red' },
+    final_b: { key: 'gaehwa', label: '통상개화론·개화', color: 'c-blue' },
+  },
+  gendarme1910: {
+    game_id: 'gendarme1910',
+    label: '어느 기관의 일입니까?',
+    era: '일제강점기 · 1910년대',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  'goryeo-debate': {
+    game_id: 'goryeo-debate',
+    label: '고려 말 대논쟁 — 정몽주 vs 정도전',
+    era: '고려 말',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
   haebang1945: {
     game_id: 'haebang1945',
     label: '도둑같이 온 해방 — 1945',
@@ -448,6 +476,47 @@ const FALLBACK_META = {
       { key: 'passed', label: '게재 허가' },
     ],
   },
+};
+
+const GAME_ID_ALIASES = {
+  gabo1894: 'gabo-reform',
+};
+
+const CANONICAL_GAME_LABELS = {
+  balhae: '발해에서 고구려의 DNA를 찾아라',
+  bungdang: '이조 전랑 자리를 차지하라 — 붕당의 탄생 1575',
+  daehan1897: '대한제국 1897 — 당신의 기준으로 평가하라',
+  daewongun: '대원군의 결단 — 무너지는 조선을 세워라',
+  dongnip1898: '황제와 맞서다 — 1898 독립협회',
+  euibyeong1907: '의병을 일으켜라 — 1895·1905·1907',
+  euljsa1905: '1905 — 남겨진 선택',
+  'gabo-reform': '갑오개혁 — 내가 설계한 개혁이 사라지는 날',
+  gaehang: '개항의 갈림길 — 1876년 전야',
+  gaehangmarket1883: '내 돈이 사라진다 — 개항장 상인 1883',
+  gaemong1905: '1905년의 선택 — 애국계몽운동',
+  ganghwa: '강화도 협상 테이블 — 1876년 2월',
+  gendarme1910: '어느 기관의 일입니까?',
+  geunal1945: '그날, 아무도 몰랐다 — 1945',
+  gobu1894: '고부, 1894',
+  'goryeo-debate': '고려 말 대논쟁 — 정몽주 vs 정도전',
+  'goryeo-detective': '고려 지배세력 탐정단',
+  gukchae1907: '대한신문 1907 — 오늘의 1면을 써라',
+  haebang1945: '도둑같이 온 해방 — 1945',
+  'mongol-survival': '1232 — 당신은 살아남을 수 있는가',
+  'sahwa-factcheck': '조보청 특별 조사관 — 사화의 진실',
+  'samsa-hearing': '3사 청문회 — 이 임명을 막아라',
+  skycastle: '고려에서 환생했다 — 문벌의 사다리',
+  ujeongtonguk: '우정총국의 밤 — 갑신정변 1884',
+  'wang-geon': '왕건의 외교전 — 918년 고려',
+  'wangs-approval': '왕의 결재함 — 조선의 통치를 경험하다',
+};
+
+const CUSTOM_RENDERERS = {
+  haebang1945: buildHaebangCards,
+  euibyeong1907: buildEuibyeongCards,
+  gukchae1907: buildGukchaeCards,
+  gendarme1910: buildGendarmeCards,
+  geunal1945: buildGeunalCards,
 };
 
 // ═══════════════════════════════════════════════════
@@ -572,7 +641,15 @@ async function loadData() {
 
     allResults = normalizeResults(Array.isArray(results) ? results : []);
     allMeta = { ...FALLBACK_META };
-    if (Array.isArray(metaRows)) metaRows.forEach(m => { allMeta[m.game_id] = m; });
+    if (Array.isArray(metaRows)) metaRows.forEach(m => {
+      const sourceId = m.game_id;
+      const gameId = GAME_ID_ALIASES[sourceId] || sourceId;
+      if (!gameId || (sourceId !== gameId && allMeta[gameId])) return;
+      allMeta[gameId] = { ...(allMeta[gameId] || {}), ...m, game_id: gameId };
+    });
+    Object.entries(CANONICAL_GAME_LABELS).forEach(([gameId, label]) => {
+      if (allMeta[gameId]) allMeta[gameId] = { ...allMeta[gameId], label };
+    });
 
     // game_meta에 등록돼 있고 실제 데이터도 있는 게임만
     const games = [...new Set(allResults.map(r => r.game))].filter(g => allMeta[g]);
@@ -675,7 +752,8 @@ function normalizeResultRow(row) {
   if (typeof choices === 'string') {
     try { choices = JSON.parse(choices); } catch { choices = {}; }
   }
-  return { ...row, choices: choices && typeof choices === 'object' ? choices : {} };
+  const game = GAME_ID_ALIASES[row.game] || row.game;
+  return { ...row, game, choices: choices && typeof choices === 'object' ? choices : {} };
 }
 
 function getAttemptKey(row) {
@@ -734,9 +812,7 @@ function renderCharts(rows, meta) {
   const grid = document.getElementById('chart-grid');
   grid.innerHTML = '';
 
-  const hasEuibyeong = isEuibyeongRows(rows, meta);
-  const hasGukchae = isGukchaeRows(rows, meta);
-  const hasHaebang = isHaebangRows(rows, meta);
+  const customRenderer = CUSTOM_RENDERERS[selGame];
 
   // 사료판단 게임: choices 값이 pos/neg/hold이고 axes에 color 없음
   const hasSrcCards = meta.axes && meta.axes.length > 0 &&
@@ -749,16 +825,8 @@ function renderCharts(rows, meta) {
   const hasSliders = meta.sliders && meta.sliders.length > 0;
   const hasEnding  = rows.some(r => r.choices?.ending);
 
-  if (hasHaebang) {
-    buildHaebangCards(rows, meta).forEach(card => grid.appendChild(card));
-    return;
-  }
-  if (hasEuibyeong) {
-    buildEuibyeongCards(rows, meta).forEach(card => grid.appendChild(card));
-    return;
-  }
-  if (hasGukchae) {
-    buildGukchaeCards(rows, meta).forEach(card => grid.appendChild(card));
+  if (customRenderer) {
+    customRenderer(rows, meta).forEach(card => grid.appendChild(card));
     return;
   }
   if (hasSrcCards) grid.appendChild(buildSrcCardsCard(rows, meta));
@@ -964,6 +1032,85 @@ function buildChoiceBars(gameName, title, rows, key, defs) {
   raf(() => entries.forEach(([value], i) => {
     const cnt = rows.filter(r => r.choices?.[key] === value).length;
     setW('gk'+key+i, total ? Math.round(cnt / total * 100) : 0);
+  }));
+  return card;
+}
+
+// 어느 기관의 일입니까? — choices: {initial:{c1..c6}, c7, debrief_card}
+const GENDARME_INSTITUTIONS = {
+  police: { label: '경찰', color: 'c-blue' },
+  court: { label: '법원', color: 'c-amber' },
+  military: { label: '군대', color: 'c-red' },
+  admin: { label: '행정기관', color: 'c-jade' },
+};
+const GENDARME_CARDS = {
+  c1: { label: '지세 계산', color: 'c-muted' },
+  c2: { label: '납세 독려', color: 'c-blue' },
+  c3: { label: '호구 조사', color: 'c-amber' },
+  c4: { label: '위생 검사', color: 'c-jade' },
+  c5: { label: '산림 감시', color: 'c-red' },
+  c6: { label: '징역 6개월 사건', color: 'c-gold' },
+  c7: { label: '가벼운 범죄 즉결', color: 'c-blue' },
+};
+
+function buildGendarmeCards(rows, meta) {
+  return [
+    buildGendarmePlacementCard(rows, meta),
+    buildChoiceBars(meta.label || '어느 기관의 일입니까?', '즉결 처벌 담당 기관', rows, 'c7', GENDARME_INSTITUTIONS),
+    buildChoiceBars(meta.label || '어느 기관의 일입니까?', '가장 인상 깊었던 업무', rows, 'debrief_card', GENDARME_CARDS),
+  ];
+}
+
+function buildGendarmePlacementCard(rows, meta) {
+  const entries = Object.entries(GENDARME_INSTITUTIONS);
+  const total = rows.reduce((sum, row) => sum + Object.keys(row.choices?.initial || {}).length, 0);
+  const card = mkCard(meta.label || '어느 기관의 일입니까?', '시대 공개 전 기관 배치');
+  card.innerHTML += entries.map(([value, def], i) => {
+    const count = rows.reduce((sum, row) =>
+      sum + Object.values(row.choices?.initial || {}).filter(choice => choice === value).length, 0);
+    const pct = total ? Math.round(count / total * 100) : 0;
+    return `<div class="bar-item"><div class="bar-row"><span class="bar-label">${def.label}</span><div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${count}회</span></div></div><div class="bar-track"><div class="bar-fill fill-${def.color}" id="gd_place_${i}" style="width:0%"></div></div></div>`;
+  }).join('') + `<div class="slider-note">시대 정보를 공개하기 전 학생이 배치한 카드 ${total}개 기준</div>`;
+  raf(() => entries.forEach(([value], i) => {
+    const count = rows.reduce((sum, row) =>
+      sum + Object.values(row.choices?.initial || {}).filter(choice => choice === value).length, 0);
+    setW(`gd_place_${i}`, total ? Math.round(count / total * 100) : 0);
+  }));
+  return card;
+}
+
+// 그날, 아무도 몰랐다 — choices: {r1..r4:{a,b}, r3:{stance}}
+const GEUNAL_ROUNDS = ['8월 15일 정오', '8월 15일 오후', '8월 15일 저녁', '8월 16일'];
+const GEUNAL_STANCES = {
+  1: { label: '이제는 나가도 될 것 같다', color: 'c-jade' },
+  2: { label: '나가고 싶지만 아직 위험하다', color: 'c-amber' },
+  3: { label: '무엇이 달라졌는지 더 확인한다', color: 'c-blue' },
+};
+
+function buildGeunalCards(rows, meta) {
+  const stanceRows = rows.map(row => ({ ...row, choices: { stance: String(row.choices?.r3?.stance || '') } }));
+  return [
+    buildGeunalTrajectoryCard(rows, meta),
+    buildChoiceBars(meta.label || '그날, 아무도 몰랐다 — 1945', '8월 15일 밤의 입장', stanceRows, 'stance', GEUNAL_STANCES),
+  ];
+}
+
+function buildGeunalTrajectoryCard(rows, meta) {
+  const card = mkCard(meta.label || '그날, 아무도 몰랐다 — 1945', '확신도 평균 궤적');
+  const average = (round, key) => {
+    const values = rows.map(row => Number(row.choices?.[`r${round}`]?.[key])).filter(value => value >= 1 && value <= 4);
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  };
+  card.innerHTML += GEUNAL_ROUNDS.map((label, index) => {
+    const round = index + 1;
+    const a = average(round, 'a');
+    const b = average(round, 'b');
+    return `<div class="bar-item" style="margin-bottom:1.1rem"><div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.45rem">R${round} · ${label}</div><div class="bar-row"><span class="bar-label">A · 일본의 패전</span><div class="bar-right"><span class="bar-pct pct-c-blue">${a ? a.toFixed(1) : '-'}</span></div></div><div class="bar-track" style="margin-bottom:5px"><div class="bar-fill fill-c-blue" id="gn_a_${round}" style="width:0%"></div></div><div class="bar-row"><span class="bar-label">B · 식민 지배의 종식</span><div class="bar-right"><span class="bar-pct pct-c-jade">${b ? b.toFixed(1) : '-'}</span></div></div><div class="bar-track"><div class="bar-fill fill-c-jade" id="gn_b_${round}" style="width:0%"></div></div></div>`;
+  }).join('') + '<div class="slider-note">1(확신하지 못함)–4(매우 확신) 척도의 반 평균</div>';
+  raf(() => GEUNAL_ROUNDS.forEach((_, index) => {
+    const round = index + 1;
+    setW(`gn_a_${round}`, average(round, 'a') / 4 * 100);
+    setW(`gn_b_${round}`, average(round, 'b') / 4 * 100);
   }));
   return card;
 }
