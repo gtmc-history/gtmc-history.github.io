@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "0.2.0",
+  "status": "design-lock-candidate",
+  "brand": {
+    "siteName": "찰리쌤의 한국사 게임실",
+    "headline": "선택하고, 비교하고, 판단하며 배우는 한국사",
+    "description": "교실에서 바로 쓰는 한국사 인터랙티브 게임·활동"
+  },
+  "search": {
+    "placeholder": "주제·사건·게임 이름 검색",
+    "fields": [
+      "title",
+      "displayTitle",
+      "shortDescription",
+      "unit",
+      "tags"
+    ]
+  },
+  "courseTabs": [
+    "전체",
+    "한국사1",
+    "한국사2"
+  ],
+  "eraNavigation": [
+    "고대·남북국",
+    "고려",
+    "조선",
+    "개항과 근대 변동",
+    "대한제국과 국권 침탈",
+    "일제강점기",
+    "해방 이후"
+  ],
+  "filters": [
+    {
+      "id": "lessonUse",
+      "label": "수업 위치",
+      "mode": "multi",
+      "options": [
+        "도입",
+        "전개",
+        "정리"
+      ]
+    },
+    {
+      "id": "activityType",
+      "label": "활동 유형",
+      "mode": "multi",
+      "options": [
+        "선택·시뮬레이션",
+        "자료·판단",
+        "토론·논증",
+        "추리·판별",
+        "조사·논증",
+        "제작·표현"
+      ]
+    },
+    {
+      "id": "duration",
+      "label": "소요 시간",
+      "mode": "single",
+      "options": [
+        {
+          "id": "short",
+          "label": "10분 이내",
+          "maxMinutes": 10
+        },
+        {
+          "id": "medium",
+          "label": "15~20분",
+          "minMinutes": 15,
+          "maxMinutes": 20
+        },
+        {
+          "id": "long",
+          "label": "20분 이상",
+          "minMinutes": 20
+        }
+      ],
+      "classificationRule": "durationMax 기준: <=10 short, <=20 medium, >20 long"
+    }
+  ],
+  "sorting": {
+    "default": "historical",
+    "tieBreakers": [
+      "sortOrder",
+      "title"
+    ]
+  },
+  "card": {
+    "show": [
+      "unit",
+      "title",
+      "shortDescription",
+      "activityType",
+      "lessonUse",
+      "duration",
+      "participationWhenGroup",
+      "cta"
+    ],
+    "ctaLabel": "게임 시작",
+    "hideLegacyOrder": true,
+    "maxVisibleChips": 4
+  },
+  "responsive": {
+    "desktopColumns": 3,
+    "tabletColumns": 2,
+    "mobileColumns": 1,
+    "mobileFilterPresentation": "bottom-sheet",
+    "desktopFilterPresentation": "popover"
+  },
+  "emptyState": {
+    "title": "조건에 맞는 활동이 없습니다.",
+    "description": "필터를 하나 줄이거나 검색어를 바꿔보세요.",
+    "resetLabel": "필터 초기화"
+  },
+  "specialGroups": [
+    {
+      "id": "liberation-1945",
+      "section": "해방 이후",
+      "label": "1945 · 해방",
+      "headline": "같은 역사, 다른 수업 경험",
+      "gameIds": [
+        "G026",
+        "G027"
+      ]
+    }
+  ]
+}

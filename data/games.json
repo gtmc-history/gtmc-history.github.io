@@ -1,0 +1,1140 @@
+{
+  "schemaVersion": "0.3.0",
+  "status": "metadata-lock-candidate",
+  "source": {
+    "hub": "https://gtmc-history.github.io/",
+    "checkedDate": "2026-08-21",
+    "note": "published inventory와 canonical title은 sibling games 저장소의 games.manifest.json을 기준으로 한다. 이 파일은 허브 표시·검색·필터용 projection이며 published slug/path 집합은 cross-repo audit로 manifest와 일치시킨다. dataCollection/dashboard 상태는 별도 코드 감사 전까지 audit_required로 유지한다."
+  },
+  "taxonomy": {
+    "eras": [
+      "고대·남북국",
+      "고려",
+      "조선",
+      "개항과 근대 변동",
+      "대한제국과 국권 침탈",
+      "일제강점기",
+      "해방 이후"
+    ],
+    "activityTypes": [
+      "선택·시뮬레이션",
+      "자료·판단",
+      "토론·논증",
+      "추리·판별",
+      "조사·논증",
+      "제작·표현"
+    ],
+    "lessonUse": [
+      "도입",
+      "전개",
+      "정리"
+    ],
+    "participation": [
+      "개인",
+      "모둠"
+    ],
+    "courses": [
+      "한국사1",
+      "한국사2"
+    ]
+  },
+  "games": [
+    {
+      "id": "G001",
+      "legacyOrder": 1,
+      "sortOrder": 1,
+      "slug": "balhae",
+      "title": "발해에서 고구려의 DNA를 찾아라",
+      "shortDescription": "문헌과 유물 증거를 교차 분석해 발해의 고구려 계승성을 논증한다.",
+      "course": "한국사1",
+      "era": "고대·남북국",
+      "unit": "발해",
+      "periodLabel": "발해 · 698–926",
+      "lessonUse": [
+        "도입"
+      ],
+      "activityType": "조사·논증",
+      "durationMin": 27,
+      "durationMax": 27,
+      "participation": "모둠",
+      "tags": [
+        "수사·추리",
+        "사료 분석",
+        "모둠 활동"
+      ],
+      "learningGoal": "서로 다른 문헌·유물 자료를 비교하여 발해의 고구려 계승성을 근거로 설명하고, 사료 해석의 쟁점을 인식한다.",
+      "essentialQuestion": "발해를 고구려의 계승 국가라고 판단할 수 있는 근거는 무엇인가?",
+      "ai": {
+        "use": "optional",
+        "mode": "Gemini 탐구 프롬프트 복사"
+      },
+      "path": "/games/balhae/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G002",
+      "legacyOrder": 2,
+      "sortOrder": 2,
+      "slug": "wang-geon",
+      "title": "왕건의 외교전 — 918년 고려",
+      "displayTitle": "왕건의 외교전 918년",
+      "shortDescription": "후삼국의 혼란 속에서 외교 카드를 선택하며 왕건의 통일 전략을 살핀다.",
+      "course": "한국사1",
+      "era": "고려",
+      "unit": "고려의 건국과 후삼국 통일",
+      "periodLabel": "후삼국 · 900–936",
+      "lessonUse": [
+        "도입"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 5,
+      "durationMax": 10,
+      "participation": "개인",
+      "tags": [
+        "카드 선택",
+        "외교",
+        "전략"
+      ],
+      "learningGoal": "후삼국의 경쟁 속에서 왕건의 외교·연합 전략이 세력 확대와 통일에 어떻게 작용했는지 이해한다.",
+      "essentialQuestion": "왕건은 어떤 선택을 통해 후삼국 경쟁에서 우위를 만들었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/wang-geon/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G003",
+      "legacyOrder": 4,
+      "sortOrder": 3,
+      "slug": "skycastle",
+      "title": "고려에서 환생했다 — 문벌의 사다리",
+      "displayTitle": "고려에서 환생했다: 문벌의 사다리",
+      "shortDescription": "음서·과거·혼인을 선택하며 고려 문벌귀족 사회의 작동 방식을 경험한다.",
+      "course": "한국사1",
+      "era": "고려",
+      "unit": "문벌귀족 사회",
+      "periodLabel": "고려 전기 · 918–1170",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 5,
+      "durationMax": 10,
+      "participation": "개인",
+      "tags": [
+        "가챠",
+        "신분제",
+        "시뮬레이션"
+      ],
+      "learningGoal": "음서·과거·혼인 관계가 고려 문벌귀족의 형성과 신분 구조 유지에 어떻게 작용했는지 설명한다.",
+      "essentialQuestion": "고려에서 문벌귀족의 지위는 어떤 제도와 관계를 통해 이어졌는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/skycastle/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G004",
+      "legacyOrder": 6,
+      "sortOrder": 4,
+      "slug": "goryeo-detective",
+      "title": "고려 지배세력 탐정단",
+      "shortDescription": "대사와 단서를 읽고 고려 시대 지배세력의 특징을 구분한다.",
+      "course": "한국사1",
+      "era": "고려",
+      "unit": "고려 지배세력의 변화",
+      "periodLabel": "고려 후기 · 무신~원 간섭기",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "추리·판별",
+      "durationMin": 5,
+      "durationMax": 10,
+      "participation": "개인",
+      "tags": [
+        "추리",
+        "카드 매칭",
+        "지배세력"
+      ],
+      "learningGoal": "호족·문벌귀족·무신·권문세족·신진 사대부의 특징을 단서에 근거해 구분하고 변화 흐름을 파악한다.",
+      "essentialQuestion": "고려의 지배세력은 시대에 따라 어떤 특징으로 구분되는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/goryeo-detective/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G005",
+      "legacyOrder": 5,
+      "sortOrder": 5,
+      "slug": "mongol-survival",
+      "title": "1232 — 당신은 살아남을 수 있는가",
+      "shortDescription": "몽골 침입기 고려 평민의 선택을 따라가며 항전과 생존의 여러 경로를 비교한다.",
+      "course": "한국사1",
+      "era": "고려",
+      "unit": "몽골 침입과 대몽 항쟁",
+      "periodLabel": "고려 중기 · 1231–1273",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "분기형 스토리",
+        "대몽 항쟁",
+        "민중"
+      ],
+      "learningGoal": "몽골 침입기에 강화 천도·항전·삼별초 등 여러 대응이 나타난 배경과 그 의미를 민중의 관점까지 포함해 이해한다.",
+      "essentialQuestion": "몽골 침입 속에서 고려 사람들에게 가능한 선택은 무엇이었고 그 대가는 무엇이었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/mongol-survival/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G006",
+      "legacyOrder": 3,
+      "sortOrder": 6,
+      "slug": "goryeo-debate",
+      "title": "고려 말 대논쟁 — 정몽주 vs 정도전",
+      "displayTitle": "고려 말 대논쟁: 정몽주 vs 정도전",
+      "shortDescription": "정몽주와 정도전의 입장을 비교하며 고려 유지와 새 왕조 건국을 논증한다.",
+      "course": "한국사1",
+      "era": "고려",
+      "unit": "고려 말 신진 사대부와 조선 건국",
+      "periodLabel": "고려 말 · 1388–1392",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "토론·논증",
+      "durationMin": 5,
+      "durationMax": 10,
+      "participation": "개인",
+      "tags": [
+        "AI 토론",
+        "역할극",
+        "논증"
+      ],
+      "learningGoal": "정몽주와 정도전의 개혁 방향을 비교하고 고려 유지와 새 왕조 건국 중 하나의 입장을 근거로 논증한다.",
+      "essentialQuestion": "고려 왕조를 유지하며 개혁할 수 있었는가, 아니면 새 왕조가 필요했는가?",
+      "ai": {
+        "use": "integrated",
+        "mode": "Gemini 연동 AI 토론"
+      },
+      "path": "/games/goryeo-debate/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G007",
+      "legacyOrder": 7,
+      "sortOrder": 7,
+      "slug": "wangs-approval",
+      "title": "왕의 결재함 — 조선의 통치를 경험하다",
+      "displayTitle": "왕의 결재함: 조선의 통치를 경험하다",
+      "shortDescription": "태종과 세종의 안건을 처리하며 6조 직계제와 의정부 서사제를 비교한다.",
+      "course": "한국사1",
+      "era": "조선",
+      "unit": "조선의 통치 체제",
+      "periodLabel": "조선 전기 · 태종~세종",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "의사결정",
+        "통치 체제",
+        "시뮬레이션"
+      ],
+      "learningGoal": "6조 직계제와 의정부 서사제의 운영 차이를 왕권과 재상권의 관계를 중심으로 설명한다.",
+      "essentialQuestion": "태종과 세종은 왜 서로 다른 방식으로 국정을 운영했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/wangs-approval/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G008",
+      "legacyOrder": 8,
+      "sortOrder": 8,
+      "slug": "samsa-hearing",
+      "title": "3사 청문회 — 이 임명을 막아라",
+      "displayTitle": "3사 청문회: 이 임명을 막아라",
+      "shortDescription": "사헌부·사간원·홍문관·이조전랑 역할을 나눠 임명 문제를 토론한다.",
+      "course": "한국사1",
+      "era": "조선",
+      "unit": "3사와 언론 기능",
+      "periodLabel": "조선 전기 · 성종~중종",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "토론·논증",
+      "durationMin": 20,
+      "durationMax": 25,
+      "participation": "모둠",
+      "tags": [
+        "역할극",
+        "언론 삼사",
+        "모둠 토론"
+      ],
+      "learningGoal": "사헌부·사간원·홍문관과 이조전랑의 역할을 이해하고 조선의 언론·인사 구조가 왕권과 공론 사이에서 어떻게 작동했는지 설명한다.",
+      "essentialQuestion": "조선의 언론 기관은 왕의 인사와 정책을 어떻게 견제할 수 있었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/samsa-hearing/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G009",
+      "legacyOrder": 9,
+      "sortOrder": 9,
+      "slug": "sahwa-factcheck",
+      "title": "조보청 특별 조사관 — 사화의 진실",
+      "displayTitle": "조보청 특별 조사관: 사화의 진실",
+      "shortDescription": "공식 죄목과 정치적 배경을 대조해 네 차례 사화의 원인을 판별한다.",
+      "course": "한국사1",
+      "era": "조선",
+      "unit": "사화와 훈구·사림",
+      "periodLabel": "조선 전기 · 연산군~명종",
+      "lessonUse": [
+        "도입",
+        "정리"
+      ],
+      "activityType": "추리·판별",
+      "durationMin": 5,
+      "durationMax": 10,
+      "participation": "개인",
+      "tags": [
+        "팩트체크",
+        "훈구·사림",
+        "사화"
+      ],
+      "learningGoal": "무오·갑자·기묘·을사사화의 표면적 명분과 정치적 배경을 구분하고 훈구와 사림의 갈등 구조를 파악한다.",
+      "essentialQuestion": "사화의 공식 죄목 뒤에는 어떤 정치적 갈등이 있었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/sahwa-factcheck/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G010",
+      "legacyOrder": 10,
+      "sortOrder": 10,
+      "slug": "bungdang",
+      "title": "이조 전랑 자리를 차지하라 — 붕당의 탄생 1575",
+      "displayTitle": "이조 전랑 자리를 차지하라",
+      "shortDescription": "삼사 배치와 자천권을 경험하며 동서 분당의 구조적 배경을 살핀다.",
+      "course": "한국사1",
+      "era": "조선",
+      "unit": "붕당의 형성",
+      "periodLabel": "조선 중기 · 선조 (1575)",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "인사 시뮬레이션",
+        "동서 분당",
+        "자천권"
+      ],
+      "learningGoal": "이조전랑의 인사권과 삼사 인사 구조가 동서 분당과 붕당 형성에 어떤 영향을 주었는지 설명한다.",
+      "essentialQuestion": "1575년의 인사 갈등은 왜 개인 다툼을 넘어 붕당 형성으로 이어졌는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/bungdang/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G011",
+      "legacyOrder": 11,
+      "sortOrder": 11,
+      "slug": "daewongun",
+      "title": "대원군의 결단 — 무너지는 조선을 세워라",
+      "displayTitle": "대원군의 결단: 무너지는 조선을 세워라",
+      "shortDescription": "개혁 카드를 선택하며 흥선 대원군 정책의 목표와 이해관계 충돌을 경험한다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "흥선 대원군의 개혁",
+      "periodLabel": "개항 전후 · 1863–1873",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "카드 선택",
+        "개혁 딜레마",
+        "시뮬레이션"
+      ],
+      "learningGoal": "비변사 폐지·서원 철폐·호포제 등 흥선 대원군의 개혁이 어떤 문제를 해결하려 했고 누구의 이해관계와 충돌했는지 파악한다.",
+      "essentialQuestion": "흥선 대원군의 개혁은 국가를 강화하면서 어떤 갈등을 만들었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/daewongun/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G012",
+      "legacyOrder": 13,
+      "sortOrder": 12,
+      "slug": "gaehang",
+      "title": "개항의 갈림길 — 1876년 전야",
+      "displayTitle": "개항의 갈림길: 1876년 전야",
+      "shortDescription": "위정척사와 통상개화의 논거에 질문하며 개항을 둘러싼 판단 기준을 세운다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "개항을 둘러싼 논쟁",
+      "periodLabel": "개항기 · 1875–1876",
+      "lessonUse": [
+        "도입",
+        "정리"
+      ],
+      "activityType": "토론·논증",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "AI 토론",
+        "개항 논쟁",
+        "딜레마"
+      ],
+      "learningGoal": "위정척사와 통상개화의 논거가 각각 어떤 위험을 중시했는지 비교하고 자신의 판단을 근거로 표현한다.",
+      "essentialQuestion": "1876년의 조선은 문을 닫아야 했는가, 어떤 조건으로 열어야 했는가?",
+      "ai": {
+        "use": "integrated",
+        "mode": "AI 인물 질의·토론"
+      },
+      "path": "/games/gaehang/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G013",
+      "legacyOrder": 12,
+      "sortOrder": 13,
+      "slug": "ganghwa",
+      "title": "강화도 협상 테이블 — 1876년 2월",
+      "displayTitle": "강화도 협상 테이블: 1876년 2월",
+      "shortDescription": "조약 초안을 수용·수정·거부하며 강화도조약의 불평등성을 분석한다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "강화도조약",
+      "periodLabel": "개항기 · 1876",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "외교 협상",
+        "불평등 조약",
+        "딜레마"
+      ],
+      "learningGoal": "강화도조약의 주요 조항과 체결 배경을 살피고 왜 불평등 조약으로 평가되는지 설명한다.",
+      "essentialQuestion": "강화도조약은 어떤 점에서 조선의 주권과 통상 질서를 제약했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/ganghwa/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G014",
+      "legacyOrder": 22,
+      "sortOrder": 14,
+      "slug": "gaehangmarket1883",
+      "title": "내 돈이 사라진다 — 개항장 상인 1883",
+      "displayTitle": "내 돈이 사라진다: 개항장 상인 1883",
+      "shortDescription": "개항장 상인으로 규칙 변화를 겪으며 외세의 경제 침탈 구조를 추적한다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "개항 이후 경제 침탈",
+      "periodLabel": "개항기 경제 · 1876–1905",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "경제 시뮬레이션",
+        "열강 침탈",
+        "구조 체험"
+      ],
+      "learningGoal": "거류지·내지행상·관세·화폐정리 등 제도 변화가 조선 상인과 경제 주권에 어떤 영향을 주었는지 설명한다.",
+      "essentialQuestion": "개항 이후 조선 상인의 경제 조건은 어떤 규칙 변화 때문에 불리해졌는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gaehangmarket1883/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G015",
+      "legacyOrder": 14,
+      "sortOrder": 15,
+      "slug": "ujeongtonguk",
+      "title": "우정총국의 밤 — 갑신정변 1884",
+      "displayTitle": "우정총국의 밤: 갑신정변 1884",
+      "shortDescription": "김옥균의 선택을 따라가며 갑신정변의 개혁 목표와 실패 구조를 발견한다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "갑신정변",
+      "periodLabel": "개항기 · 1884",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "외교 시뮬레이션",
+        "갑신정변",
+        "딜레마"
+      ],
+      "learningGoal": "갑신정변의 개혁 목표와 국내외 정치 조건을 살피고 일본 의존과 청의 개입이 실패에 미친 영향을 설명한다.",
+      "essentialQuestion": "갑신정변은 왜 급진적 개혁 의지에도 불구하고 오래 지속되지 못했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/ujeongtonguk/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G016",
+      "legacyOrder": 15,
+      "sortOrder": 16,
+      "slug": "gobu1894",
+      "title": "고부, 1894",
+      "shortDescription": "고부 농민의 네 번의 선택을 통해 동학농민운동의 복합적 압력을 경험한다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "동학농민운동",
+      "periodLabel": "동학농민운동 · 1894",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "동학농민운동",
+        "선택 시뮬레이션",
+        "딜레마"
+      ],
+      "learningGoal": "동학농민운동의 전개 과정에서 반봉건·반외세 요구와 농민의 생존 문제가 어떻게 맞물렸는지 설명한다.",
+      "essentialQuestion": "1894년 농민들의 선택에는 어떤 요구와 압력이 동시에 작용했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gobu1894/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G017",
+      "legacyOrder": 16,
+      "sortOrder": 17,
+      "slug": "gabo-reform",
+      "title": "갑오개혁 — 내가 설계한 개혁이 사라지는 날",
+      "displayTitle": "갑오개혁: 내가 설계한 개혁이 사라지는 날",
+      "shortDescription": "개혁안을 결정하고 선택지가 줄어드는 과정을 통해 갑오개혁과 외세 개입의 관계를 살핀다.",
+      "course": "한국사1",
+      "era": "개항과 근대 변동",
+      "unit": "갑오개혁",
+      "periodLabel": "갑오개혁 · 1894–1895",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "갑오개혁",
+        "선택지 축소",
+        "외세 개입"
+      ],
+      "learningGoal": "갑오개혁의 주요 내용을 이해하고 일본의 경복궁 점령과 을미사변 등 외세 개입이 개혁의 자율성과 지속성에 미친 영향을 파악한다.",
+      "essentialQuestion": "갑오개혁의 내용과 추진 조건 사이에는 어떤 긴장이 있었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gabo-reform/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G018",
+      "legacyOrder": 18,
+      "sortOrder": 18,
+      "slug": "daehan1897",
+      "title": "대한제국 1897 — 당신의 기준으로 평가하라",
+      "displayTitle": "대한제국 1897: 당신의 기준으로 평가하라",
+      "shortDescription": "여덟 개 사료를 긍정·부정·판단유보로 분류하며 대한제국의 근대성을 평가한다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "대한제국과 광무개혁",
+      "periodLabel": "대한제국 · 1897–1907",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "사료 판단",
+        "광무개혁",
+        "근대 국가론"
+      ],
+      "learningGoal": "대한제국과 광무개혁에 관한 여러 사료를 기준에 따라 평가하고 근대 국가로서의 성격을 근거로 판단한다.",
+      "essentialQuestion": "대한제국은 어떤 기준에서 근대 국가로 평가할 수 있고, 어떤 한계를 보였는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/daehan1897/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G019",
+      "legacyOrder": 17,
+      "sortOrder": 19,
+      "slug": "dongnip1898",
+      "title": "황제와 맞서다 — 1898 독립협회",
+      "displayTitle": "황제와 맞서다: 1898 독립협회",
+      "shortDescription": "독립협회 대표로 황제권과 민권의 쟁점을 토론하며 개혁의 방향을 판단한다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "독립협회",
+      "periodLabel": "대한제국 · 1898",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "토론·논증",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "AI 토론",
+        "독립협회",
+        "민권 vs 황권"
+      ],
+      "learningGoal": "독립협회의 의회 설립·민권 확대 요구와 대한제국 황제권 강화 사이의 갈등을 여러 사건을 통해 비교한다.",
+      "essentialQuestion": "대한제국의 개혁에서 황제권 강화와 민권 확대는 어떻게 충돌했는가?",
+      "ai": {
+        "use": "integrated",
+        "mode": "AI 역할 토론"
+      },
+      "path": "/games/dongnip1898/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G020",
+      "legacyOrder": 19,
+      "sortOrder": 20,
+      "slug": "euljsa1905",
+      "title": "1905 — 남겨진 선택",
+      "shortDescription": "대한제국 어전회의 참모로 네 국면을 거치며 일본 침략 속 선택지 축소를 경험한다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "일제의 국권 침탈",
+      "periodLabel": "국권침탈 · 1904–1907",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "선택지 축소",
+        "을사늑약",
+        "어전회의"
+      ],
+      "learningGoal": "러일전쟁 전후 일본의 침략이 심화되면서 대한제국의 외교·정치적 선택지가 어떻게 줄어들었는지 설명한다.",
+      "essentialQuestion": "일본의 국권 침탈이 진행될수록 대한제국의 선택지는 왜 줄어들었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/euljsa1905/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G021",
+      "legacyOrder": 20,
+      "sortOrder": 21,
+      "slug": "euibyeong1907",
+      "title": "의병을 일으켜라 — 1895·1905·1907",
+      "displayTitle": "의병을 일으켜라: 1895·1905·1907",
+      "shortDescription": "을미·을사·정미 의병의 시기를 따라 전략을 선택하며 의병 운동의 변화와 지속성을 살핀다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "항일 의병 운동",
+      "periodLabel": "항일 의병 · 1895–1907",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "의병 운동",
+        "을미·을사·정미",
+        "전략 선택"
+      ],
+      "learningGoal": "을미·을사·정미 의병의 배경과 참여층·전략의 변화를 비교하고 항일 의병 운동의 지속성을 이해한다.",
+      "essentialQuestion": "1895·1905·1907년 의병은 무엇이 달라졌고 무엇이 이어졌는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/euibyeong1907/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G022",
+      "legacyOrder": 21,
+      "sortOrder": 22,
+      "slug": "gaemong1905",
+      "title": "1905년의 선택 — 애국계몽운동",
+      "displayTitle": "1905년의 선택: 애국계몽운동",
+      "shortDescription": "공개 운동·계몽 운동·비밀 조직의 갈래를 따라가며 애국계몽운동의 전략을 비교한다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "애국계몽운동",
+      "periodLabel": "애국계몽 · 1905–1910",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "선택·시뮬레이션",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "애국계몽운동",
+        "분기형 스토리",
+        "신민회"
+      ],
+      "learningGoal": "을사늑약 이후 애국계몽운동이 교육·산업·언론·비밀결사 등 다양한 방식으로 국권 회복을 추구한 이유와 한계를 설명한다.",
+      "essentialQuestion": "무장 투쟁이 아닌 방식으로 국권을 되찾으려 한 사람들은 무엇을 바꾸려 했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gaemong1905/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G023",
+      "legacyOrder": 24,
+      "sortOrder": 23,
+      "slug": "gukchae1907",
+      "title": "대한신문 1907 — 오늘의 1면을 써라",
+      "displayTitle": "대한신문 1907: 오늘의 1면을 써라",
+      "shortDescription": "경제 침탈 현장을 취재하고 1면을 편집하며 국채보상운동의 의미를 표현한다.",
+      "course": "한국사1",
+      "era": "대한제국과 국권 침탈",
+      "unit": "경제 구국 운동과 국채보상운동",
+      "periodLabel": "경제 구국 · 1907",
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "제작·표현",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "국채보상운동",
+        "경제 구국",
+        "신문 편집"
+      ],
+      "learningGoal": "개항 이후 경제 침탈과 경제 구국 운동의 관계를 파악하고 국채보상운동의 의미를 신문 편집 결과물로 표현한다.",
+      "essentialQuestion": "1907년의 신문 1면에서 경제 침탈과 국채보상운동을 어떻게 연결해 보여줄 것인가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gukchae1907/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G024",
+      "legacyOrder": 25,
+      "sortOrder": 24,
+      "slug": "gendarme1910",
+      "title": "어느 기관의 일입니까?",
+      "shortDescription": "통치 업무를 먼저 분류한 뒤 실제 기록과 대조하며 헌병경찰제의 권한 구조를 판단한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "1910년대 무단 통치와 헌병경찰제",
+      "periodLabel": "1910년대 · 무단 통치",
+      "lessonUse": [
+        "도입"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "헌병경찰제",
+        "권한 구조",
+        "사료 판단"
+      ],
+      "learningGoal": "1910년대 기록을 근거로 헌병경찰제 아래 경찰·군대·행정·사법 권한의 경계가 어떻게 흐려졌는지 판단한다.",
+      "essentialQuestion": "헌병경찰제 아래에서 경찰은 어디까지의 권한을 행사했는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/gendarme1910/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G025",
+      "legacyOrder": 23,
+      "sortOrder": 25,
+      "slug": "saito1919",
+      "title": "1919, 무엇이 달라졌나",
+      "shortDescription": "총독부 발표와 여러 자료를 대조하며 1919년 이후 통치 변화와 한계를 다시 판단한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "3·1 운동 이후 식민 통치의 변화",
+      "periodLabel": "문화 정치 · 1919",
+      "lessonUse": [
+        "전개",
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "문화 정치",
+        "사료 검토",
+        "판단 궤적"
+      ],
+      "learningGoal": "총독부의 변화 선언과 실제 자료를 대조하여 3·1 운동 이후 식민 통치의 변화와 한계를 증거에 근거해 판단하고 자신의 판단 변화를 설명한다.",
+      "essentialQuestion": "1919년 이후 일제의 식민 통치는 실제로 얼마나 달라졌는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/saito1919/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G028",
+      "legacyOrder": 28,
+      "sortOrder": 26,
+      "slug": "aegukban1938",
+      "title": "열 집을 묶다",
+      "shortDescription": null,
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "민족 말살 정책과 전시 동원 체제",
+      "periodLabel": "전시 동원 체제 · 1938–1944",
+      "startYear": 1938,
+      "endYear": 1944,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "선택·시뮬레이션",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "애국반",
+        "생활 통제",
+        "정보와 동원"
+      ],
+      "path": "/games/aegukban1938/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G026",
+      "legacyOrder": 26,
+      "sortOrder": 27,
+      "slug": "haebang1945",
+      "title": "도둑같이 온 해방 — 1945",
+      "displayTitle": "도둑같이 온 해방 1945",
+      "shortDescription": "서로 다른 정보 경로에서 해방 소식을 접하며 정보 제한이 판단에 미치는 영향을 비교한다.",
+      "course": "한국사2",
+      "era": "해방 이후",
+      "unit": "광복과 해방 소식의 확산",
+      "periodLabel": "1945년 8월 15–16일",
+      "lessonUse": [
+        "전개",
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "해방",
+        "정보 경로",
+        "판단 비교"
+      ],
+      "learningGoal": "라디오·신문·거리·입소문처럼 제한된 정보 경로가 1945년 해방 상황을 이해하는 판단에 어떤 차이를 만드는지 비교한다.",
+      "essentialQuestion": "같은 1945년 8월 15일을 서로 다른 정보 경로로 접하면 판단은 어떻게 달라지는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/haebang1945/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      },
+      "relatedGroup": {
+        "id": "liberation-1945",
+        "label": "1945 · 해방",
+        "comparisonLabel": "같은 역사, 다른 수업 경험",
+        "variantLabel": "정보 경로 비교"
+      }
+    },
+    {
+      "id": "G027",
+      "legacyOrder": 27,
+      "sortOrder": 28,
+      "slug": "geunal1945",
+      "title": "그날, 아무도 몰랐다 — 1945",
+      "displayTitle": "그날, 아무도 몰랐다 1945",
+      "shortDescription": "그 시점에 들어온 정보만으로 확신도를 기록하며 해방 당일 판단의 변화를 추적한다.",
+      "course": "한국사2",
+      "era": "해방 이후",
+      "unit": "광복 직후의 불확실성과 판단",
+      "periodLabel": "1945년 8월 15–16일",
+      "lessonUse": [
+        "전개",
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "해방",
+        "불확실성",
+        "판단 궤적"
+      ],
+      "learningGoal": "1945년 8월 15~16일 당시 이용 가능한 정보만으로 판단을 갱신하며 후대의 확정된 지식과 당시 사람들의 불확실성을 구분한다.",
+      "essentialQuestion": "해방은 당시 사람들에게 언제, 어떤 정보가 쌓였을 때 확실한 사실이 되었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/geunal1945/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      },
+      "relatedGroup": {
+        "id": "liberation-1945",
+        "label": "1945 · 해방",
+        "comparisonLabel": "같은 역사, 다른 수업 경험",
+        "variantLabel": "판단 궤적"
+      }
+    }
+  ]
+}
