@@ -519,6 +519,7 @@ const CUSTOM_RENDERERS = {
   gukchae1907: buildGukchaeCards,
   gendarme1910: buildGendarmeCards,
   geunal1945: buildGeunalCards,
+  saito1919: buildSaitoCards,
 };
 
 // ═══════════════════════════════════════════════════
@@ -1036,6 +1037,34 @@ function buildChoiceBars(gameName, title, rows, key, defs) {
     setW('gk'+key+i, total ? Math.round(cnt / total * 100) : 0);
   }));
   return card;
+}
+
+// 1919, 무엇이 달라졌나 — choices: {final_axis, changed_by, r1..r4}
+const SAITO_FINAL_AXES = {
+  '지속성': { label: '목적과 핵심 권력 관계는 유지', color: 'c-red' },
+  '통제재편': { label: '통제 수단은 확대·강화', color: 'c-amber' },
+  '변화인정': { label: '실제 변화와 한계를 함께 평가', color: 'c-jade' },
+  '증거한계': { label: '다른 영역의 자료가 더 필요', color: 'c-blue' },
+};
+const SAITO_CHANGED_BY = {
+  r1: { label: '자료 1 · 경찰 조직', color: 'c-red' },
+  r2: { label: '자료 2 · 정치 참여', color: 'c-amber' },
+  r3: { label: '자료 3 · 치안 유지법', color: 'c-blue' },
+  r4: { label: '자료 4 · 총독 임명', color: 'c-jade' },
+  none: { label: '크게 바뀌지 않음', color: 'c-muted' },
+};
+
+function buildSaitoCards(rows, meta) {
+  const resultRows = rows.filter(row => {
+    const choices = row?.choices || {};
+    return choices.record_type !== 'comment' &&
+      (choices.record_type === 'result' || choices.final_axis || choices.changed_by);
+  });
+  const label = meta.label || '1919, 무엇이 달라졌나';
+  return [
+    buildChoiceBars(label, '최종 판단 분포', resultRows, 'final_axis', SAITO_FINAL_AXES),
+    buildChoiceBars(label, '처음 판단을 가장 크게 바꾼 자료', resultRows, 'changed_by', SAITO_CHANGED_BY),
+  ];
 }
 
 // 어느 기관의 일입니까? — choices: {initial:{c1..c6}, c7, debrief_card}
