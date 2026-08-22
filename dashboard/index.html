@@ -439,6 +439,12 @@ const FALLBACK_META = {
     era: '일제강점기 · 1910년대',
     axes: [], scenes: [], sliders: [], endings: [],
   },
+  hoesaryeong1912: {
+    game_id: 'hoesaryeong1912',
+    label: '허가받으시오 — 1912년, 회사를 세우다',
+    era: '일제강점기 · 1910년대',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
   'goryeo-debate': {
     game_id: 'goryeo-debate',
     label: '고려 말 대논쟁 — 정몽주 vs 정도전',
@@ -498,6 +504,7 @@ const CANONICAL_GAME_LABELS = {
   ganghwa: '강화도 협상 테이블 — 1876년 2월',
   gendarme1910: '어느 기관의 일입니까?',
   geunal1945: '그날, 아무도 몰랐다 — 1945',
+  hoesaryeong1912: '허가받으시오 — 1912년, 회사를 세우다',
   gobu1894: '고부, 1894',
   'goryeo-debate': '고려 말 대논쟁 — 정몽주 vs 정도전',
   'goryeo-detective': '고려 지배세력 탐정단',
@@ -519,6 +526,7 @@ const CUSTOM_RENDERERS = {
   gukchae1907: buildGukchaeCards,
   gendarme1910: buildGendarmeCards,
   geunal1945: buildGeunalCards,
+  hoesaryeong1912: buildHoesaryeongCards,
   saito1919: buildSaitoCards,
 };
 
@@ -727,6 +735,7 @@ function getRows() {
 function getAnalysisRows(rows = getRows()) {
   if (selGame === 'haebang1945') return rows.filter(isHaebangResultRow);
   if (selGame === 'geunal1945') return rows.filter(r => !(r.comment || '').trim());
+  if (selGame === 'hoesaryeong1912') return rows.filter(isHoesaryeongResultRow);
   return rows;
 }
 
@@ -1064,6 +1073,48 @@ function buildSaitoCards(rows, meta) {
   return [
     buildChoiceBars(label, '최종 판단 분포', resultRows, 'final_axis', SAITO_FINAL_AXES),
     buildChoiceBars(label, '처음 판단을 가장 크게 바꾼 자료', resultRows, 'changed_by', SAITO_CHANGED_BY),
+  ];
+}
+
+// 허가받으시오 — choices: {company_form, final_decision, decision_reason, pattern}
+const HOESARYEONG_PATTERNS = {
+  'H-I': { label: '합명 구상 → 회사 성립', color: 'c-jade' },
+  'H-N': { label: '합명 구상 → 지금 방식 유지', color: 'c-amber' },
+  'J-I': { label: '주식 구상 → 회사 성립', color: 'c-blue' },
+  'J-N': { label: '주식 구상 → 지금 방식 유지', color: 'c-red' },
+};
+const HOESARYEONG_INCORPORATE_REASONS = {
+  partners: { label: '함께 준비한 사람들과의 약속', color: 'c-jade' },
+  expansion: { label: '자본을 모아 사업 확대', color: 'c-blue' },
+};
+const HOESARYEONG_STAY_REASONS = {
+  oversight: { label: '감독·정지·해산 권한의 부담', color: 'c-red' },
+  keep_way: { label: '지금 방식 유지가 더 적절함', color: 'c-amber' },
+};
+
+function isHoesaryeongResultRow(row) {
+  const choices = row?.choices || {};
+  return choices.record_type !== 'comment' && (
+    choices.record_type === 'result' ||
+    choices.company_form ||
+    choices.final_decision ||
+    choices.pattern
+  );
+}
+
+function buildHoesaryeongCards(rows, meta) {
+  const resultRows = rows.filter(isHoesaryeongResultRow);
+  const incorporateRows = resultRows
+    .filter(row => row.choices?.final_decision === 'incorporate')
+    .map(row => ({ ...row, choices: { ...row.choices, incorporate_reason: row.choices?.decision_reason } }));
+  const stayRows = resultRows
+    .filter(row => row.choices?.final_decision === 'stay_noncompany')
+    .map(row => ({ ...row, choices: { ...row.choices, stay_reason: row.choices?.decision_reason } }));
+  const label = meta.label || '허가받으시오 — 1912년, 회사를 세우다';
+  return [
+    buildChoiceBars(label, '4궤적 분포', resultRows, 'pattern', HOESARYEONG_PATTERNS),
+    buildChoiceBars(label, '회사 성립 선택의 조건부 이유', incorporateRows, 'incorporate_reason', HOESARYEONG_INCORPORATE_REASONS),
+    buildChoiceBars(label, '지금 방식 유지 선택의 조건부 이유', stayRows, 'stay_reason', HOESARYEONG_STAY_REASONS),
   ];
 }
 

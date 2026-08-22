@@ -54,6 +54,12 @@ const FALLBACK_META: MetaRow[] = [
     axes: [], scenes: [], sliders: [], endings: [],
   },
   {
+    game_id: "hoesaryeong1912",
+    label: "허가받으시오 — 1912년, 회사를 세우다",
+    era: "일제강점기 · 1910년대",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
     game_id: "geunal1945",
     label: "그날, 아무도 몰랐다 — 1945",
     era: "일제강점기",

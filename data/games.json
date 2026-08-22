@@ -972,9 +972,49 @@
       }
     },
     {
+      "id": "G029",
+      "legacyOrder": 29,
+      "sortOrder": 25,
+      "slug": "hoesaryeong1912",
+      "title": "허가받으시오 — 1912년, 회사를 세우다",
+      "shortDescription": "회사 설립 계획을 세우고 회사령의 허가·성립·감독 구조를 확인한 뒤 회사 성립 여부를 판단한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "식민지 경제 체제의 구축과 회사령",
+      "periodLabel": "회사령 · 1912",
+      "startYear": 1912,
+      "endYear": 1912,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "회사령",
+        "식민지 경제",
+        "선택 궤적"
+      ],
+      "learningGoal": "회사령 아래에서 회사 설립 허가가 끝이 아니라 일정 기간 내 성립과 이후 감독·정지·해산 권한으로 이어졌음을 판단한다.",
+      "essentialQuestion": "허가를 받았는데도 회사 설립이 끝난 것이 아니었던 이유는 무엇인가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/hoesaryeong1912/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G025",
       "legacyOrder": 23,
-      "sortOrder": 25,
+      "sortOrder": 26,
       "slug": "saito1919",
       "title": "1919, 무엇이 달라졌나",
       "shortDescription": "총독부 발표와 여러 자료를 대조하며 1919년 이후 통치 변화와 한계를 다시 판단한다.",
@@ -1013,7 +1053,7 @@
     {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 26,
+      "sortOrder": 27,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1047,7 +1087,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 27,
+      "sortOrder": 28,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1093,7 +1133,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 28,
+      "sortOrder": 29,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
