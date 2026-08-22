@@ -3,7 +3,7 @@
   "status": "metadata-lock-candidate",
   "source": {
     "hub": "https://gtmc-history.github.io/",
-    "checkedDate": "2026-08-21",
+    "checkedDate": "2026-08-22",
     "note": "published inventory와 canonical title은 sibling games 저장소의 games.manifest.json을 기준으로 한다. 이 파일은 허브 표시·검색·필터용 projection이며 published slug/path 집합은 cross-repo audit로 manifest와 일치시킨다. dataCollection/dashboard 상태는 별도 코드 감사 전까지 audit_required로 유지한다."
   },
   "taxonomy": {
@@ -1051,9 +1051,48 @@
       }
     },
     {
+      "id": "G030",
+      "legacyOrder": 30,
+      "sortOrder": 27,
+      "slug": "altteure1937",
+      "title": "알뜨르: 지도를 넓혀라",
+      "shortDescription": "현장·제주·동아시아로 지도를 넓혀 알뜨르의 공간적 의미를 다시 설명한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "민족 말살 정책과 전시 동원 체제",
+      "periodLabel": "전시 동원 체제 · 1937년 이후",
+      "startYear": 1937,
+      "endYear": null,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": 5,
+      "durationMax": 8,
+      "participation": "개인",
+      "tags": [
+        "알뜨르",
+        "공간 분석",
+        "사료→지도"
+      ],
+      "learningGoal": "현장·제주·동아시아로 관찰 범위를 넓혀 알뜨르를 중국 대륙 전쟁 및 제주 주민 노동 동원과 연결해 설명한다.",
+      "essentialQuestion": "멀리서 확대된 전쟁은 제주 알뜨르를 어떻게 바꾸었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/altteure1937/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 27,
+      "sortOrder": 28,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1087,7 +1126,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 28,
+      "sortOrder": 29,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1133,7 +1172,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 29,
+      "sortOrder": 30,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
