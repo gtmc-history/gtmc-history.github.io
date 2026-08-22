@@ -239,6 +239,16 @@ h1 {
 .comment-meta { font-size: 0.67rem; color: var(--text-muted); margin-top: 0.28rem; }
 .no-comment { font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 1.5rem; }
 
+/* ── COMPACT CROSS-TABS ── */
+.matrix-wrap { overflow-x: auto; margin-top: 0.45rem; }
+.matrix-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.76rem; }
+.matrix-table th, .matrix-table td { border: 1px solid var(--gold-line); padding: 0.55rem 0.45rem; text-align: center; }
+.matrix-table th { color: var(--gold-lt); font-weight: 600; background: rgba(201,164,76,0.07); }
+.matrix-table th:first-child { text-align: left; min-width: 132px; }
+.matrix-table td:first-child { text-align: left; color: var(--text-sub); }
+.matrix-count { color: var(--text); font-weight: 700; }
+.matrix-zero { color: var(--text-muted); opacity: 0.55; }
+
 /* ── QUESTIONS ── */
 .question-cards { display: flex; flex-direction: column; gap: 0.75rem; }
 .q-card { background: var(--ink-card); border: 1px solid var(--gold-line); border-radius: 3px; padding: 1.2rem 1.5rem; display: flex; gap: 1rem; }
@@ -496,6 +506,7 @@ const CANONICAL_GAME_LABELS = {
   daehan1897: '대한제국 1897 — 당신의 기준으로 평가하라',
   daewongun: '대원군의 결단 — 무너지는 조선을 세워라',
   dongnip1898: '황제와 맞서다 — 1898 독립협회',
+  economy1930: '숫자는 성장하고 있습니다',
   euibyeong1907: '의병을 일으켜라 — 1895·1905·1907',
   euljsa1905: '1905 — 남겨진 선택',
   'gabo-reform': '갑오개혁 — 내가 설계한 개혁이 사라지는 날',
@@ -522,6 +533,7 @@ const CANONICAL_GAME_LABELS = {
 };
 
 const CUSTOM_RENDERERS = {
+  economy1930: buildEconomyCards,
   haebang1945: buildHaebangCards,
   euibyeong1907: buildEuibyeongCards,
   gukchae1907: buildGukchaeCards,
@@ -734,6 +746,7 @@ function getRows() {
 }
 
 function getAnalysisRows(rows = getRows()) {
+  if (selGame === 'economy1930') return rows.filter(isEconomyResultRow);
   if (selGame === 'haebang1945') return rows.filter(isHaebangResultRow);
   if (selGame === 'geunal1945') return rows.filter(r => !(r.comment || '').trim());
   if (selGame === 'hoesaryeong1912') return rows.filter(isHoesaryeongResultRow);
@@ -848,6 +861,83 @@ function renderCharts(rows, meta) {
   if (hasScenes)  grid.appendChild(buildScenesCard(rows, meta));
   if (hasSliders) grid.appendChild(buildSlidersCard(rows, meta));
   if (hasEnding)  grid.appendChild(buildEndingsCard(rows, meta));
+}
+
+// 숫자는 성장하고 있습니다 — choices v1.0 cross-tabs and first-opened evidence
+const ECONOMY_INITIAL = {
+  growth: '조선 경제, 성장의 길에 들어서다',
+  development: '농업과 공업 개발이 본격화되다',
+  distribution: '성장은 보인다. 혜택은 더 봐야 한다',
+  reserve: '이 자료만으로는 평가하기 어렵다',
+};
+const ECONOMY_FINAL = {
+  kept: '처음 제목 유지',
+  A: '빠르게 성장하다',
+  B: '결국 수탈의 경제였다',
+  C: '그 이익은 누구에게 갔는가',
+  D: '누구를 위한 개발이었는가',
+};
+const ECONOMY_R2_FIRST = {
+  capital: { label: '한국인·일본인 회사의 자본금', color: 'c-blue' },
+  tariff: { label: '1923년 관세 제도의 변화', color: 'c-amber' },
+  kr_scale: { label: '한국인 회사의 규모', color: 'c-jade' },
+};
+const ECONOMY_R3_FIRST = {
+  company: { label: '회사', color: 'c-blue' },
+  labor: { label: '노동자', color: 'c-amber' },
+  resident: { label: '주민', color: 'c-red' },
+  env: { label: '환경', color: 'c-jade' },
+};
+const ECONOMY_R3_JUDGMENT = {
+  1: { label: '주민 피해가 커 개발이라 부르기 어렵다', color: 'c-red' },
+  2: { label: '도시 성장과 다른 문제는 별개다', color: 'c-amber' },
+  3: { label: '개발은 있었다. 누구를 위한 것인지 묻는다', color: 'c-blue' },
+  4: { label: '성장·이익·비용으로 나누어 설명한다', color: 'c-jade' },
+};
+
+function isEconomyResultRow(row) {
+  const choices = row?.choices || {};
+  if (choices.record_type === 'comment') return false;
+  return choices.record_type === 'result' || !choices.record_type;
+}
+
+function buildEconomyCards(rows, meta) {
+  return [
+    buildEconomyMatrixCard(rows, meta, '처음 제목 × 최종 제목', 's0_initial', ECONOMY_INITIAL, 'final_title', ECONOMY_FINAL),
+    buildEconomyMatrixCard(rows, meta, 'R1 유지·수정 × 최종 제목', 'r1_kept', { true: 'R1 문장 유지', false: 'R1 문장 수정' }, 'final_title', ECONOMY_FINAL),
+    buildEconomyFirstChoiceCard(rows, meta, '기업 라운드 · 가장 먼저 요구한 자료', 'r2_request_order', ECONOMY_R2_FIRST, 'eco-r2'),
+    buildEconomyFirstChoiceCard(rows, meta, '흥남 라운드 · 가장 먼저 연 자료철', 'r3_folder_order', ECONOMY_R3_FIRST, 'eco-r3'),
+    buildChoiceBars(meta.label || '숫자는 성장하고 있습니다', '흥남 개발 판단', rows, 'r3_judgment', ECONOMY_R3_JUDGMENT),
+  ];
+}
+
+function buildEconomyMatrixCard(rows, meta, title, rowKey, rowDefs, colKey, colDefs) {
+  const card = mkCard(meta.label || '숫자는 성장하고 있습니다', title);
+  const rowEntries = Object.entries(rowDefs);
+  const colEntries = Object.entries(colDefs);
+  const rowHeading = rowKey === 's0_initial' ? '처음 제목' : 'R1 판단';
+  const valueFor = (row, key) => key === 'r1_kept' ? String(row.choices?.[key]) : row.choices?.[key];
+  const counts = rowEntries.map(([rowValue]) => colEntries.map(([colValue]) =>
+    rows.filter(row => valueFor(row, rowKey) === rowValue && valueFor(row, colKey) === colValue).length
+  ));
+  card.innerHTML += `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>${rowHeading}</th>${colEntries.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead><tbody>${rowEntries.map(([rowValue, rowLabel], ri) => `<tr><td>${rowLabel}</td>${colEntries.map((_, ci) => `<td><span class="${counts[ri][ci] ? 'matrix-count' : 'matrix-zero'}">${counts[ri][ci]}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="slider-note">※ 소감 전용 행은 제외하며, record_type이 없는 기존 결과 행은 포함합니다 · 결과 ${rows.length}건</div>`;
+  return card;
+}
+
+function buildEconomyFirstChoiceCard(rows, meta, title, key, defs, idPrefix) {
+  const total = rows.length;
+  const entries = Object.entries(defs);
+  const card = mkCard(meta.label || '숫자는 성장하고 있습니다', title);
+  card.innerHTML += entries.map(([value, def], i) => {
+    const count = rows.filter(row => row.choices?.[key]?.[0] === value).length;
+    const pct = total ? Math.round(count / total * 100) : 0;
+    return `<div class="bar-item"><div class="bar-row"><span class="bar-label">${def.label}</span><div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${count}명</span></div></div><div class="bar-track"><div class="bar-fill fill-${def.color}" id="${idPrefix}-${i}" style="width:0%"></div></div></div>`;
+  }).join('');
+  raf(() => entries.forEach(([value], i) => {
+    const count = rows.filter(row => row.choices?.[key]?.[0] === value).length;
+    setW(`${idPrefix}-${i}`, total ? Math.round(count / total * 100) : 0);
+  }));
+  return card;
 }
 
 // 도둑같이 온 해방 — choices: {record_type:'result', r1..r4:{path,judge}}

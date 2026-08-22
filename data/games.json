@@ -1051,9 +1051,48 @@
       }
     },
     {
+      "id": "G031",
+      "legacyOrder": 31,
+      "sortOrder": 27,
+      "slug": "economy1930",
+      "title": "숫자는 성장하고 있습니다",
+      "shortDescription": "쌀·회사·공업의 성장 지표에 추가 자료를 겹쳐 보며 식민지 경제에 대한 설명을 고쳐 쓴다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "수탈과 개발의 식민지 경제",
+      "periodLabel": "1920~1930년대 · 식민지 경제",
+      "startYear": 1920,
+      "endYear": 1930,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": 15,
+      "durationMax": 25,
+      "participation": "개인",
+      "tags": [
+        "식민지 경제",
+        "사료 판단",
+        "판단 궤적"
+      ],
+      "learningGoal": "1920~1930년대 수탈과 개발의 식민지 경제 모습을 파악하고 당시 한국인들의 삶을 설명한다.",
+      "essentialQuestion": "경제가 발전했는지 판단하려면 어떤 숫자와 자료를 함께 봐야 할까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/economy1930/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G030",
       "legacyOrder": 30,
-      "sortOrder": 27,
+      "sortOrder": 28,
       "slug": "altteure1937",
       "title": "알뜨르: 지도를 넓혀라",
       "shortDescription": "현장·제주·동아시아로 지도를 넓혀 알뜨르의 공간적 의미를 다시 설명한다.",
@@ -1092,7 +1131,7 @@
     {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 28,
+      "sortOrder": 29,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1126,7 +1165,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 29,
+      "sortOrder": 30,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1172,7 +1211,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 30,
+      "sortOrder": 31,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
