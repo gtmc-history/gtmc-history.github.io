@@ -455,6 +455,12 @@ const FALLBACK_META = {
     era: '일제강점기 · 1910년대',
     axes: [], scenes: [], sliders: [], endings: [],
   },
+  jangnal1919: {
+    game_id: 'jangnal1919',
+    label: '장날, 1919년 3월',
+    era: '일제강점기 · 3·1 운동',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
   'goryeo-debate': {
     game_id: 'goryeo-debate',
     label: '고려 말 대논쟁 — 정몽주 vs 정도전',
@@ -517,6 +523,7 @@ const CANONICAL_GAME_LABELS = {
   gendarme1910: '어느 기관의 일입니까?',
   geunal1945: '그날, 아무도 몰랐다 — 1945',
   hoesaryeong1912: '허가받으시오 — 1912년, 회사를 세우다',
+  jangnal1919: '장날, 1919년 3월',
   gobu1894: '고부, 1894',
   'goryeo-debate': '고려 말 대논쟁 — 정몽주 vs 정도전',
   'goryeo-detective': '고려 지배세력 탐정단',
@@ -540,6 +547,7 @@ const CUSTOM_RENDERERS = {
   gendarme1910: buildGendarmeCards,
   geunal1945: buildGeunalCards,
   hoesaryeong1912: buildHoesaryeongCards,
+  jangnal1919: buildJangnalCards,
   saito1919: buildSaitoCards,
 };
 
@@ -1137,6 +1145,36 @@ function buildChoiceBars(gameName, title, rows, key, defs) {
     setW('gk'+key+i, total ? Math.round(cnt / total * 100) : 0);
   }));
   return card;
+}
+
+// 장날, 1919년 3월 — 선택의 옳고 그름이 아니라 판단 분포만 표시
+const JANGNAL_S1 = {
+  village: { label: '동리 어른들에게', color: 'c-jade' },
+  market: { label: '장터의 상인·장꾼에게', color: 'c-blue' },
+  myeonjang: { label: '면장에게', color: 'c-amber' },
+  wait: { label: '아직 아무에게도', color: 'c-muted' },
+};
+const JANGNAL_S3 = {
+  tonight: { label: '오늘 밤 · 마을', color: 'c-red' },
+  marketday: { label: '내일 장날 · 장터', color: 'c-blue' },
+  joint: { label: '이웃 면에도 알림', color: 'c-jade' },
+  avoid: { label: '장날을 피함', color: 'c-muted' },
+};
+const JANGNAL_S4 = {
+  office: { label: '면사무소 앞', color: 'c-red' },
+  myeonjang_home: { label: '면장의 집', color: 'c-amber' },
+  market: { label: '장터로 돌아감', color: 'c-blue' },
+  disperse: { label: '해산', color: 'c-muted' },
+};
+
+function buildJangnalCards(rows, meta) {
+  const resultRows = rows.filter(row => row.choices?.s1_inform || row.choices?.s4_where);
+  const label = meta.label || '장날, 1919년 3월';
+  return [
+    buildChoiceBars(label, '서울 소식을 누구에게 먼저 알렸는가', resultRows, 's1_inform', JANGNAL_S1),
+    buildChoiceBars(label, '언제·어디서 모이려 했는가', resultRows, 's3_when', JANGNAL_S3),
+    buildChoiceBars(label, '면사무소 앞에서 어디로 갔는가', resultRows, 's4_where', JANGNAL_S4),
+  ];
 }
 
 // 1919, 무엇이 달라졌나 — choices: {final_axis, changed_by, r1..r4}
