@@ -1012,9 +1012,50 @@
       }
     },
     {
+      "id": "G032",
+      "legacyOrder": 32,
+      "sortOrder": 26,
+      "slug": "jangnal1919",
+      "title": "장날, 1919년 3월",
+      "shortDescription": "1919년 3월의 지역 주민이 되어 소식·준비·시점·공간을 판단하고 실제 광주군 기록과 대조한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "3·1 운동과 지역 사회의 참여",
+      "periodLabel": "3·1 운동 · 1919년 3월",
+      "startYear": 1919,
+      "endYear": 1919,
+      "lessonUse": [
+        "전개",
+        "정리"
+      ],
+      "activityType": "선택·판단",
+      "durationMin": 15,
+      "durationMax": 20,
+      "participation": "개인",
+      "tags": [
+        "3·1 운동",
+        "지역사",
+        "역사적 판단"
+      ],
+      "learningGoal": "3·1 운동이 지역에서 장날·마을·면사무소 같은 공간과 관계망을 통해 다시 조직되었음을 실제 기록과 비교하여 설명한다.",
+      "essentialQuestion": "전국적 만세 운동은 지역에서 어떤 판단과 관계망을 통해 다시 조직되었는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/jangnal1919/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G025",
       "legacyOrder": 23,
-      "sortOrder": 26,
+      "sortOrder": 27,
       "slug": "saito1919",
       "title": "1919, 무엇이 달라졌나",
       "shortDescription": "총독부 발표와 여러 자료를 대조하며 1919년 이후 통치 변화와 한계를 다시 판단한다.",
@@ -1053,7 +1094,7 @@
     {
       "id": "G031",
       "legacyOrder": 31,
-      "sortOrder": 27,
+      "sortOrder": 28,
       "slug": "economy1930",
       "title": "숫자는 성장하고 있습니다",
       "shortDescription": "쌀·회사·공업의 성장 지표에 추가 자료를 겹쳐 보며 식민지 경제에 대한 설명을 고쳐 쓴다.",
@@ -1092,7 +1133,7 @@
     {
       "id": "G030",
       "legacyOrder": 30,
-      "sortOrder": 28,
+      "sortOrder": 29,
       "slug": "altteure1937",
       "title": "알뜨르: 지도를 넓혀라",
       "shortDescription": "현장·제주·동아시아로 지도를 넓혀 알뜨르의 공간적 의미를 다시 설명한다.",
@@ -1131,7 +1172,7 @@
     {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 29,
+      "sortOrder": 30,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1165,7 +1206,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 30,
+      "sortOrder": 31,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1211,7 +1252,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 31,
+      "sortOrder": 32,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
