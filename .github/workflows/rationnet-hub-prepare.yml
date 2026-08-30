@@ -1,0 +1,276 @@
+name: Prepare rationnet1943 hub release
+
+on:
+  push:
+    branches: [publish-rationnet1943]
+    paths:
+      - '.github/workflows/rationnet-hub-prepare.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: publish-rationnet1943
+          fetch-depth: 0
+      - name: Patch hub projection and dashboard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('dashboard/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          def once(old, new, label):
+              global s
+              n = s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected 1 anchor, got {n}')
+              s = s.replace(old, new, 1)
+
+          once("  'goryeo-debate': {", """  rationnet1943: {
+    game_id: 'rationnet1943',
+    label: '배급망 1943',
+    era: '일제강점기 · 전시 동원',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  'goryeo-debate': {""", 'fallback meta')
+
+          once("  saito1919: '1919, 무엇이 달라졌나',", """  rationnet1943: '배급망 1943',
+  saito1919: '1919, 무엇이 달라졌나',""", 'canonical label')
+
+          once("  jangnal1919: buildJangnalCards,", """  jangnal1919: buildJangnalCards,
+  rationnet1943: buildRationnetCards,""", 'renderer mapping')
+
+          once("  if (selGame === 'hoesaryeong1912') return rows.filter(isHoesaryeongResultRow);\n  return rows;", """  if (selGame === 'hoesaryeong1912') return rows.filter(isHoesaryeongResultRow);
+  if (selGame === 'rationnet1943') return rows.filter(isRationnetResultRow);
+  return rows;""", 'analysis row filter')
+
+          old_comments = """function renderComments(rows) {
+  const items = rows.filter(r => r.game === selGame && r.comment && r.comment.trim());
+  const badge = document.getElementById('comment-badge');
+  if (badge) badge.textContent = items.length > 0 ? items.length : '';
+
+  document.getElementById('comment-list').innerHTML = items.length === 0
+    ? '<div class=\"no-comment\">소감을 작성한 학생이 없습니다.</div>'
+    : items.map((r, i) => `
+        <div class=\"comment-item\" style=\"animation-delay:${Math.min(i,20)*.04}s\">
+          ${esc(r.comment)}
+          <div class=\"comment-meta\">${r.class && r.class!=='미입력'?`<span class=\"comment-class\">${r.class}반</span> · `:''}${fmtTime(r.timestamp)}</div>
+        </div>`).join('');
+}"""
+          new_comments = """function renderComments(rows) {
+  if (selGame === 'rationnet1943') {
+    const items = rows.filter(r => r.game === selGame && r.choices?.record_type === 'comment' && ((r.comment || '').trim() || (r.choices?.final_text || '').trim()));
+    const badge = document.getElementById('comment-badge');
+    if (badge) badge.textContent = items.length > 0 ? items.length : '';
+    document.getElementById('comment-list').innerHTML = items.length === 0
+      ? '<div class=\"no-comment\">서술·소감을 작성한 학생이 없습니다.</div>'
+      : items.map((r, i) => `
+          <div class=\"comment-item\" style=\"animation-delay:${Math.min(i,20)*.04}s\">
+            ${(r.choices?.final_text || '').trim() ? `<div style=\"font-weight:700;margin-bottom:.4rem\">서술</div><div>${esc(r.choices.final_text)}</div>` : ''}
+            ${(r.comment || '').trim() ? `<div style=\"font-weight:700;margin:.7rem 0 .4rem\">소감</div><div>${esc(r.comment)}</div>` : ''}
+            <div class=\"comment-meta\">${r.class && r.class!=='미입력'?`<span class=\"comment-class\">${r.class}반</span> · `:''}${fmtTime(r.timestamp)}</div>
+          </div>`).join('');
+    return;
+  }
+  const items = rows.filter(r => r.game === selGame && r.comment && r.comment.trim());
+  const badge = document.getElementById('comment-badge');
+  if (badge) badge.textContent = items.length > 0 ? items.length : '';
+
+  document.getElementById('comment-list').innerHTML = items.length === 0
+    ? '<div class=\"no-comment\">소감을 작성한 학생이 없습니다.</div>'
+    : items.map((r, i) => `
+        <div class=\"comment-item\" style=\"animation-delay:${Math.min(i,20)*.04}s\">
+          ${esc(r.comment)}
+          <div class=\"comment-meta\">${r.class && r.class!=='미입력'?`<span class=\"comment-class\">${r.class}반</span> · `:''}${fmtTime(r.timestamp)}</div>
+        </div>`).join('');
+}"""
+          once(old_comments, new_comments, 'comments renderer')
+
+          renderer = r'''
+// 배급망 1943 — result/comment는 play_id로만 연결하며 normalizeResults의 attempt 병합 대상이 아니다.
+const RATIONNET_PRIVACY_MIN = 5;
+const RATIONNET_CHIPS = {
+  1: '① 1939 식량 상황',
+  2: '② 쌀 매출표',
+  3: '③ 고무제품 배급 경로',
+  4: '④ 부영 식료배급소',
+  5: '⑤ 구 설치·배급 사무 이관',
+};
+
+function isRationnetResultRow(row) {
+  const c = row?.choices || {};
+  if (c.record_type === 'comment') return false;
+  return c.record_type === 'result' || (!c.record_type && (c.s2_classify || c.s4_lines || c.s7));
+}
+function rationnetPct(count, total) {
+  return total >= RATIONNET_PRIVACY_MIN ? `${Math.round(count / total * 100)}%` : '—';
+}
+function rationnetWidth(count, total) {
+  return total >= RATIONNET_PRIVACY_MIN && total ? Math.round(count / total * 100) : 0;
+}
+function rationnetBar(label, count, total, id, color='c-blue') {
+  return `<div class="bar-row"><span class="bar-label">${label}</span><div class="bar-right"><span class="bar-pct pct-${color}">${rationnetPct(count,total)}</span><span class="bar-count">${count}명</span></div></div><div class="bar-track" style="margin-bottom:7px"><div class="bar-fill fill-${color}" id="${id}" style="width:0%"></div></div>`;
+}
+function rationnetPrivacyNote(total) {
+  return total < RATIONNET_PRIVACY_MIN
+    ? `<div class="slider-note">※ 소수 응답 보호: 결과가 ${RATIONNET_PRIVACY_MIN}건 미만이면 비율은 표시하지 않습니다. · 결과 ${total}건</div>`
+    : `<div class="slider-note">※ 최초 판단값 기준 · 결과 ${total}건</div>`;
+}
+
+function buildRationnetCards(rows, meta) {
+  return [
+    buildRationnetScopeCard(rows, meta),
+    buildRationnetSourceRangeCard(rows, meta),
+    buildRationnetS2Card(rows, meta),
+    buildRationnetMapCard(rows, meta),
+  ];
+}
+
+function buildRationnetScopeCard(rows, meta) {
+  const total = rows.length;
+  const evidenceRows = rows.filter(r => r.choices?.s7?.claim_b?.mode === 'evidence');
+  const cannotRows = rows.filter(r => r.choices?.s7?.claim_b?.mode === 'cannot_say');
+  const card = mkCard(meta.label || '배급망 1943', '범위 판단 · 주장 B');
+  card.innerHTML += rationnetBar('증거를 붙였다', evidenceRows.length, total, 'rn_b_evidence', 'c-amber');
+  card.innerHTML += rationnetBar('「말할 수 없다」를 골랐다', cannotRows.length, total, 'rn_b_cannot', 'c-jade');
+  card.innerHTML += '<div style="font-size:.72rem;color:var(--text-muted);margin:.9rem 0 .45rem">증거를 붙인 학생이 선택한 기록</div>';
+  Object.entries(RATIONNET_CHIPS).forEach(([chip, label], i) => {
+    const count = evidenceRows.filter(r => (r.choices?.s7?.claim_b?.chips || []).map(Number).includes(Number(chip))).length;
+    card.innerHTML += rationnetBar(label, count, evidenceRows.length, `rn_b_chip_${i}`, ['c-blue','c-amber','c-jade','c-red','c-gold'][i]);
+  });
+  card.innerHTML += rationnetPrivacyNote(total);
+  raf(() => {
+    setW('rn_b_evidence', rationnetWidth(evidenceRows.length,total));
+    setW('rn_b_cannot', rationnetWidth(cannotRows.length,total));
+    Object.keys(RATIONNET_CHIPS).forEach((chip,i) => {
+      const count = evidenceRows.filter(r => (r.choices?.s7?.claim_b?.chips || []).map(Number).includes(Number(chip))).length;
+      setW(`rn_b_chip_${i}`, rationnetWidth(count,evidenceRows.length));
+    });
+  });
+  return card;
+}
+
+function buildRationnetSourceRangeCard(rows, meta) {
+  const total = rows.length;
+  const defs = [
+    ['line4_first','애국반 → 가구를 「말한다」', 'c-amber'],
+    ['line5_first','학교 → 학생을 「말한다」', 'c-amber'],
+    ['line6_first','연맹 → 지정 소매상을 「말한다」', 'c-red'],
+  ];
+  const card = mkCard(meta.label || '배급망 1943', '사료 범위 감각 · S4 최초 판단');
+  defs.forEach(([key,label,color],i) => {
+    const count = rows.filter(r => r.choices?.s4_lines?.[key] === 'says').length;
+    card.innerHTML += rationnetBar(label,count,total,`rn_s4_${i}`,color);
+  });
+  card.innerHTML += rationnetPrivacyNote(total);
+  raf(() => defs.forEach(([key],i) => {
+    const count = rows.filter(r => r.choices?.s4_lines?.[key] === 'says').length;
+    setW(`rn_s4_${i}`, rationnetWidth(count,total));
+  }));
+  return card;
+}
+
+function buildRationnetS2Card(rows, meta) {
+  const total = rows.length;
+  const defs = [
+    ['c1_first','1939 식량 사정','background'],
+    ['c2_first','1940.5 쌀 매출표','distribution'],
+    ['c3_first','1940.10 이후 소비 규정','distribution'],
+    ['c4_first','시기 미확인 가격 단속','price'],
+  ];
+  const card = mkCard(meta.label || '배급망 1943', '시간×성격 · S2 최초 판정');
+  defs.forEach(([key,label,expected],i) => {
+    const count = rows.filter(r => r.choices?.s2_classify?.[key] === expected).length;
+    card.innerHTML += rationnetBar(`${label} · 성격 일치`,count,total,`rn_s2_${i}`,['c-jade','c-blue','c-blue','c-amber'][i]);
+  });
+  card.innerHTML += rationnetPrivacyNote(total);
+  raf(() => defs.forEach(([key,,expected],i) => {
+    const count = rows.filter(r => r.choices?.s2_classify?.[key] === expected).length;
+    setW(`rn_s2_${i}`, rationnetWidth(count,total));
+  }));
+  return card;
+}
+
+function buildRationnetMapCard(rows, meta) {
+  const total = rows.length;
+  const defs = [
+    ['s5_node','부영 식료배급소 → 경성부','gov'],
+    ['s6_map_read','세 사례 → 하나로 묶이지 않는다','none'],
+    ['s6_district_node','구 → 경성부 아래','under_gov'],
+  ];
+  const card = mkCard(meta.label || '배급망 1943', '지도 해독 · 최초 판단');
+  defs.forEach(([key,label,expected],i) => {
+    const count = rows.filter(r => r.choices?.[key] === expected).length;
+    card.innerHTML += rationnetBar(label,count,total,`rn_map_${i}`,['c-jade','c-blue','c-gold'][i]);
+  });
+  card.innerHTML += rationnetPrivacyNote(total);
+  raf(() => defs.forEach(([key,,expected],i) => {
+    const count = rows.filter(r => r.choices?.[key] === expected).length;
+    setW(`rn_map_${i}`, rationnetWidth(count,total));
+  }));
+  return card;
+}
+
+'''
+          once('// ⓪ 사료판단 차트', renderer + '// ⓪ 사료판단 차트', 'renderer insertion')
+          p.write_text(s, encoding='utf-8')
+
+          gp = Path('data/games.json')
+          data = json.loads(gp.read_text(encoding='utf-8-sig'))
+          games = data['games']
+          if any(g.get('slug') == 'rationnet1943' for g in games):
+              raise SystemExit('rationnet1943 already exists')
+          for g in games:
+              if isinstance(g.get('sortOrder'), int) and g['sortOrder'] >= 31:
+                  g['sortOrder'] += 1
+          entry = {
+            'id':'G033','legacyOrder':33,'sortOrder':31,'slug':'rationnet1943','title':'배급망 1943',
+            'shortDescription':'1940~1943년 경성의 배급·행정 기록을 연결하며 전시 동원이 일상의 소비와 유통을 어떻게 다시 조직했는지 복원한다.',
+            'course':'한국사2','era':'일제강점기','unit':'민족 말살 정책과 전시 동원 체제','periodLabel':'전시 동원 체제 · 1940–1943',
+            'startYear':1940,'endYear':1943,'lessonUse':['전개','정리'],'activityType':'자료·판단','durationMin':19,'durationMax':21,
+            'participation':'개인','tags':['전시 동원','배급','생활사'],
+            'learningGoal':'1940~1943년 경성의 배급·행정 기록을 연결하고 기록의 범위를 판별하여 전시 동원이 소비·유통 질서를 다시 조직했음을 설명한다.',
+            'essentialQuestion':'전시 동원은 전쟁터로 끌려간 사람에게만 일어난 일이었을까?',
+            'ai':{'use':'none','mode':None},'path':'/games/rationnet1943/','status':'published',
+            'dataCollection':{'status':'audit_required'},'dashboard':{'status':'audit_required'}
+          }
+          idx = next(i for i,g in enumerate(games) if g.get('slug') == 'haebang1945')
+          games.insert(idx, entry)
+          gp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          python -m json.tool data/games.json >/dev/null
+          grep -q "rationnet1943: buildRationnetCards" dashboard/index.html
+          grep -q "if (selGame === 'rationnet1943') return rows.filter(isRationnetResultRow);" dashboard/index.html
+          grep -q '"slug": "rationnet1943"' data/games.json
+          python - <<'PY'
+          import re, pathlib, subprocess, tempfile
+          src = pathlib.Path('dashboard/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', src, flags=re.S|re.I)
+          for i, code in enumerate(scripts):
+              if not code.strip(): continue
+              f = pathlib.Path(tempfile.gettempdir()) / f'dashboard-script-{i}.js'
+              f.write_text(code, encoding='utf-8')
+              subprocess.run(['node','--check',str(f)], check=True)
+          print('inline scripts syntax OK:', len(scripts))
+          PY
+          git diff --check
+      - name: Commit prepared release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/rationnet-hub-prepare.yml
+          git add dashboard/index.html data/games.json
+          git commit -m 'hub: prepare rationnet1943 projection and renderer'
+          git push origin HEAD:publish-rationnet1943
