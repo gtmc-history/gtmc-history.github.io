@@ -1204,9 +1204,50 @@
       }
     },
     {
+      "id": "G033",
+      "legacyOrder": 33,
+      "sortOrder": 31,
+      "slug": "rationnet1943",
+      "title": "배급망 1943",
+      "shortDescription": "1940~1943년 경성의 배급·행정 기록을 연결하며 전시 동원이 일상의 소비와 유통을 어떻게 다시 조직했는지 복원한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "민족 말살 정책과 전시 동원 체제",
+      "periodLabel": "전시 동원 체제 · 1940–1943",
+      "startYear": 1940,
+      "endYear": 1943,
+      "lessonUse": [
+        "전개",
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 19,
+      "durationMax": 21,
+      "participation": "개인",
+      "tags": [
+        "전시 동원",
+        "배급",
+        "생활사"
+      ],
+      "learningGoal": "1940~1943년 경성의 배급·행정 기록을 연결하고 기록의 범위를 판별하여 전시 동원이 소비·유통 질서를 다시 조직했음을 설명한다.",
+      "essentialQuestion": "전시 동원은 전쟁터로 끌려간 사람에게만 일어난 일이었을까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/rationnet1943/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 31,
+      "sortOrder": 32,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1252,7 +1293,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 32,
+      "sortOrder": 33,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
