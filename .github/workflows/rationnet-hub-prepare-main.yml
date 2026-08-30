@@ -1,0 +1,52 @@
+name: Run rationnet1943 hub preparation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rationnet-hub-prepare-main.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: publish-rationnet1943
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply and verify patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/prepare-rationnet-hub.py
+          python -m json.tool data/games.json >/dev/null
+          grep -q "rationnet1943: buildRationnetCards" dashboard/index.html
+          grep -q "if (selGame === 'rationnet1943') return rows.filter(isRationnetResultRow);" dashboard/index.html
+          grep -q '"slug": "rationnet1943"' data/games.json
+          python - <<'PY'
+          import re, pathlib, subprocess, tempfile
+          src=pathlib.Path('dashboard/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',src,flags=re.S|re.I)
+          for i,code in enumerate(scripts):
+              if not code.strip(): continue
+              f=pathlib.Path(tempfile.gettempdir())/f'dashboard-{i}.js'; f.write_text(code,encoding='utf-8')
+              subprocess.run(['node','--check',str(f)],check=True)
+          print('inline scripts syntax OK')
+          PY
+          git diff --check
+      - name: Commit prepared branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm -f .github/workflows/rationnet-hub-prepare.yml scripts/prepare-rationnet-hub.py
+          git add dashboard/index.html data/games.json
+          git commit -m 'hub: prepare rationnet1943 projection and renderer'
+          git push origin HEAD:publish-rationnet1943
