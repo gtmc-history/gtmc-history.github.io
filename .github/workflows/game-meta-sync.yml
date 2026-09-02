@@ -1,0 +1,33 @@
+name: One-time game_meta sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/game-meta-sync.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: https://xgniwztlrakkrbzcfklb.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Check deployment credential
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo 'SUPABASE_SERVICE_ROLE_KEY is not configured in this repository.'
+            exit 78
+          fi
+      - name: Upsert missing game metadata
+        run: |
+          curl --fail-with-body --silent --show-error \
+            -X POST "$SUPABASE_URL/rest/v1/game_meta?on_conflict=game_id" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -H 'Prefer: resolution=merge-duplicates,return=minimal' \
+            --data '[{"game_id":"jangnal1919","label":"장날, 1919년 3월","era":"일제강점기 · 3·1 운동","axes":[],"scenes":[],"sliders":[],"endings":[]},{"game_id":"imjeong1919","label":"1919~1925, 임시 정부를 다시 설계하다","era":"일제강점기 · 대한민국 임시 정부","axes":[],"scenes":[],"sliders":[],"endings":[]}]'
