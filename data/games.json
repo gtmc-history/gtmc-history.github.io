@@ -1092,9 +1092,49 @@
       }
     },
     {
+      "id": "G034",
+      "legacyOrder": 34,
+      "sortOrder": 28,
+      "slug": "imjeong1919",
+      "title": "1919~1925, 임시 정부를 다시 설계하다",
+      "shortDescription": "수업에서 배운 임시 정부의 운영과 위기를 자료로 다시 판단하며 1919~1925년 자신의 판단 변화를 확인한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "대한민국 임시 정부의 수립과 활동",
+      "periodLabel": "대한민국 임시 정부 · 1919–1925",
+      "startYear": 1919,
+      "endYear": 1925,
+      "lessonUse": [
+        "정리"
+      ],
+      "activityType": "자료·판단",
+      "durationMin": 18,
+      "durationMax": 22,
+      "participation": "개인",
+      "tags": [
+        "대한민국 임시 정부",
+        "자료 판단",
+        "판단 궤적"
+      ],
+      "learningGoal": "대한민국 임시 정부가 위기 속에서 운영 방식과 우선순위를 어떻게 재검토했는지 자료를 근거로 설명하고 자신의 판단 변화를 성찰한다.",
+      "essentialQuestion": "독립운동의 구심점으로 만들어진 임시 정부는 위기가 닥칠 때 무엇을 유지하고 무엇을 바꾸어야 했을까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/imjeong1919/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
       "id": "G031",
       "legacyOrder": 31,
-      "sortOrder": 28,
+      "sortOrder": 29,
       "slug": "economy1930",
       "title": "숫자는 성장하고 있습니다",
       "shortDescription": "쌀·회사·공업의 성장 지표에 추가 자료를 겹쳐 보며 식민지 경제에 대한 설명을 고쳐 쓴다.",
@@ -1133,7 +1173,7 @@
     {
       "id": "G030",
       "legacyOrder": 30,
-      "sortOrder": 29,
+      "sortOrder": 30,
       "slug": "altteure1937",
       "title": "알뜨르: 지도를 넓혀라",
       "shortDescription": "현장·제주·동아시아로 지도를 넓혀 알뜨르의 공간적 의미를 다시 설명한다.",
@@ -1172,7 +1212,7 @@
     {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 30,
+      "sortOrder": 31,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1206,7 +1246,7 @@
     {
       "id": "G033",
       "legacyOrder": 33,
-      "sortOrder": 31,
+      "sortOrder": 32,
       "slug": "rationnet1943",
       "title": "배급망 1943",
       "shortDescription": "1940~1943년 경성의 배급·행정 기록을 연결하며 전시 동원이 일상의 소비와 유통을 어떻게 다시 조직했는지 복원한다.",
@@ -1247,7 +1287,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 32,
+      "sortOrder": 33,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1293,7 +1333,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 33,
+      "sortOrder": 34,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",

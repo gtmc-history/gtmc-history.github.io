@@ -461,6 +461,12 @@ const FALLBACK_META = {
     era: '일제강점기 · 3·1 운동',
     axes: [], scenes: [], sliders: [], endings: [],
   },
+  imjeong1919: {
+    game_id: 'imjeong1919',
+    label: '1919~1925, 임시 정부를 다시 설계하다',
+    era: '일제강점기 · 대한민국 임시 정부',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
   rationnet1943: {
     game_id: 'rationnet1943',
     label: '배급망 1943',
@@ -530,6 +536,7 @@ const CANONICAL_GAME_LABELS = {
   geunal1945: '그날, 아무도 몰랐다 — 1945',
   hoesaryeong1912: '허가받으시오 — 1912년, 회사를 세우다',
   jangnal1919: '장날, 1919년 3월',
+  imjeong1919: '1919~1925, 임시 정부를 다시 설계하다',
   gobu1894: '고부, 1894',
   'goryeo-debate': '고려 말 대논쟁 — 정몽주 vs 정도전',
   'goryeo-detective': '고려 지배세력 탐정단',
@@ -555,6 +562,7 @@ const CUSTOM_RENDERERS = {
   geunal1945: buildGeunalCards,
   hoesaryeong1912: buildHoesaryeongCards,
   jangnal1919: buildJangnalCards,
+  imjeong1919: buildImjeongCards,
   rationnet1943: buildRationnetCards,
   saito1919: buildSaitoCards,
 };
@@ -1183,6 +1191,54 @@ function buildJangnalCards(rows, meta) {
     buildChoiceBars(label, '서울 소식을 누구에게 먼저 알렸는가', resultRows, 's1_inform', JANGNAL_S1),
     buildChoiceBars(label, '언제·어디서 모이려 했는가', resultRows, 's3_when', JANGNAL_S3),
     buildChoiceBars(label, '면사무소 앞에서 어디로 갔는가', resultRows, 's4_where', JANGNAL_S4),
+  ];
+}
+
+// 1919~1925, 임시 정부를 다시 설계하다 — 수업 후 판단 궤적
+const IMJEONG_S3 = {
+  '연결': { label: '국내 연결', color: 'c-blue' },
+  '자금': { label: '자금', color: 'c-amber' },
+  '외교': { label: '외교', color: 'c-jade' },
+  '합의': { label: '노선 합의', color: 'c-red' },
+};
+const IMJEONG_TRANSITION = {
+  '유지': { label: '같은 우선순위 유지', color: 'c-blue' },
+  '전환': { label: '다른 우선순위로 전환', color: 'c-amber' },
+  '진입': { label: '합의 → 운영 기반으로 이동', color: 'c-jade' },
+  '이탈': { label: '운영 기반 → 합의로 이동', color: 'c-red' },
+  '비해당': { label: '노선 합의 유지', color: 'c-muted' },
+};
+const IMJEONG_S5 = {
+  '개조': { label: '개조', color: 'c-jade' },
+  '창조': { label: '창조', color: 'c-red' },
+  '고수': { label: '회의 결정 불인정·정부 고수', color: 'c-blue' },
+};
+const IMJEONG_S6 = {
+  '찬성': { label: '탄핵 찬성', color: 'c-red' },
+  '반대': { label: '탄핵 반대', color: 'c-blue' },
+  '유보': { label: '자료 부족·판단 유보', color: 'c-muted' },
+};
+const IMJEONG_S4_REASON = {
+  '연락망 붕괴': { label: '연락망 붕괴', color: 'c-blue' },
+  '외교 성과 부족': { label: '외교 성과 부족', color: 'c-jade' },
+  '노선 갈등': { label: '노선 갈등', color: 'c-amber' },
+  '청원 성토': { label: '위임 통치 청원 성토', color: 'c-red' },
+};
+function buildImjeongCards(rows, meta) {
+  const resultRows = rows.filter(row => {
+    const c = row?.choices || {};
+    return c.record_type !== 'comment' && (c.record_type === 'result' || c.s1_integration_plan);
+  });
+  const label = meta.label || '1919~1925, 임시 정부를 다시 설계하다';
+  const s3Rows = resultRows.map(row => ({ ...row, choices: { ...row.choices, imj_s3: row.choices?.s3_priority || (row.choices?.s3_org_stance ? '합의' : '') } }));
+  const s4Rows = resultRows.map(row => ({ ...row, choices: { ...row.choices, imj_s4: row.choices?.s4_priority || (row.choices?.s4_org_stance ? '합의' : '') } }));
+  return [
+    buildChoiceBars(label, '1920년 · 가장 놓쳐서는 안 될 기반', s3Rows, 'imj_s3', IMJEONG_S3),
+    buildChoiceBars(label, '1921년 위기 이후 · 다시 고른 기반', s4Rows, 'imj_s4', IMJEONG_S3),
+    buildChoiceBars(label, '1920 → 1921 · 판단 변화', resultRows, 'priority_transition', IMJEONG_TRANSITION),
+    buildChoiceBars(label, '판단을 가장 흔든 사건', resultRows, 's4_reason_event', IMJEONG_S4_REASON),
+    buildChoiceBars(label, '1923년 · 임시 정부 문제에 대한 입장', resultRows, 's5_stance', IMJEONG_S5),
+    buildChoiceBars(label, '1925년 · 탄핵 책임 판단', resultRows, 's6_verdict', IMJEONG_S6),
   ];
 }
 
