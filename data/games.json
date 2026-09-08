@@ -3,7 +3,7 @@
   "status": "metadata-lock-candidate",
   "source": {
     "hub": "https://gtmc-history.github.io/",
-    "checkedDate": "2026-08-22",
+    "checkedDate": "2026-09-08",
     "note": "published inventory와 canonical title은 sibling games 저장소의 games.manifest.json을 기준으로 한다. 이 파일은 허브 표시·검색·필터용 projection이며 published slug/path 집합은 cross-repo audit로 manifest와 일치시킨다. dataCollection/dashboard 상태는 별도 코드 감사 전까지 audit_required로 유지한다."
   },
   "taxonomy": {
@@ -1134,7 +1134,7 @@
     {
       "id": "G031",
       "legacyOrder": 31,
-      "sortOrder": 29,
+      "sortOrder": 30,
       "slug": "economy1930",
       "title": "숫자는 성장하고 있습니다",
       "shortDescription": "쌀·회사·공업의 성장 지표에 추가 자료를 겹쳐 보며 식민지 경제에 대한 설명을 고쳐 쓴다.",
@@ -1173,7 +1173,7 @@
     {
       "id": "G030",
       "legacyOrder": 30,
-      "sortOrder": 30,
+      "sortOrder": 31,
       "slug": "altteure1937",
       "title": "알뜨르: 지도를 넓혀라",
       "shortDescription": "현장·제주·동아시아로 지도를 넓혀 알뜨르의 공간적 의미를 다시 설명한다.",
@@ -1212,7 +1212,7 @@
     {
       "id": "G028",
       "legacyOrder": 28,
-      "sortOrder": 31,
+      "sortOrder": 32,
       "slug": "aegukban1938",
       "title": "열 집을 묶다",
       "shortDescription": null,
@@ -1246,7 +1246,7 @@
     {
       "id": "G033",
       "legacyOrder": 33,
-      "sortOrder": 32,
+      "sortOrder": 33,
       "slug": "rationnet1943",
       "title": "배급망 1943",
       "shortDescription": "1940~1943년 경성의 배급·행정 기록을 연결하며 전시 동원이 일상의 소비와 유통을 어떻게 다시 조직했는지 복원한다.",
@@ -1287,7 +1287,7 @@
     {
       "id": "G026",
       "legacyOrder": 26,
-      "sortOrder": 33,
+      "sortOrder": 34,
       "slug": "haebang1945",
       "title": "도둑같이 온 해방 — 1945",
       "displayTitle": "도둑같이 온 해방 1945",
@@ -1333,7 +1333,7 @@
     {
       "id": "G027",
       "legacyOrder": 27,
-      "sortOrder": 34,
+      "sortOrder": 35,
       "slug": "geunal1945",
       "title": "그날, 아무도 몰랐다 — 1945",
       "displayTitle": "그날, 아무도 몰랐다 1945",
@@ -1374,6 +1374,46 @@
         "label": "1945 · 해방",
         "comparisonLabel": "같은 역사, 다른 수업 경험",
         "variantLabel": "판단 궤적"
+      }
+    },
+    {
+      "id": "G035",
+      "legacyOrder": 35,
+      "sortOrder": 29,
+      "slug": "uiyeol-target",
+      "title": "왜 그곳을 겨냥했을까?",
+      "shortDescription": "의열 투쟁의 표적을 분류하고 사료와 실행 결과를 비교하며 표적만으로 조직·전략·논리를 어디까지 설명할 수 있는지 판단한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "무장 투쟁과 의열 투쟁",
+      "periodLabel": "1919–1932 · 의열 투쟁",
+      "startYear": 1919,
+      "endYear": 1932,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "의열 투쟁",
+        "사료 비판",
+        "표적 분류"
+      ],
+      "learningGoal": "의열 투쟁의 주요 사례를 표적의 성격에 따라 분류하고, 사료와 실행 결과를 근거로 표적이 보여 주는 의도와 설명의 한계를 판단한다.",
+      "essentialQuestion": "표적을 보면 독립운동가들이 식민 지배의 무엇을 문제로 보았는지 어디까지 읽을 수 있을까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/uiyeol-target/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
       }
     }
   ]
