@@ -1415,6 +1415,46 @@
       "dashboard": {
         "status": "audit_required"
       }
+    },
+    {
+      "id": "G036",
+      "legacyOrder": 36,
+      "sortOrder": 29.5,
+      "slug": "bunhwa1920",
+      "title": "갈라진 지도",
+      "shortDescription": "자료의 근거로 관계를 연결하고, 1920년대 민족 운동의 공통 목표와 갈라진 지점을 설명한다.",
+      "course": "한국사2",
+      "era": "일제강점기",
+      "unit": "1920년대 민족 운동",
+      "periodLabel": "1920년대",
+      "startYear": 1920,
+      "endYear": 1929,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "민족 운동",
+        "자료 판단",
+        "관계 지도"
+      ],
+      "learningGoal": "자료에 직접 나타난 관계와 근거가 부족한 판단을 구분하고 민족 운동의 공통 목표와 갈라진 지점을 설명한다.",
+      "essentialQuestion": "1920년대 민족 운동은 왜 하나의 길로 모이지 않았을까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/bunhwa1920/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
     }
   ]
 }
