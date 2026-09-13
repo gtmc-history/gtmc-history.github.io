@@ -1,0 +1,82 @@
+name: One-shot publish 1945 NEWSROOM to hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/newsroom-hub-publish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add hub projection and dashboard label
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          games_path = Path('data/games.json')
+          data = json.loads(games_path.read_text(encoding='utf-8'))
+          games = data['games']
+          slug = 'newsroom1945'
+          if not any(g.get('slug') == slug for g in games):
+              games.append({
+                  'id': 'G028',
+                  'legacyOrder': 28,
+                  'sortOrder': 36,
+                  'slug': slug,
+                  'title': '1945 NEWSROOM',
+                  'shortDescription': '모스크바 3국 외상회의 결정문과 실제 보도를 대조해 1면 제목을 판단하고 최종 편집 판단을 설명한다.',
+                  'course': '한국사2',
+                  'era': '해방 이후',
+                  'unit': '모스크바 3국 외상회의와 신탁통치 논쟁',
+                  'periodLabel': '해방 직후 · 1945년 12월',
+                  'startYear': 1945,
+                  'endYear': 1945,
+                  'lessonUse': [],
+                  'lessonUseStatus': 'unconfirmed',
+                  'activityType': '자료·판단',
+                  'durationMin': None,
+                  'durationMax': None,
+                  'durationStatus': 'unconfirmed',
+                  'participation': '개인',
+                  'tags': ['모스크바 3국 외상회의', '사료 대조', '신문 보도', '편집 판단'],
+                  'learningGoal': '모스크바 3국 외상회의 결정문과 당시 보도를 대조하여 자료에서 확인되는 내용과 확인되지 않는 내용을 구분하고, 근거를 바탕으로 최종 1면 제목을 판단한다.',
+                  'essentialQuestion': '결정문과 당시 보도를 비교할 때, 어떤 제목이 자료에 충실한 보도라고 판단할 수 있는가?',
+                  'ai': {'use': 'none', 'mode': None},
+                  'path': '/games/newsroom1945/',
+                  'status': 'published',
+                  'dataCollection': {'status': 'audit_required'},
+                  'dashboard': {'status': 'audit_required'}
+              })
+          if 'source' in data:
+              data['source']['checkedDate'] = '2026-09-13'
+          games_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          dash_path = Path('dashboard/index.html')
+          s = dash_path.read_text(encoding='utf-8')
+          label = "  newsroom1945: '1945 NEWSROOM',"
+          if label not in s:
+              anchor = "  geunal1945: '그날, 아무도 몰랐다 — 1945',"
+              if anchor not in s:
+                  raise SystemExit('dashboard canonical label anchor not found')
+              s = s.replace(anchor, anchor + '\n' + label, 1)
+              dash_path.write_text(s, encoding='utf-8')
+          PY
+      - name: Validate JSON and syntax marker
+        run: |
+          python -m json.tool data/games.json >/dev/null
+          grep -q "newsroom1945: '1945 NEWSROOM'" dashboard/index.html
+      - name: Commit hub publication
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/games.json dashboard/index.html
+          git commit -m 'publish: add 1945 NEWSROOM to hub'
+          git push
