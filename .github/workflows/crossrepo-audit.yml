@@ -1,0 +1,36 @@
+name: Cross-repo Singanhoe audit
+
+on:
+  push:
+    branches:
+      - release/singanhoe1927-hub
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout games repository
+        uses: actions/checkout@v4
+        with:
+          repository: gtmc-history/games
+          ref: main
+          path: games
+
+      - name: Checkout hub release branch
+        uses: actions/checkout@v4
+        with:
+          repository: gtmc-history/gtmc-history.github.io
+          ref: release/singanhoe1927-hub
+          path: hub
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Audit canonical game integration
+        working-directory: games
+        run: npm run audit:games -- --hub-repo "../hub"
