@@ -3,7 +3,7 @@
   "status": "metadata-lock-candidate",
   "source": {
     "hub": "https://gtmc-history.github.io/",
-    "checkedDate": "2026-09-08",
+    "checkedDate": "2026-09-13",
     "note": "published inventory와 canonical title은 sibling games 저장소의 games.manifest.json을 기준으로 한다. 이 파일은 허브 표시·검색·필터용 projection이며 published slug/path 집합은 cross-repo audit로 manifest와 일치시킨다. dataCollection/dashboard 상태는 별도 코드 감사 전까지 audit_required로 유지한다."
   },
   "taxonomy": {
@@ -1448,6 +1448,47 @@
         "mode": null
       },
       "path": "/games/bunhwa1920/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
+    },
+    {
+      "id": "G028",
+      "legacyOrder": 28,
+      "sortOrder": 36,
+      "slug": "newsroom1945",
+      "title": "1945 NEWSROOM",
+      "shortDescription": "모스크바 3국 외상회의 결정문과 실제 보도를 대조해 1면 제목을 판단하고 최종 편집 판단을 설명한다.",
+      "course": "한국사2",
+      "era": "해방 이후",
+      "unit": "모스크바 3국 외상회의와 신탁통치 논쟁",
+      "periodLabel": "해방 직후 · 1945년 12월",
+      "startYear": 1945,
+      "endYear": 1945,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "모스크바 3국 외상회의",
+        "사료 대조",
+        "신문 보도",
+        "편집 판단"
+      ],
+      "learningGoal": "모스크바 3국 외상회의 결정문과 당시 보도를 대조하여 자료에서 확인되는 내용과 확인되지 않는 내용을 구분하고, 근거를 바탕으로 최종 1면 제목을 판단한다.",
+      "essentialQuestion": "결정문과 당시 보도를 비교할 때, 어떤 제목이 자료에 충실한 보도라고 판단할 수 있는가?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/newsroom1945/",
       "status": "published",
       "dataCollection": {
         "status": "audit_required"
