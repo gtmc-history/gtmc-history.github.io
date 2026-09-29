@@ -1,6 +1,6 @@
 'use strict';
 
-const DATA_URLS = ['./data/games.json', './data/hub.config.json'];
+const DATA_URLS = ['/data/games.json', '/data/hub.config.json'];
 const DEFAULT_STATE = Object.freeze({
   course: '전체',
   search: '',

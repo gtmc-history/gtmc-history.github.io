@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-G350VXSFGE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-G350VXSFGE");
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>찰리쌤의 한국사 게임실</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/hub.css">
+  <script src="/assets/hub.js" defer></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__deco" aria-hidden="true">
+      <span class="hero__line"></span>
+      <span class="hero__diamond"></span>
+      <span class="hero__line"></span>
+    </div>
+    <p class="site-label" id="site-name">찰리쌤의 한국사 게임실</p>
+    <h1 id="hero-headline">선택하고, 비교하고, 판단하며 배우는 한국사</h1>
+    <p class="hero__description" id="hero-description">교실에서 바로 쓰는 한국사 인터랙티브 게임·활동</p>
+  </header>
+
+  <main class="wrap">
+    <section class="discovery" aria-label="게임 검색과 필터">
+      <div class="course-tabs" id="course-tabs" role="tablist" aria-label="과목 선택"></div>
+
+      <div class="search-row">
+        <div class="search-box">
+          <label class="visually-hidden" for="game-search">게임 검색</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.5-3.5"></path>
+          </svg>
+          <input class="search-input" id="game-search" type="search" autocomplete="off" placeholder="주제·사건·게임 이름 검색">
+        </div>
+        <button class="filter-open" id="filter-open" type="button" aria-controls="filter-dialog" aria-expanded="false">
+          <span class="filter-open__label">필터</span>
+          <span class="filter-count" id="filter-count" hidden>0</span>
+        </button>
+      </div>
+
+      <div class="active-row" id="active-row" hidden>
+        <div class="active-filters" id="active-filters" aria-label="활성 필터"></div>
+        <button class="reset-link" id="reset-all" type="button">전체 초기화</button>
+      </div>
+
+      <div class="result-summary">
+        <p class="result-count" id="result-count" aria-live="polite">게임 목록을 불러오는 중입니다.</p>
+        <button class="reset-link" id="reset-inline" type="button" hidden>필터 초기화</button>
+      </div>
+    </section>
+
+    <nav class="era-navigation" id="era-navigation" aria-label="시대 바로가기" hidden></nav>
+
+    <div class="state-panel" id="loading-state" role="status">
+      <p>게임 목록을 불러오는 중입니다.</p>
+    </div>
+
+    <div class="state-panel" id="error-state" role="alert" hidden>
+      <h2>게임 목록을 불러오지 못했습니다.</h2>
+      <p>페이지를 새로고침해 주세요. 문제가 계속되면 잠시 후 다시 시도해 주세요.</p>
+    </div>
+
+    <div class="state-panel" id="empty-state" hidden>
+      <h2>조건에 맞는 활동이 없습니다.</h2>
+      <p>필터를 하나 줄이거나 검색어를 바꿔보세요.</p>
+      <button id="empty-reset" type="button">필터 초기화</button>
+    </div>
+
+    <div id="hub-sections"></div>
+
+    <noscript>
+      <div class="state-panel" role="alert">
+        <h2>게임 목록을 불러오지 못했습니다.</h2>
+        <p>페이지를 새로고침해 주세요. 문제가 계속되면 잠시 후 다시 시도해 주세요.</p>
+      </div>
+    </noscript>
+  </main>
+
+  <dialog class="filter-dialog" id="filter-dialog" aria-labelledby="filter-title">
+    <div class="filter-dialog__header">
+      <h2 id="filter-title">필터</h2>
+      <button class="filter-close" id="filter-close" type="button" aria-label="필터 닫기">×</button>
+    </div>
+    <div class="filter-dialog__body" id="filter-controls"></div>
+    <div class="filter-dialog__footer">
+      <button class="filter-reset" id="filter-reset" type="button">전체 초기화</button>
+      <button class="filter-apply" id="filter-apply" type="button">결과 보기</button>
+    </div>
+  </dialog>
+
+  <footer>
+    <p class="footer-logo">찰리쌤의 스마트 교무실</p>
+    <a class="footer-link" href="https://hischarlie.tistory.com" target="_blank" rel="noopener noreferrer">hischarlie.tistory.com</a>
+  </footer>
+</body>
+</html>
