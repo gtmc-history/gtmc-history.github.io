@@ -1,107 +1,413 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-G350VXSFGE"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag("js", new Date());
-    gtag("config", "G-G350VXSFGE");
-  </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>찰리쌤의 한국사 게임실</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/hub.css">
-  <script src="./assets/hub.js" defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="역사교사 이명철(찰리쌤)의 질문 중심 역사수업, AI 활용 수업, 교육도구 개발과 교사 연수 포트폴리오" />
+  <link rel="canonical" href="https://gtmc.kr/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="이명철 | 역사교사 · Lee Myungchul" />
+  <meta property="og:description" content="질문이 자라는 교실을 만듭니다. 역사수업 · 질문 · AI · 교육도구" />
+  <meta property="og:url" content="https://gtmc.kr/" />
+  <meta property="og:image" content="https://gtmc.kr/og-profile.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="이명철 | 역사교사 · Lee Myungchul" />
+  <meta name="twitter:description" content="질문이 자라는 교실을 만듭니다. 역사수업 · 질문 · AI · 교육도구" />
+  <meta name="twitter:image" content="https://gtmc.kr/og-profile.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>이명철 | 역사교사 · Lee Myungchul</title>
+  <style>
+    :root {
+      --ink: #161616;
+      --paper: #ffffff;
+      --surface: #f1f1ef;
+      --jjok: #2b4a9b;
+      --jjok-deep: #1b2a5e;
+      --jjok-light: #a9baf0;
+      --jjok-pale: #c9d4f7;
+      --body: #3d3f44;
+      --muted: #5c5f66;
+      --line: rgba(22,22,22,.14);
+      --line-dark: rgba(255,255,255,.16);
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      word-break: keep-all;
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(18px);
+      background: rgba(255,255,255,.9);
+      border-bottom: 1px solid var(--line);
+    }
+    nav { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: baseline; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+    .brand span { color: var(--muted); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+    .navlinks { display: flex; gap: 20px; color: var(--body); font-size: .92rem; }
+    .navlinks a:hover { color: var(--jjok); }
+
+    .hero {
+      min-height: 760px;
+      display: grid;
+      align-items: center;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 64px; align-items: center; padding: 110px 0 90px; }
+    .eyebrow { font-size: .82rem; letter-spacing: .18em; font-weight: 800; color: var(--jjok); margin-bottom: 20px; }
+    h1, h2, .brand-title { font-family: "Noto Serif KR", "AppleMyungjo", "Batang", serif; }
+    h1 { margin: 0 0 28px; font-size: clamp(3.1rem, 6.6vw, 6.7rem); line-height: .98; letter-spacing: -.04em; font-weight: 800; }
+    h1 .sub { display: block; margin-top: 12px; color: var(--jjok); }
+    .hero-copy { max-width: 720px; font-size: clamp(1.08rem, 1.7vw, 1.3rem); color: var(--body); }
+    .hero-name { margin-top: 28px; font-size: 1.06rem; font-weight: 750; }
+    .hero-name small { display: block; margin-top: 3px; color: var(--muted); font-weight: 500; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px; border-radius: 2px; border: 1px solid var(--ink); font-weight: 700; font-size: .94rem; transition: background .15s ease, color .15s ease; }
+    .btn.primary { color: white; background: var(--ink); }
+    .btn.primary:hover { background: var(--jjok); }
+    .btn:hover { background: var(--jjok); border-color: var(--jjok); color: #fff; }
+    .btn.ghost { background: rgba(255,255,255,.52); }
+    .hero-card {
+      border: 0; border-top: 2px solid var(--ink); border-radius: 0; padding: 22px 0 0;
+      background: transparent; box-shadow: none;
+    }
+    .hero-card-label { margin:0 0 18px; font-size:.76rem; letter-spacing:.16em; font-weight:850; color:var(--jjok); }
+    .hero-stats { display:grid; border-top:1px solid var(--line); }
+    .hero-stat { display:grid; grid-template-columns:132px 1fr; gap:18px; align-items:center; padding:22px 0; border-bottom:1px solid var(--line); }
+    .hero-stat strong { font-family:"Noto Serif KR", "AppleMyungjo", "Batang", serif; font-size:2.35rem; line-height:1; letter-spacing:-.04em; color:var(--jjok-deep); }
+    .hero-stat b { display:block; margin-bottom:3px; font-size:.98rem; }
+    .hero-stat span { display:block; color:var(--muted); font-size:.84rem; line-height:1.45; }
+
+    section { padding: 112px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 170px 1fr; gap: 40px; margin-bottom: 56px; }
+    .section-no { font-size: .8rem; font-weight: 800; color: var(--jjok); letter-spacing: .14em; }
+    h2 { margin: 0; font-size: clamp(2.25rem, 4vw, 4.4rem); line-height: 1.08; letter-spacing: -.04em; font-weight:750; }
+    .lead { max-width: 790px; margin: 22px 0 0; color: var(--body); font-size: 1.08rem; }
+
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; }
+    .about-copy p { font-size: 1.08rem; margin: 0 0 18px; }
+    .meta { display: grid; gap: 0; border-top: 1px solid var(--line); }
+    .meta-row { display: grid; grid-template-columns: 120px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .meta-row b { font-size: .85rem; color: var(--muted); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+    .tag { border:1px solid var(--line); padding:6px 10px; border-radius:2px; font-size:.83rem; background:white; }
+
+    .cards { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:18px; }
+    .card { border:1px solid var(--line); border-radius:2px; padding:30px; background:#fff; min-height:260px; display:flex; flex-direction:column; justify-content:space-between; }
+    .card .kicker { color:var(--jjok); font-size:.78rem; letter-spacing:.11em; font-weight:800; text-transform:uppercase; }
+    .card h3 { font-size:1.65rem; line-height:1.18; letter-spacing:-.035em; margin:12px 0; }
+    .card p { color:var(--body); margin:0; }
+    .card .arrow { margin-top:25px; font-weight:800; color:var(--jjok); }
+    .link-card { transition: border-color .15s ease, background .15s ease; }
+    .link-card:hover { border-color:var(--jjok); }
+    .dark .link-card:hover { border-color:var(--jjok-light); }
+
+    .dark { background: var(--ink); color:white; }
+    .dark .lead { color:rgba(255,255,255,.68); }
+    .dark .section-no { color:var(--jjok-light); }
+    .dark .card .kicker { color:var(--jjok-light); }
+    .dark .card .arrow { color:var(--jjok-pale); }
+    .dark .card { background:rgba(255,255,255,.055); border-color:rgba(255,255,255,.14); }
+    .dark .card p { color:rgba(255,255,255,.67); }
+    .dark .tag { background:rgba(255,255,255,.06); border-color:var(--line-dark); }
+
+    .blogband { background: var(--surface); }
+    .brand-block { display:grid; grid-template-columns: 1fr 1fr; gap:42px; align-items:center; border:0; border-top:2px solid var(--ink); border-radius:0; background:transparent; padding:36px 0 0; }
+    .brand-title { font-size:clamp(2rem,3.2vw,3.4rem); line-height:1.08; letter-spacing:-.04em; margin:0 0 16px; }
+    .recent-posts { border:1px solid var(--line); border-radius:0; background:white; overflow:hidden; }
+    .recent-posts-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line); }
+    .recent-posts-head b { font-size:.78rem; letter-spacing:.12em; color:var(--jjok); }
+    .recent-posts-head span { font-size:.78rem; color:var(--muted); }
+    .recent-post { display:grid; grid-template-columns:76px 1fr 24px; gap:14px; align-items:start; padding:20px 22px; border-bottom:1px solid var(--line); transition:background .18s ease; }
+    .recent-post:last-child { border-bottom:0; }
+    .recent-post:hover { background:var(--surface); }
+    .recent-post time { font-size:.8rem; color:var(--muted); font-weight:700; }
+    .recent-post b { font-size:.98rem; line-height:1.45; }
+    .recent-post .go { color:var(--jjok); font-weight:900; }
+    .topic-list { display:grid; gap:0; border-top:1px solid var(--line-dark); }
+    .topic { display:grid; grid-template-columns:80px 1fr; gap:24px; padding:24px 0; border-bottom:1px solid var(--line-dark); }
+    .topic .num { color:var(--jjok-light); font-weight:800; }
+    .topic h3 { margin:0 0 7px; font-size:1.32rem; }
+    .topic p { margin:0; color:rgba(255,255,255,.64); }
+
+    .timeline { display:grid; gap:0; border-top:1px solid var(--line); }
+    .tl { display:grid; grid-template-columns:180px 1fr; gap:32px; padding:23px 0; border-bottom:1px solid var(--line); }
+    .tl time { font-weight:800; color:var(--jjok); }
+    .tl h3 { margin:0 0 5px; font-size:1.12rem; }
+    .tl p { margin:0; color:var(--muted); }
+    .credentials { margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .cred { padding:22px; border:1px solid var(--line); border-radius:0; background:white; }
+    .cred .cred-year { display:block; margin-bottom:8px; color:var(--jjok); font-size:.76rem; font-weight:850; letter-spacing:.08em; }
+    .cred b { display:block; margin-bottom:6px; line-height:1.35; }
+    .cred span { color:var(--muted); font-size:.9rem; }
+    .talks { margin-top:46px; border-top:1px solid var(--line-dark); }
+    .talks-head { margin:0; padding:28px 0 8px; font-size:1rem; letter-spacing:.02em; color:var(--jjok-light); }
+    .talk { display:grid; grid-template-columns:110px 1fr; gap:22px; padding:18px 0; border-bottom:1px solid var(--line-dark); }
+    .talk time { font-weight:800; color:var(--jjok-light); }
+    .talk b { display:block; margin-bottom:3px; }
+    .talk span { color:rgba(255,255,255,.64); font-size:.94rem; }
+
+    .contact { text-align:center; background:var(--paper); }
+    .contact h2 { max-width:900px; margin:0 auto; }
+    .contact p { max-width:680px; margin:22px auto 0; color:var(--muted); }
+    .contact .buttons { justify-content:center; }
+    footer { padding:30px 0 44px; color:var(--muted); font-size:.84rem; }
+    .footer-row { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+
+    @media (max-width: 850px) {
+      .navlinks { display:none; }
+      .hero { min-height:auto; }
+      .hero-grid { grid-template-columns:1fr; padding-top:80px; }
+      .hero-card { max-width:560px; }
+      .section-head { grid-template-columns:1fr; gap:12px; }
+      .about-grid, .brand-block { grid-template-columns:1fr; gap:38px; }
+      .cards { grid-template-columns:1fr; }
+      .credentials { grid-template-columns:1fr 1fr; }
+      .talk { grid-template-columns:90px 1fr; }
+      .tl { grid-template-columns:1fr; gap:5px; }
+    }
+    @media (max-width: 540px) {
+      .wrap { width:min(calc(100% - 26px), var(--max)); }
+      nav { min-height:62px; }
+      h1 { font-size:2.7rem; }
+      .hero-grid { padding:68px 0 58px; gap:38px; }
+      section { padding:80px 0; }
+      .hero-card { padding:18px 0 0; }
+      .hero-stat { grid-template-columns:105px 1fr; padding:18px 0; }
+      .hero-stat strong { font-size:1.9rem; }
+      .card { padding:24px; }
+      .brand-block { padding:28px 0 0; }
+      .credentials { grid-template-columns:1fr; }
+      .meta-row { grid-template-columns:95px 1fr; }
+      .topic { grid-template-columns:48px 1fr; gap:12px; }
+      .talk { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="hero__deco" aria-hidden="true">
-      <span class="hero__line"></span>
-      <span class="hero__diamond"></span>
-      <span class="hero__line"></span>
+  <header class="topbar">
+    <div class="wrap">
+      <nav aria-label="주요 멛k��">
+        <a class="brand" href="#top">이명철 <span>Lee Myungchul · 찰리쌤</span></a>
+        <div class="navlinks">
+          <a href="#about">About</a>
+          <a href="#classroom">Classroom</a>
+          <a href="#build">Build</a>
+          <a href="#teach">Teach & Share</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </nav>
     </div>
-    <p class="site-label" id="site-name">찰리쌤의 한국사 게임실</p>
-    <h1 id="hero-headline">선택하고, 비교하고, 판단하며 배우는 한국사</h1>
-    <p class="hero__description" id="hero-description">교실에서 바로 쓰는 한국사 인터랙티브 게임·활동</p>
   </header>
 
-  <main class="wrap">
-    <section class="discovery" aria-label="게임 검색과 필터">
-      <div class="course-tabs" id="course-tabs" role="tablist" aria-label="과목 선택"></div>
-
-      <div class="search-row">
-        <div class="search-box">
-          <label class="visually-hidden" for="game-search">게임 검색</label>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <path d="m20 20-3.5-3.5"></path>
-          </svg>
-          <input class="search-input" id="game-search" type="search" autocomplete="off" placeholder="주제·사건·게임 이름 검색">
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">HISTORY · QUESTIONS · AI</div>
+          <h1>질문이 자라는<br><span class="sub">교실을 만듭니다.</span></h1>
+          <p class="hero-copy">학생이 스스로 질문하고, 탐구하고, 판단하는 역사 수업을 설계합니다. 그리고 교실과 교무실에 필요한 도구는 직접 만듭니다.</p>
+          <div class="hero-name">이명철 · 역사교사<small>Lee Myungchul · History Educator · 복정고등학교 · 찰리쌤</small></div>
+          <div class="buttons">
+            <a class="btn primary" href="#classroom">수업 이야기 보기</a>
+            <a class="btn ghost" href="#build">만든 도구 보기</a>
+            <a class="btn ghost" href="https://hischarlie.tistory.com/" target="_blank" rel="noopener">스마트 교무실 ↗</a>
+          </div>
         </div>
-        <button class="filter-open" id="filter-open" type="button" aria-controls="filter-dialog" aria-expanded="false">
-          <span class="filter-open__label">필터</span>
-          <span class="filter-count" id="filter-count" hidden>0</span>
-        </button>
-      </div>
-
-      <div class="active-row" id="active-row" hidden>
-        <div class="active-filters" id="active-filters" aria-label="활성 필터"></div>
-        <button class="reset-link" id="reset-all" type="button">전체 초기화</button>
-      </div>
-
-      <div class="result-summary">
-        <p class="result-count" id="result-count" aria-live="polite">게임 목록을 불러오는 중입니다.</p>
-        <button class="reset-link" id="reset-inline" type="button" hidden>필터 초기화</button>
+        <aside class="hero-card" aria-label="대표 수업과 제작 활동 기록">
+          <p class="hero-card-label">SELECTED RECORDS</p>
+          <div class="hero-stats">
+            <div class="hero-stat"><strong>1,785</strong><div><b>학생 질문 기록</b><span>2026 상반기 대표 수업 사례</span></div></div>
+            <div class="hero-stat"><strong>23+</strong><div><b>역사 게임·활동</b><span>직접 개발·공개</span></div></div>
+            <div class="hero-stat"><strong>2016~</strong><div><b>역사교사</b><span>수업 · 연구 · 나눔</span></div></div>
+          </div>
+        </aside>
       </div>
     </section>
 
-    <nav class="era-navigation" id="era-navigation" aria-label="시대 바로가기" hidden></nav>
-
-    <div class="state-panel" id="loading-state" role="status">
-      <p>게임 목록을 불러오는 중입니다.</p>
-    </div>
-
-    <div class="state-panel" id="error-state" role="alert" hidden>
-      <h2>게임 목록을 불러오지 못했습니다.</h2>
-      <p>페이지를 새로고침해 주세요. 문제가 계속되면 잠시 후 다시 시도해 주세요.</p>
-    </div>
-
-    <div class="state-panel" id="empty-state" hidden>
-      <h2>조건에 맞는 활동이 없습니다.</h2>
-      <p>필터를 하나 줄이거나 검색어를 바꿔보세요.</p>
-      <button id="empty-reset" type="button">필터 초기화</button>
-    </div>
-
-    <div id="hub-sections"></div>
-
-    <noscript>
-      <div class="state-panel" role="alert">
-        <h2>게임 목록을 불러오지 못했습니다.</h2>
-        <p>페이지를 새로고침해 주세요. 문제가 계속되면 잠시 후 다시 시도해 주세요.</p>
+    <section id="about">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-no">01 / ABOUT</div>
+          <div>
+            <h2>역사를 가르칩니다.<br>그리고 수업의 문제를 직접 해결합니다.</h2>
+            <p class="lead">교실에서 시작한 고민을 수업 설계, 디지털 콘텐츠, 교사 업무 도구로 연결합니다.</p>
+          </div>
+        </div>
+        <div class="about-grid">
+          <div class="about-copy">
+            <p>2016년부터 특성화고, 중학교, 일반계 고등학교에서 역사를 가르쳐 왔습니다.</p>
+            <p>학생에게 맞지 않는 수업이라면 순서를 바꾸고, 필요한 활동이 없다면 새로 만들고, 반복되는 일이 있다면 도구를 만듭니다. 학교급과 학생에 따라 수업을 조정해 온 경험은 지금의 수업 철학이 되었습니다.</p>
+            <p>지금은 <strong>학생이 좋은 질문을 만드는 과정</strong>, <strong>AI를 생각의 도구로 사용하는 수업</strong>, 그리고 <strong>교사가 수업에 더 많은 시간을 쓸 수 있게 하는 교육 도구</strong>에 집중하고 있습니다.</p>
+            <div class="tags">
+              <span class="tag">#질문중심수업</span><span class="tag">#역사탐구</span><span class="tag">#생성형AI</span><span class="tag">#에듀테크</span><span class="tag">#교육도구개발</span><span class="tag">#업무자동화</span>
+            </div>
+          </div>
+          <div class="meta">
+            <div class="meta-row"><b>소속</b><span>복정고등학교 · 역사교사</span></div>
+            <div class="meta-row"><b>교직 경력</b><span>2016. 3. ~ 현재</span></div>
+            <div class="meta-row"><b>전공</b><span>역사교육과</span></div>
+            <div class="meta-row"><b>관심</b><span>질문 · 탐구 · AI · 수업도구 · 교사업무</span></div>
+            <div class="meta-row"><b>블로그</b><span><a href="https://hischarlie.tistory.com/" target="_blank" rel="noopener">찰리쌤의 스마트 교무실 ↗</a></span></div>
+            <div class="meta-row"><b>E-mail</b><span><a href="mailto:gtmc@gtmc.kr">gtmc@gtmc.kr</a></span></div>
+          </div>
+        </div>
       </div>
-    </noscript>
+    </section>
+
+    <section id="classroom">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-no">02 / CLASSROOM</div>
+          <div>
+            <h2>질문에서 시작해<br>판단까지 가는 수업.</h2>
+            <p class="lead">AI가 답을 대신 만드는 수업보다, 학생이 먼저 생각하고 AI를 비판적으로 활용하는 수업을 설계합니다.</p>
+          </div>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <div>
+              <div class="kicker">Question Inquiry Project</div>
+              <h3>질문이 자라는 한국사 교실</h3>
+              <p>학생이 배운 내용을 바탕으로 탐구 질문을 만들고, AI 질문 코치의 피드백을 받아 질문을 발전시킵니다. 질문 이력과 변화는 포트폴리오로 남고, 탐구보고서와 수행평가로 이어집니다.</p>
+            </div>
+            <div class="arrow">학생의 질문 → 피드백 → 재질문 → 탐구</div>
+          </article>
+          <article class="card">
+            <div>
+              <div class="kicker">BAEUM-GIL</div>
+              <h3>AI 활용 탐구수업 모형 ‘배움길’</h3>
+              <p>배움 읽기 → 배움 잇기 → 배움 비추기 → 배움 키우기의 순환 구조 속에서 사실과 관점, 근거와 해석을 구분하고 AI의 역사 해석도 비판적으로 검토합니다.</p>
+            </div>
+            <div class="arrow">AI를 정답지가 아니라 사고의 대상으로</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="build" class="dark">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-no">03 / BUILD</div>
+          <div>
+            <h2>필요한 도구가 없으면<br>직접 만듭니다.</h2>
+            <p class="lead">학생의 참여를 돕는 웹게임부터 질문 피드백 시스템, 반복되는 교사업무를 줄읻k�� 자동화 도구까지 교실의 실제 문제에서 출발합니다. <strong>업무는 AI에게, 시간은 학생에게.</strong></p>
+          </div>
+        </div>
+        <div class="cards">
+          <a class="card link-card" href="/history-games/"><div><div class="kicker">History Learning Lab</div><h3>한국사 웹 기반 학습 게임</h3><p>주요 한국사 단원을 학생이 직접 판단하고 조작하며 배우도록 웹 기반 학습 게임을 설계·개발하고 공개합니다.</p></div><div class="arrow">게임 허브에서 보기 ↗</div></a>
+          <a class="card link-card" href="https://hischarlie.tistory.com/166" target="_blank" rel="noopener"><div><div class="kicker">AI Feedback</div><h3>질문 코치와 학습 대시보드</h3><p>학생 질문을 수집하고 AI 피드백을 제공하며, 질문의 변화와 재제출 과정을 학생과 교사가 확인할 수 있도록 연결합니다.</p></div><div class="arrow">질문 중심 수업 사례 보기 ↗</div></a>
+          <a class="card link-card" href="https://gtmc-history.github.io/bokjeong-checker/" target="_blank" rel="noopener"><div><div class="kicker">Teacher Workflow</div><h3>교사 업무 자동화</h3><p>평가계획서, 제출·검수, 문서 처리처럼 반복되는 학교 업무를 Google Workspace와 AI, 간단한 웹도구로 줄이는 방법을 실험합니다.</p></div><div class="arrow">평가계획서 검사기 보기 ↗</div></a>
+          <a class="card link-card" href="https://hischarlie.tistory.com/" target="_blank" rel="noopener"><div><div class="kicker">Share & Open</div><h3>현장에서 쓰고, 다시 나눕니다.</h3><p>도구를 만드는 데서 끝내지 않고 실제 수업과 학교 업무에서 사용해 본 과정을 블로그와 연수에서 공유합니다.</p></div><div class="arrow">찰리쌤의 스마트 교무실 ↗</div></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="blogband" id="blog">
+      <div class="wrap">
+        <div class="brand-block">
+          <div>
+            <div class="eyebrow">GTMC · CHARLIE'S SMART OFFICE</div>
+            <h2 class="brand-title">찰리쌤의<br>스마트 교무실</h2>
+            <p>역사교사 이명철이 ‘찰리쌤’이라는 이름으로 수업에서 써본 AI, 직접 만든 교육도구, 교사업무 자동화의 시행착오를 기록합니다. 완성된 결과보다 ‘왜 만들었고, 실제로 어떻게 썼는지’를 남기는 공간입니다.</p>
+            <div class="buttons"><a class="btn primary" href="https://hischarlie.tistory.com/" target="_blank" rel="noopener">블로그 방문하기 ↗</a></div>
+          </div>
+          <div class="recent-posts" aria-label="찰리쌤의 스마트 교무실 최근 글">
+            <div class="recent-posts-head"><b>SELECTED POSTS</b><span>수업 · 기록 · 도구</span></div>
+            <a class="recent-post" href="https://hischarlie.tistory.com/166" target="_blank" rel="noopener"><time>08.09</time><b>석 달 동안 쌓인 1,785개의 질문, 그 시작은 수업 설계였습니다</b><span class="go">↗</span></a>
+            <a class="recent-post" href="https://hischarlie.tistory.com/167" target="_blank" rel="noopener"><time>08.13</time><b>내 수업을 기자들은 어떻게 읽었을까 — 언론 보도 9건을 읽고 남기는 기록</b><span class="go">↗</span></a>
+            <a class="recent-post" href="https://hischarlie.tistory.com/171" target="_blank" rel="noopener"><time>08.28</time><b>평가계획서 HWPX, 과목별로 자동 분할하고 다시 합치기</b><span class="go">↗</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="teach" class="dark">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-no">04 / TEACH & SHARE</div>
+          <div>
+            <h2>교실에서 해본 것만<br>이야기합니다.</h2>
+            <p class="lead">학교와 교육기관에서 생성형 AI, 질문 중심 수업, 수업·평가 설계, 교육도구 제작을 주제로 교사들과 경험을 나눕니다.</p>
+          </div>
+        </div>
+        <div class="topic-list">
+          <div class="topic"><div class="num">01</div><div><h3>AI와 함께 설계하는 수업과 평가</h3><p>생성형 AI를 학생의 사고를 대신하는 도구가 아니라 학습을 지원하고 피드백하는 도구로 활용하는 방법.</p></div></div>
+          <div class="topic"><div class="num">02</div><div><h3>질문에서 탐구로 가는 교실</h3><p>질문 생성 → 개선 → 자료 탐구 → 논증으로 이어지는 질문 중심 수업과 수행평가 설계.</p></div></div>
+          <div class="topic"><div class="num">03</div><div><h3>교사가 직접 만드는 교육도구</h3><p>Google Workspace, 생성형 AI, 바이브코딩을 활용해 자신의 수업과 업무에 맞는 작은 도구를 만드는 과정.</p></div></div>
+        </div>
+        <div class="talks">
+          <h3 class="talks-head">RECENT TALKS · 최근 강의와 사례 나눔</h3>
+          <div class="talk"><time>2026. 07–08</time><div><b>AI 선도교원 양성 연수 1권역 · 강사</b><span>인공지능 활용 수업 설계 및 실천 연수</span></div></div>
+          <div class="talk"><time>2026. 08</time><div><b>한국교육학술정보원(KERIS) · 2026 AI 활용 교육 콘퍼런스</b><span>AI 피드백을 활용한 질문 중심 한국사 수업 사례 발표</span></div></div>
+          <div class="talk"><time>2026. 08</time><div><b>천재교과서 · 역사 수행평가 박람회</b><span>에듀테크와 AI를 활용한 수행평가 시스템 사례 나눔</span></div></div>
+          <div class="talk"><time>2026. 10</time><div><b>교보교육재단 · 2026 교육 심포지엄</b><span>학교 현장의 생성형 AI 활용 사례발제 · 예정</span></div></div>
+        </div>
+        <div class="tags" style="margin-top:32px"><span class="tag">교내 연수</span><span class="tag">교육청·교육기관 연수</span><span class="tag">생성형 AI</span><span class="tag">질문 중심 수업</span><span class="tag">수업·평가</span><span class="tag">업무자동화</span></div>
+      </div>
+    </section>
+
+    <section id="experience">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-no">05 / EXPERIENCE</div>
+          <div>
+            <h2>학교급이 달라도<br>질문은 같았습니다.</h2>
+            <p class="lead">학생이 의미 있게 배우려면 무엇을 바꿔야 하는가. 학교가 바뀔 때마다 그 질문에서 다시 시작했습니다.</p>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="tl"><time>2016. 3. – 2018. 2.</time><div><h3>여주자영농업고등학교 · 교사</h3><p>특성화고 학생의 현재와 역사를 연결하기 위한 수업 순서와 구성을 실험했습니다.</p></div></div>
+          <div class="tl"><time>2018. 3. – 2024. 2.</time><div><h3>금광중학교 · 교사</h3><p>지역사 탐구·홍보 활동과 지역 근현대사 교육 자료 개발 경험을 쌓았습니다.</p></div></div>
+          <div class="tl"><time>2024. 3. – 현재</time><div><h3>복정고등학교 · 역사교사</h3><p>질문 탐구 프로젝트, AI 활용 탐구수업, 웹 기반 역사수업 자료와 교사업무 도구를 개발·적용하고 있으며, 2026 교육부 역사 선도교사단으로 역사 수업 자료 개발과 현장 사례 공유에 참여하고 있습니다.</p></div></div>
+        </div>
+        <div class="credentials">
+          <div class="cred"><span class="cred-year">2026~현재</span><b>교육부 역사 선도교사단</b><span>역사 수업·평가 지원자료 개발 · 연수 지원</span></div>
+          <div class="cred"><span class="cred-year">2026</span><b>역사교육 정책자문단</b><span>경기도교육청</span></div>
+          <div class="cred"><span class="cred-year">2021~현재</span><b>Google Certified Trainer</b><span>Google for Education</span></div>
+          <div class="cred"><span class="cred-year">2024~현재</span><b>AIEDAP 마스터교원</b><span>AI·디지털 기반 교육</span></div>
+          <div class="cred"><span class="cred-year">2024</span><b>교실혁명 선도교사</b><span>에듀테크 확산 · 교내 연수</span></div>
+          <div class="cred"><span class="cred-year">2026</span><b>터치 교사단</b><span>디지털 기반 수업 확산</span></div>
+          <div class="cred"><span class="cred-year">2026</span><b>하이러닝 선도교원</b><span>경기도교육청</span></div>
+          <div class="cred"><span class="cred-year">2026~현재</span><b>성남 에듀테크 지원단</b><span>에듀테크 활용 수업 지원 · 현장 확산</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact">
+      <div class="wrap">
+        <div class="section-no" style="margin-bottom:18px">06 / CONTACT</div>
+        <h2>수업과 도구에 관한<br>새로운 이야기를 기다립니다.</h2>
+        <p>교사 연수, 수업 사례 나눔, 교육도구와 콘텐츠 협업에 관한 문의는 이메일로 연락해 주세요.</p>
+        <div class="buttons">
+          <a class="btn primary" href="mailto:gtmc@gtmc.kr">이메일 보내기</a>
+          <a class="btn ghost" href="./lee_myungchul.vcf" download>연락처 저장</a>
+          <a class="btn ghost" href="https://hischarlie.tistory.com/" target="_blank" rel="noopener">블로그 보기 ↗</a>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <dialog class="filter-dialog" id="filter-dialog" aria-labelledby="filter-title">
-    <div class="filter-dialog__header">
-      <h2 id="filter-title">필터</h2>
-      <button class="filter-close" id="filter-close" type="button" aria-label="필터 닫기">×</button>
-    </div>
-    <div class="filter-dialog__body" id="filter-controls"></div>
-    <div class="filter-dialog__footer">
-      <button class="filter-reset" id="filter-reset" type="button">전체 초기화</button>
-      <button class="filter-apply" id="filter-apply" type="button">결과 보기</button>
-    </div>
-  </dialog>
-
   <footer>
-    <p class="footer-logo">찰리쌤의 스마트 교무실</p>
-    <a class="footer-link" href="https://hischarlie.tistory.com" target="_blank" rel="noopener noreferrer">hischarlie.tistory.com</a>
+    <div class="wrap footer-row"><span>© 2026 Lee Myungchul.</span><span>History · Questions · AI · 찰리쌤의 스마트 교무실</span></div>
   </footer>
+  <!-- profile version 1.3.1 -->
 </body>
 </html>
