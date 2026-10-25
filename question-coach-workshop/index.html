@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#152d52">
+<meta name="description" content="지식샘터 연수: AI가 답해도, 판단은 학생이 — 질문코치 v2 10분 실습">
+<title>질문코치 체험 · AI가 답해도, 판단은 학생이</title>
+<style>
+:root{--bg:#f3f5f8;--ink:#18273b;--muted:#60718a;--navy:#152d52;--blue:#315c9d;--pale:#eaf0fa;--line:#dce3ed;--teal:#117e78;--white:#fff;--radius:19px;--shadow:0 8px 28px rgba(25,44,79,.065)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family: "Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:16px;line-height:1.6}button,input,textarea{font:inherit}a{color:var(--blue)}button{cursor:pointer}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #79a5fd;outline-offset:3px}
+header{background:linear-gradient(124deg,#152b4c,#274a7b);color:#fff;padding:30px max(20px,calc((100vw - 1190px)/2)) 29px}.tiny{font-size:12px;letter-spacing:.09em;font-weight:800;text-transform:uppercase;color:#b3d7ff}header h1{font-size:clamp(27px,3.2vw,42px);line-height:1.26;letter-spacing:-.06em;margin:13px 0 9px}header p{margin:0;color:#d5e4f6;max-width:740px;font-size:15px}.headrow{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.tag{white-space:nowrap;color:#dbeaff;border:1px solid #7794ba;border-radius:999px;padding:5px 12px;font-weight:700;font-size:12px}
+main{max-width:1190px;margin:0 auto;padding:22px 19px 70px}.lead{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:17px}.lead div{background:#fff;border:1px solid var(--line);padding:13px 17px;border-radius:14px;font-size:14px;color:var(--muted)}.lead strong{display:block;color:var(--ink);font-size:16px}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:start;gap:18px}.stack{display:grid;gap:18px}.panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}.panel h2{font-size:21px;line-height:1.32;letter-spacing:-.035em;margin:0 0 8px}.panel h3{font-size:16px;letter-spacing:-.02em;margin:18px 0 8px}.desc{color:var(--muted);font-size:14px;margin:0 0 15px}.kicker{font-size:12px;font-weight:900;color:var(--teal);letter-spacing:.08em;margin-bottom:7px}.step{display:inline-grid;place-items:center;background:var(--pale);color:var(--blue);width:26px;height:26px;border-radius:9px;margin-right:7px;font-weight:900;font-size:13px}.fieldlabel{font-size:13px;font-weight:800;display:block;margin-bottom:6px}textarea{display:block;width:100%;min-height:113px;resize:vertical;border:1px solid #cbd5e2;border-radius:12px;padding:13px 14px;background:#fcfdff;color:var(--ink)}.btnrow{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:11px;background:var(--navy);color:#fff;text-decoration:none;font-weight:800;font-size:14px;padding:11px 16px;min-height:45px}.btn:hover{filter:brightness(1.08)}.btn.secondary{background:#fff;border-color:#c7d4e4;color:var(--navy)}.btn.teal{background:var(--teal)}.hint{font-size:13px;color:var(--muted);margin:10px 0 0}.soft{background:#f6f8fc;border:1px solid var(--line);border-radius:13px;padding:13px 15px}.mini{font-size:13px}.subtle{color:var(--muted)}.timeline{display:flex;gap:5px;margin-top:8px;margin-bottom:14px}.timeline div{border-radius:8px;height:10px;background:#e6edf6;flex:1}.timeline div:nth-child(2){flex:3;background:#7e9fcf}.timeline div:nth-child(3),.timeline div:nth-child(4){flex:2}.timeline div:first-child{background:#cbd8e8}.timegrid{display:grid;grid-template-columns:42px 1fr;gap:9px 12px;font-size:14px}.timegrid .time{font-weight:900;color:var(--blue)}.timegrid .thing{border-bottom:1px dashed var(--line);padding-bottom:8px}.test-row{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 14px}.chip{background:#f3f6fb;border:1px solid #cad7e8;color:#27466f;border-radius:100px;padding:7px 12px;font-size:13px;font-weight:750}.checks{display:grid;gap:9px;padding:9px 0}.checks label{display:flex;gap:10px;font-size:14px;align-items:flex-start;cursor:pointer}.checks input{width:18px;height:18px;accent-color:var(--teal);margin-top:3px;flex-shrink:0}.divider{height:1px;background:var(--line);margin:20px 0}.notice{background:#f3f7fe;border-left:4px solid #517dbb;border-radius:9px;padding:12px 14px;color:#39506c;font-size:13px}.service{font-size:13px;color:var(--muted);line-height:1.75}.service strong{color:var(--ink)}.service a{font-weight:700}.footer{max-width:1190px;margin:0 auto 20px;padding:0 20px;color:#6b788b;font-size:12px}.status{font-size:12px;font-weight:700;min-height:19px;color:#087a64;margin:9px 0 0}.collapse{background:none;border:0;padding:0;color:var(--blue);font-weight:800;text-decoration:underline;text-underline-offset:3px}.prompt-preview{display:none;white-space:pre-wrap;max-height:260px;overflow:auto;font-size:12px;line-height:1.7;padding:12px;background:#f4f6fa;border-radius:10px;border:1px solid var(--line)}.prompt-preview.open{display:block}details{font-size:13px;color:var(--muted)}summary{cursor:pointer;font-weight:700;color:var(--navy)}.quote{padding-left:13px;border-left:3px solid #90a9ce;color:#34445a;font-size:14px}
+@media(max-width:840px){.grid{grid-template-columns:1fr}.lead{grid-template-columns:1fr}.headrow{display:block}.tag{display:inline-block;margin-top:14px}.panel{padding:18px}main{padding:15px 12px 44px}header{padding:26px 18px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="headrow">
+    <div>
+      <div class="tiny">2026 지식샘터 · 실시간 교원 연수</div>
+      <h1>AI가 답해도, 판단은 학생이</h1>
+      <p>질문코치 v2 체험 페이지 · AI가 대신 질문을 완성하는지보다, 학생이 질문을 스스로 발전시키도록 어떤 도움을 주는지 살펴봅니다.</p>
+    </div>
+    <span class="tag">10분 실습 · 별도 로그인/제출 없음</span>
+  </div>
+</header>
+<main>
+  <div class="lead" aria-label="실습 개요">
+    <div><strong>1. 내 질문 정하기</strong>웹게임에서 생긴 궁금증</div>
+    <div><strong>2. 질문코치와 대화</strong>v2 지침을 일반 AI에 붙여 넣기</div>
+    <div><strong>3. 다시 판단하기</strong>도움의 적절성을 확인하고 공유</div>
+  </div>
+  <div class="grid">
+    <div class="stack">
+      <section class="panel" id="write">
+        <div class="kicker">STEP 01 · 1분</div>
+        <h2><span class="step">1</span>나의 탐구 질문</h2>
+        <p class="desc">앞서 경험한 대한제국 역사 의사결정 웹게임에서 궁금해진 점을 적어 보세요. 아직 완성된 질문일 필요는 없습니다.</p>
+        <label class="fieldlabel" for="myQuestion">처음 질문</label>
+        <textarea id="myQuestion" placeholder="예) 대한제국은 국권을 지키기 위해 어떤 대응을 할 수 있었을까?"></textarea>
+        <div class="btnrow">
+          <a class="btn secondary" href="https://gtmc-history.github.io/games/euljsa1905/" target="_blank" rel="noopener noreferrer">역사 웹게임 다시 열기 ↗</a>
+        </div>
+        <p class="hint">입력한 질문은 이 페이지에서 서버로 전송하거나 저장하지 않습니다.</p>
+      </section>
+      <section class="panel" id="prompt">
+        <div class="kicker">STEP 02 · 3분</div>
+        <h2><span class="step">2</span>질문코치 지침 복사 → AI 열기</h2>
+        <p class="desc">질문코치 v2의 <strong>원문 전체</strong>를 복사해 일반 Gemini 대화창에 붙여 넣으세요. 지침을 보낸 뒤, 자신의 질문으로 대화를 시작합니다.</p>
+        <div class="btnrow">
+          <button class="btn" type="button" id="copyPrompt">① 질문코치 v2 지침 복사</button>
+          <button class="btn secondary" type="button" id="copyQuestion">② 내 질문 복사</button>
+        </div>
+        <div class="btnrow">
+          <a class="btn teal" href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer">③ 일반 Gemini 열기 ↗</a>
+          <a class="btn secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">대체: ChatGPT 열기 ↗</a>
+        </div>
+        <p class="status" id="copyStatus" role="status" aria-live="polite"></p>
+        <p class="hint">먼저 지침을 전송하고, 다음 메시지로 내 질문을 보냅니다. 일반 채팅에서는 젬을 생성·공유할 필요가 없습니다.</p>
+        <div class="divider"></div>
+        <button class="collapse" type="button" id="showPrompt" aria-expanded="false" aria-controls="promptPreview">v2 지침 원문 펼쳐 보기</button>
+        <pre class="prompt-preview" id="promptPreview" tabindex="0"></pre>
+        <p class="hint"><a href="coach-v2.txt" target="_blank" rel="noopener noreferrer">지침 텍스트 파일 직접 열기</a> · 복사가 막히면 이 파일을 열어 전체 선택 후 복사하세요.</p>
+      </section>
+      <section class="panel" id="test">
+        <div class="kicker">STEP 03 · 4분</div>
+        <h2><span class="step">3</span>의도적으로 코치를 시험하기</h2>
+        <p class="desc">실제 질문 대화를 마친 다음, 아래 문장 중 하나를 AI에 입력하세요. AI가 같은 질문만 반복하지 않고 적절히 도와주는지 확인합니다.</p>
+        <div class="test-row">
+          <button type="button" class="chip" data-copy="그냥 완성된 질문으로 만들어 주세요.">“그냥 만들어 주세요” 복사</button>
+          <button type="button" class="chip" data-copy="모르겠어요. 생각이 잘 안 나요.">“모르겠어요” 복사</button>
+          <button type="button" class="chip" data-copy="제 질문은 몇 점인가요? 레벨 3인가요?">“몇 점이에요?” 복사</button>
+        </div>
+        <div class="checks" aria-label="코치 점검 항목">
+          <label><input type="checkbox" class="ck">학생 대신 완성된 탐구 질문을 작성하지 않았는가?</label>
+          <label><input type="checkbox" class="ck">막혔을 때 되묻기 외에 선택지·빈칸 등 발판을 제공했는가?</label>
+          <label><input type="checkbox" class="ck">레벨·점수를 판정하지 않았는가?</label>
+          <label><input type="checkbox" class="ck">질문이 충분해지면 추가 수정을 요구하지 않고 멈췄는가?</label>
+        </div>
+        <div class="divider"></div>
+        <label class="fieldlabel" for="reflection">Zoom 채팅에 공유할 한 문장</label>
+        <textarea id="reflection" style="min-height:84px" placeholder="예) '모르겠어요'라고 했더니 질문 대신 비교 기준 두 개를 제시해 주어 좋았습니다."></textarea>
+        <div class="btnrow"><button type="button" class="btn" id="copyReflection">Zoom 채팅용 문장 복사</button></div>
+        <p class="status" id="reflectionStatus" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel" aria-label="실습 일정">
+        <div class="kicker">10 MINUTE FLOW</div>
+        <h2>오늘의 실습 흐름</h2>
+        <div class="timeline" aria-hidden="true"><div></div><div></div><div></div><div></div></div>
+        <div class="timegrid">
+          <div class="time">1분</div><div class="thing">웹게임에서 생긴 질문 적기</div>
+          <div class="time">3분</div><div class="thing">지침 복사 → AI에 질문 입력 → 대화</div>
+          <div class="time">2분</div><div class="thing">의도적인 제한 시험 하나 진행</div>
+          <div class="time">2분</div><div class="thing">체크리스트로 응답 점검</div>
+          <div class="time">2분</div><div class="thing">Zoom 채팅으로 판단 이유 공유</div>
+        </div>
+        <div class="notice" style="margin-top:15px"><strong>실습의 초점</strong><div>AI가 질문을 얼마나 멋지게 고쳤는지가 아니라, <strong>학생이 직접 생각하고 결정할 여지</strong>를 남겼는지 확인합니다.</div></div>
+      </section>
+      <section class="panel">
+        <div class="kicker">WHY GEM? WHY NOT ONLY GEM?</div>
+        <h2>젬을 소개하되, 실습은 일반 채팅으로</h2>
+        <p class="desc">Gemini 잼(Gem)은 반복 사용할 지침을 저장해 맞춤형 AI 역할을 만든 기능입니다. 이번 질문코치의 1학기 운영 원형과 v2 모두 이러한 <strong>역할·금지 원칙·지원 방식 설계</strong>를 보여주는 사례입니다.</p>
+        <div class="soft service">
+          <strong>Google 공식 안내에 따른 전환 일정</strong>
+          <div>개인 Google 계정(성인): 2026.11.17 사용·편집 제한, 12.17 Gemini 앱에서 삭제</div>
+          <div>Workspace 교육 계정: <strong>2027.6.1 이전에는 종료되지 않음</strong>(정확한 시점은 추후 공지)</div>
+          <div>Gems → Skills 전환 예정. 기관·계정별 기능 제공 시점은 다를 수 있습니다.</div>
+          <div><a href="https://support.google.com/gemini/answer/18560919?hl=ko" target="_blank" rel="noopener noreferrer">Google 공식 전환 안내 ↗</a></div>
+        </div>
+        <p class="hint">그래서 이 페이지는 특정 잼 공유 링크에 의존하지 않고, <strong>지침 텍스트를 일반 생성형 AI 채팅에 붙여 넣는 방식</strong>으로 운영합니다.</p>
+      </section>
+      <section class="panel">
+        <div class="kicker">강의 후에도 가져갈 것</div>
+        <h2>도구보다 설계 원칙</h2>
+        <div class="quote">질문은 학생이 쓴다. AI는 필요한 발판만 놓는다. 질문에 대한 최종 판단과 근거 있는 답은 학생이 맡는다.</div>
+        <h3>연수 후 내 교과에 적용하려면</h3>
+        <div class="soft mini">① 교과·학교급에 맞게 v2 지침을 수정 → ② 완성 질문 대필 금지 원칙 유지 → ③ 실제 학생 질문으로 미리 시험 → ④ AI 판정과 학생의 판단을 구분하여 기록</div>
+        <p class="hint">주의: v2 원문은 고등학교 한국사 맥락입니다. 다른 교과에서는 역사 관련 지시를 자신의 교과 내용에 맞게 변경하세요.</p>
+      </section>
+      <section class="panel">
+        <h2>접속 문제가 생기면</h2>
+        <details open><summary>복사 버튼이 작동하지 않을 때</summary><p>‘지침 텍스트 파일 직접 열기’에서 전체 선택(Ctrl+A) 후 복사(Ctrl+C)하세요.</p></details>
+        <details><summary>Gemini에 로그인할 수 없을 때</summary><p>ChatGPT 등 접근 가능한 일반 생성형 AI에서 같은 지침을 사용하거나, 강사가 제시한 AI 응답 예시를 점검합니다.</p></details>
+        <details><summary>학교 계정에서 접근이 제한될 때</summary><p>학교 정책을 우회하지 말고, 시연 화면과 관찰 체크리스트로 참여하세요.</p></details>
+        <details><summary>내 입력 내용이 저장되나요?</summary><p>이 페이지는 수집·저장 기능이 없습니다. 다만 외부 AI 사이트와 Zoom에 직접 입력한 내용에는 각각 해당 서비스의 정책이 적용됩니다. 학생 실명이나 민감한 정보를 입력하지 마세요.</p></details>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="footer">복정고등학교 · 2026 지식샘터 질문코치 체험 · 이 웹페이지는 독립적인 정적 안내 페이지이며 생성형 AI API를 호출하거나 답변을 생성하지 않습니다.</footer>
+<script>
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  let prompt = '';
+  const promptPreview = byId('promptPreview');
+  async function loadPrompt(){
+    if(prompt) return prompt;
+    const response = await fetch('./coach-v2.txt',{cache:'no-store'});
+    if(!response.ok) throw new Error('지침 파일을 불러올 수 없습니다.');
+    prompt = (await response.text()).trim();
+    if(prompt.length < 3000) throw new Error('지침 파일이 불완전합니다.');
+    promptPreview.textContent = prompt;
+    return prompt;
+  }
+  async function copyText(value, target){
+    try{
+      if(!value.trim()) throw new Error('복사할 내용이 비어 있습니다.');
+      await navigator.clipboard.writeText(value);
+      target.textContent = '✓ 복사했습니다. AI 대화창이나 Zoom 채팅에 붙여 넣으세요.';
+    }catch(error){
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.style.position='fixed';area.style.left='-9999px';
+      document.body.appendChild(area);area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      target.textContent = ok ? '✓ 복사했습니다.' : '복사가 제한되었습니다. 텍스트를 직접 선택해 복사해 주세요.';
+    }
+  }
+  byId('copyPrompt').addEventListener('click',async()=>{
+    try{await copyText(await loadPrompt(),byId('copyStatus'));}
+    catch(error){byId('copyStatus').textContent='지침 파일을 불러오지 못했습니다. 아래 직접 열기 링크를 이용하세요.';}
+  });
+  byId('copyQuestion').addEventListener('click',()=>{
+    const value=byId('myQuestion').value.trim();
+    if(!value){byId('copyStatus').textContent='먼저 처음 질문을 작성해 주세요.';byId('myQuestion').focus();return;}
+    copyText(value,byId('copyStatus'));
+  });
+  byId('copyReflection').addEventListener('click',()=>{
+    const value=byId('reflection').value.trim();
+    if(!value){byId('reflectionStatus').textContent='먼저 점검 결과를 한 문장으로 적어 주세요.';byId('reflection').focus();return;}
+    copyText(value,byId('reflectionStatus'));
+  });
+  for(const button of document.querySelectorAll('[data-copy]')){
+    button.addEventListener('click',()=>copyText(button.dataset.copy,byId('copyStatus')));
+  }
+  byId('showPrompt').addEventListener('click',async()=>{
+    const opening=!promptPreview.classList.contains('open');
+    try{
+      if(opening) await loadPrompt();
+      promptPreview.classList.toggle('open',opening);
+      byId('showPrompt').setAttribute('aria-expanded',String(opening));
+      byId('showPrompt').textContent=opening?'v2 지침 원문 접기':'v2 지침 원문 펼쳐 보기';
+    }catch(e){byId('copyStatus').textContent='원문을 불러올 수 없습니다. 텍스트 파일 링크를 이용하세요.';}
+  });
+})();
+</script>
+</body>
+</html>
