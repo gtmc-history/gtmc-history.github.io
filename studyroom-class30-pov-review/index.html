@@ -1057,13 +1057,20 @@ function furnitureFootprints30(){
 function pathClear30(from,points,destination){
  const obstacles=furnitureFootprints30();
  let prev=from;
- for(const to of points){
+ for(let segment=0;segment<points.length;segment++){
+  const to=points[segment],finalApproach=segment===points.length-1;
   const distance=Math.hypot(prev[0]-to[0],prev[1]-to[1]),steps=Math.max(1,Math.ceil(distance/.075));
   for(let i=0;i<=steps;i++){
    const t=i/steps,x=prev[0]+(to[0]-prev[0])*t,z=prev[1]+(to[1]-prev[1])*t;
    for(const o of obstacles){
     if(o.kind==='chair'&&o.owner===destination)continue;
-    const pad=o.kind==='chair'?.13:.13;
+    // Last half-metre intentionally ends at the destination chair. The destination
+    // desk is not a corridor obstacle during this short sitting animation.
+    if(finalApproach&&o.kind==='desk'&&(
+      o.owner===destination||
+      (isSharedSeat(destination,roomKey)&&(destination%L.cols)%2===1&&o.owner===destination-1)
+    ))continue;
+    const pad=.24; // approximately the avatar's footprint, not just its center point
     if(Math.abs(x-o.x)<o.hx+pad&&Math.abs(z-o.z)<o.hz+pad)return false;
    }
   }
