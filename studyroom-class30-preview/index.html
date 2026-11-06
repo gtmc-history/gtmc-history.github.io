@@ -296,10 +296,19 @@ function npc(kind){
     subject:pick(SUBJECTS),elapsed:rnd(60,2600),len:pick([1500,3000,3000]),state:'study',breakLeft:0,
     look:{skin:pick(SKIN),hair:pick(HAIR),shirt:pick(SHIRT),bun:Math.random()<.5}};
 }
-function makeSeats(kind,fill){return Array.from({length:12},(_,idx)=>({idx,occ:null,trace:null}));}
+
+/* v0.7-class preview: versioned 30-seat rooms; existing 12-seat rooms unchanged. */
+function isClassRoom30(k){
+ return k==='public-3p'||/^sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-4$/.test(k||'');
+}
+function seatCapacity(k){return isClassRoom30(k)?30:12;}
+function sharedCount30(k){
+ let n=0;for(let i=0;i<seatCapacity(k);i++)if(isSharedSeat(i,k))n++;return n;
+}
+function makeSeats(kind,fill){return Array.from({length:seatCapacity(kind)},(_,idx)=>({idx,occ:null,trace:null}));}
 const rooms={};
-['public-1','public-2','public-3','public-4','public-5'].forEach(k=>rooms[k]={seats:makeSeats(k,0),today:0,goal:{}});
-let roomKey='public-3';
+['public-1','public-2','public-3','public-4','public-5','public-3p'].forEach(k=>rooms[k]={seats:makeSeats(k,0),today:0,goal:{}});
+let roomKey='public-3p';
 /* STUDY ROOM v0.6-C: independent visual themes, no DB schema changes. */
 const ROOM_THEMES={
   modern:{id:'modern',icon:'🏫',name:'캠퍼스 라운지',desc:'밝은 원목과 커다란 유리창',shared:8,bg:'#dcd4bf',wall:'#e7e7dd',floor:'#bdbdb4',rug:'#d7dbd2',wood:'#c9a37d',trim:'#6f8f89',chair:'#748f86',lamp:'#fff3cb',sun:'#fff7df',sky:'#c4e8ee'},
@@ -309,11 +318,19 @@ const ROOM_THEMES={
   forest:{id:'forest',icon:'🌿',name:'숲속 서재',desc:'큰 창과 실내 나무·초록빛',shared:8,bg:'#748e79',wall:'#d7dcc6',floor:'#a99f79',rug:'#7a996b',wood:'#a27d52',trim:'#587b5d',chair:'#7c9871',lamp:'#fff0b7',sun:'#f5e9c8',sky:'#c5dfaa'}
 };
 function themeFor(key){
+  if(isClassRoom30(key))return ROOM_THEMES.coast;
   const n=Number((key||'public-1').split('-').pop());
   const names=(key||'').startsWith('sch-')?['modern','coast','astral']:['modern','classic','coast','astral','forest'];
   return ROOM_THEMES[names[Math.max(0,Math.min(names.length-1,(n||1)-1))]]||ROOM_THEMES.modern;
 }
-function isSharedSeat(i,key){return i<themeFor(key||roomKey).shared;}
+function isSharedSeat(i,key){
+ const k=key||roomKey;
+ if(!isClassRoom30(k))return i<themeFor(k).shared;
+ const cols=innerWidth/innerHeight<.85?3:6;
+ const row=Math.floor(i/cols),column=i%cols;
+ // 18 shared seats: PC three shared rows, mobile first two seats of nine rows.
+ return cols===6?row<3:row<9&&column<2;
+}
 
 let speed=1;
 
@@ -368,10 +385,11 @@ const seatObjs=[]; // {g, hit, char, x, z, deskTopY}
 const plants=[];
 
 function computeLayout(){
-  const portrait=innerWidth/innerHeight<.85;
-  const cols=portrait?2:4, rows=12/cols, dx=portrait?1.95:2.3, dz=2.15;
+  const portrait=innerWidth/innerHeight<.85,large=isClassRoom30(roomKey);
+  const cols=large?(portrait?3:6):(portrait?2:4);
+  const count=seatCapacity(roomKey),rows=count/cols,dx=large?(portrait?1.85:2.1):(portrait?1.95:2.3),dz=large?2.08:2.15;
   const seats=[];
-  for(let i=0;i<12;i++){const c=i%cols,r=Math.floor(i/cols);seats.push({x:(c-(cols-1)/2)*dx,z:(r-(rows-1)/2)*dz})}
+  for(let i=0;i<count;i++){const c=i%cols,r=Math.floor(i/cols);seats.push({x:(c-(cols-1)/2)*dx,z:(r-(rows-1)/2)*dz})}
   const halfW=cols*dx/2+1.0, halfD=rows*dz/2+1.1, maxZ=Math.max(...seats.map(q=>q.z));
   const aisles=[];for(let c=0;c<cols-1;c++)aisles.push((c+.5-(cols-1)/2)*dx);
   return {portrait,cols,rows,dx,dz,seats,halfW,halfD,frontZ:maxZ+1.5,door:{x:halfW-.35,z:maxZ+1.5},aisles};
@@ -722,7 +740,7 @@ function buildRoom(){
   scene.background.set(t.bg);if(scene.fog){scene.fog.color.set(t.bg)}
   sun.color.set(t.sun);warm.color.set(t.lamp);
   sun.intensity=t.id==='astral'?.33:.68;warm.intensity=t.id==='astral'?.85:.36;
-  // Surfaces: all themed geometry is placed in this roomGroup. The 12 seat IDs are fixed.
+  // Surfaces: theme scene keeps every server seat ID (12 standard / 30 preview).
   const f=new THREE.Mesh(new THREE.PlaneGeometry(W*2,D*2+4),M(t.floor));
   f.rotation.x=-Math.PI/2;f.position.z=1.5;f.receiveShadow=true;roomGroup.add(f);
   const planks=t.id==='modern'||t.id==='coast'?1.1:.65;
@@ -781,7 +799,7 @@ function buildRoom(){
   const dh=.76;
   L.seats.forEach((p,i)=>{
     const shared=isSharedSeat(i,roomKey);
-    if(shared&&i%2===0&&L.seats[i+1]){
+    if(shared&&(i%L.cols)%2===0&&L.seats[i+1]&&isSharedSeat(i+1,roomKey)&&Math.abs(L.seats[i+1].z-p.z)<.01){
       const other=L.seats[i+1],center=(p.x+other.x)/2,width=Math.abs(p.x-other.x)+1.12;
       const tableGroup=new THREE.Group();tableGroup.position.set(center,0,p.z);roomGroup.add(tableGroup);
       box(width,.09,.82,t.wood,0,dh,0,tableGroup);
@@ -1139,8 +1157,8 @@ const SB_URL='https://onsjszszvtclmtpfivjt.supabase.co';
 const SB_KEY='sb_publishable_1DkbZFhimFE-pHGztz4JhA_cMEesM2k'; // browser-safe publishable key, NOT a secret
 const TURNSTILE_SITE_KEY='0x4AAAAAAF1uiPf1JVADknYM'; // Public Turnstile sitekey only; NEVER commit secret
 const CAPTCHA_SERVER_READY=true; // Supabase CAPTCHA enabled by operator; verify sign-in in a real browser
-const ROOM_KEYS=['public-1','public-2','public-3','public-4','public-5'];
-const ROOM_RE=/^(?:public-[1-5]|sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-[1-3])$/;
+const ROOM_KEYS=['public-3p','public-1','public-2','public-3','public-4','public-5'];
+const ROOM_RE=/^(?:public-[1-5]|public-3p|sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-[1-4])$/;
 let sb=null, session=null, schoolChoice=null, schoolName='', serverTotals=null, serverHistory=[];
 let liveConnected=false, liveOccupied=0, liveViewers=0, liveId=null, serverOffset=0;
 let roomChannel=null, activeTab=false, isConnecting=false, hbTimer=null, refetchT=null, pendingClaim=null;
@@ -1149,14 +1167,14 @@ let following=false, recoveryActive=false, finishing=false, sessionErr=false, lo
 let historyTimer=null, historyQueue=Promise.resolve(), stateQueue=Promise.resolve();
 let foregroundActive=!document.hidden&&document.hasFocus();
 let tabWaiting=false;
-const roomName=k=>(k.startsWith('sch-')?(schoolName||'우리 학교')+' · ':'')+themeFor(k).icon+' '+themeFor(k).name;
+const roomName=k=>isClassRoom30(k)?(k.startsWith('sch-')?(schoolName||'우리 학교')+' · 🌊 학급 오션뷰 30석':'🌊 오션뷰 학급형 30석'):(k.startsWith('sch-')?(schoolName||'우리 학교')+' · ':'')+themeFor(k).icon+' '+themeFor(k).name;
 function ensureRoom(k){if(!rooms[k])rooms[k]={seats:makeSeats(k,0),today:0,goal:{}}}
 function getTodaySec(mode){return +(serverTotals?.today?.[mode+'_seconds']||0)}
 function getAllSec(mode){return +(serverTotals?.all?.[mode+'_seconds']||0)}
 const fmtDuration=sec=>{const n=Math.max(0,Math.floor(Number(sec)||0)),h=Math.floor(n/3600),m=Math.floor((n%3600)/60),s=n%60;return h?`${h}시간 ${m}분${s?' '+s+'초':''}`:m?`${m}분${s?' '+s+'초':''}`:`${s}초`};
 function roomTitle(){return roomName(roomKey)}
 function renderRoomButton(){$('#roomBtn').textContent='🚪 '+roomName(roomKey)+' · 방 변경 ▾'}
-function renderGoal(){const pct=liveOccupied/12*100;$('#goal').innerHTML=`<div class="gt"><span>📚 ${escapeHtml(roomName(roomKey))} · 실시간</span><b>${liveOccupied} / 12석</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="gs"><span>가상 학생 0명 · 실제 입장자만 표시</span><span>${escapeHtml(schoolChoice?.name||'학교 미선택')}</span></div>`}
+function renderGoal(){const capacity=seatCapacity(roomKey),pct=liveOccupied/capacity*100;$('#goal').innerHTML=`<div class="gt"><span>📚 ${escapeHtml(roomName(roomKey))} · 실시간</span><b>${liveOccupied} / ${capacity}석</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="gs"><span>가상 학생 0명 · 실제 입장자만 표시</span><span>${escapeHtml(schoolChoice?.name||'학교 미선택')}</span></div>`}
 function renderStats(){ $('#stNow').textContent=liveOccupied+'명';$('#stToday').textContent=liveViewers+'명';$('#myRec').innerHTML='📊 오늘 집중 <b>'+fmtDuration(getTodaySec('focus'))+'</b> · 자율 <b>'+fmtDuration(getTodaySec('self'))+'</b>';$('#hint').style.opacity=me.seat===null?'1':'0';$('#conn').textContent=liveConnected?(session?.user?.is_anonymous===false?'● 계정 접속':'● 익명 접속'):(isConnecting?'인증·연결 중…':'연결 대기');}
 async function rpc(name,args={}){if(!sb)throw new Error('connection_unavailable');const {data,error}=await sb.rpc(name,args);if(error)throw error;return data}
 function checkOk(r){if(!r||r.ok===false)throw new Error(r?.error||'server_response_failed');return r}
@@ -1222,7 +1240,7 @@ async function connect(){if(!activeTab||isConnecting)return;isConnecting=true;re
  try{await authorize();const t0=Date.now();const hb=await rpc('sr6_heartbeat');const t1=Date.now();serverOffset=Date.parse(hb.now)-(t0+t1)/2;
   const sc=hb.school;if(sc?.code){schoolChoice={code:sc.code,name:sc.name,sido:sc.sido};schoolName=sc.name;}
   else{schoolChoice=null;schoolName='';}
-  let k='public-1';if(hb.seat){k=hb.seat.room;ensureRoom(k);liveId=hb.seat.presence_id;recoveryActive=true;
+  let k='public-3p';if(hb.seat){k=hb.seat.room;ensureRoom(k);liveId=hb.seat.presence_id;recoveryActive=true;
     me.seat=hb.seat.seat;me.room=k;me.mode=hb.seat.mode;me.state=hb.seat.state==='break'?'break':'study';me.pausedAway=hb.seat.state!=='study';
     $('#hud').classList.add('show');
     const h=await fetchHistory();const running=h.find(v=>v.status==='running'||v.status==='paused');
@@ -1283,8 +1301,8 @@ function scheduleRefetch(){clearTimeout(refetchT);refetchT=setTimeout(refetch,16
 async function refetch(){if(!sb||!roomKey)return;const key=roomKey;
  const {data,error}=await sb.from('seats6').select('room,seat_no,presence_id,nick,subject,look,mode,state,focus_acc,state_at').eq('room',key);
  if(key!==roomKey)return;if(error){presentError(error);return}
- const now=Date.now()+serverOffset;const seats=Array(12).fill(null);
- (data||[]).forEach(r=>{const extra=r.mode==='focus'&&r.state==='study'?Math.max(0,(now-Date.parse(r.state_at))/1000):0;
+ const now=Date.now()+serverOffset;const seats=Array(seatCapacity(key)).fill(null);
+ (data||[]).forEach(r=>{if(!Number.isInteger(r.seat_no)||r.seat_no<0||r.seat_no>=seats.length)return;const extra=r.mode==='focus'&&r.state==='study'?Math.max(0,(now-Date.parse(r.state_at))/1000):0;
  seats[r.seat_no]={id:r.presence_id,nick:r.nick,subject:r.subject,look:r.look||{},mode:r.mode,state:r.state,elapsed:Math.floor((r.focus_acc||0)+extra)};});
  applySnapshot(key,seats);
 }
@@ -1324,7 +1342,7 @@ function showSit(i){const html=()=>`<h3>${i+1}번 ${isSharedSeat(i)?'공유 테�
  };
 }
 async function claim(i){if(!activeTab||!liveConnected||pendingClaim)return;pendingClaim={seat:i};
- try{const r=checkOk(await rpc('sr6_claim',{p_room:roomKey,p_seat:i,p_nick:me.nick,p_subject:me.subject,p_look:{hair:me.hair,shirt:me.shirt,skin:me.skin,bun:me.bun},p_mode:modeSelected,p_show_school:false}));
+ try{const r=checkOk(await rpc(isClassRoom30(roomKey)?'sr7_preview_claim':'sr6_claim',{p_room:roomKey,p_seat:i,p_nick:me.nick,p_subject:me.subject,p_look:{hair:me.hair,shirt:me.shirt,skin:me.skin,bun:me.bun},p_mode:modeSelected,p_show_school:false}));
   liveId=r.presence_id;me.mode=modeSelected;await refetch();
  }catch(e){pendingClaim=null;presentError(e)}
 }
