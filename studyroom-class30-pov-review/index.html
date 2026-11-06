@@ -1280,7 +1280,7 @@ function updateCamera(dt){
    // Camera looks through the new fourth-wall portal instead of being clipped by it.
    const ex=px-.12,ey=1.95+(zoom-1)*.18;
    const ez=L.frontZ+clamp6d(1.55*zoom,1.10,2.0);
-   const ax=px-.15-1.5*Math.sin(yaw),ay=-.40-(pitch-.69)*1.5,az=pz-3.5;
+   const ax=px-.15-1.5*Math.sin(yaw),ay=-.55-(pitch-.69)*1.5,az=pz-3.5;
    cx=cx*(1-e)+ex*e;cy=cy*(1-e)+ey*e;cz=cz*(1-e)+ez*e;
    tx=tx*(1-e)+ax*e;ty=ty*(1-e)+ay*e;tz=tz*(1-e)+az*e;
   }
