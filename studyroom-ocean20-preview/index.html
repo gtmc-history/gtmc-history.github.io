@@ -1334,7 +1334,7 @@ function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomK
   queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
     checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
   if(isOcean20())focusOceanDesk20(i);
-  updateHud();refreshLabels();
+  updateHud();updateOceanDock20();refreshLabels();
  });$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
 }
 async function finishStudy(showReport=true){if(finishing||me.seat===null)return;const wasWalk=me.state==='walk';finishing=true;$('#hStop').disabled=true;
