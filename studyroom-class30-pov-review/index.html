@@ -405,7 +405,7 @@ function computeLayout(){
   for(let i=0;i<count;i++){const c=i%cols,r=Math.floor(i/cols);seats.push({x:(c-(cols-1)/2)*dx,z:(r-(rows-1)/2)*dz})}
   const halfW=cols*dx/2+1.0, halfD=rows*dz/2+1.1, maxZ=Math.max(...seats.map(q=>q.z));
   const aisles=[];for(let c=0;c<cols-1;c++)aisles.push((c+.5-(cols-1)/2)*dx);
-  return {portrait,cols,rows,dx,dz,seats,halfW,halfD,frontZ:maxZ+1.5,door:{x:halfW-.35,z:maxZ+1.5},aisles};
+  return {portrait,cols,rows,dx,dz,seats,halfW,halfD,frontZ:maxZ+1.5,door:{x:large?halfW-1.05:halfW-.35,z:maxZ+1.5},aisles};
 }
 
 function bookshelf(w,h,parent,x,z,ry){
@@ -769,8 +769,53 @@ function batchStaticBoxes30(root){
  return {batched:n,groups:k};
 }
 
+
+/* Four-sided library interior: front entrance wall with real doorway and shelves.
+   The entrance wall is shown in person-height views and cut away in overhead overview. */
+let entranceWall30=null, entranceAvatar30=null, frontWallBatch30=null;
+function buildEntranceWall30(W,t){
+ const g=new THREE.Group();g.name='library-front-wall-30';roomGroup.add(g);
+ entranceWall30=g;
+ const z=L.frontZ+.74,doorX=L.door.x,doorHalf=.72;
+ const openingL=doorX-doorHalf,openingR=doorX+doorHalf;
+ const a=openingL+W,b=W-openingR;
+ const wall=(width,height,depth,color,x,y,zz)=>box(width,height,depth,color,x,y,zz,g,false);
+ wall(a,4.3,.22,t.wall,(-W+openingL)/2,2.15,z);
+ if(b>.05)wall(b,4.3,.22,t.wall,(openingR+W)/2,2.15,z);
+ wall(doorHalf*2,1.0,.22,t.wall,doorX,3.8,z);
+ // Framed opening is aligned to the avatar's spawn position; do not block path.
+ for(const x of [openingL,openingR]){
+  wall(.17,3.4,.27,t.trim,x,1.7,z-.06);
+  wall(.25,.20,.37,'#c6a47a',x,3.43,z-.06);
+ }
+ wall(doorHalf*2+.25,.18,.30,t.trim,doorX,3.36,z-.07);
+ wall(doorHalf*2,.08,.28,'#f1ddad',doorX,3.22,z-.07);
+ // Solid timber-backed shelves turn the missing fourth face into a true library wall.
+ const innerL=-W+.28,innerR=openingL-.27;
+ const span=innerR-innerL,cols=Math.max(2,Math.floor(span/1.45)),step=span/cols;
+ for(let i=0;i<cols;i++){
+  const x=innerL+(i+.5)*step,unit=Math.max(.84,Math.min(1.3,step-.10));
+  bookshelf(unit,3.22,g,x,z-.43,0);
+ }
+ // Subtle library wall fixtures at either end; avoid the center walkway.
+ for(const x of [-W+.27,openingL-.16]){
+  wall(.22,3.62,.35,t.trim,x,1.81,z-.22);
+  const s=sph(.12,'#fce8b4',x,3.50,z-.51,g,8);
+  s.material=new THREE.MeshBasicMaterial({color:'#fff0c9'});
+ }
+ // Transparent cutaway is not needed: in overview mode this whole fourth face is hidden.
+ g.visible=true;
+ return g;
+}
+function refreshEntranceWall30(){
+ if(!entranceWall30)return;
+ // Zoomed-out map view requires an unobstructed seat overview.
+ entranceWall30.visible=cameraMode6e!=='room';
+}
+
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
+  entranceWall30=null;entranceAvatar30=null;frontWallBatch30=null;
   if(!isOcean20()&&seaAudio20)stopOceanSound20();
   deskBlend20=0;deskSeat20=null;
   seatObjs.length=0;plants.length=0;walkers.length=0;oceanFx20.length=0;
@@ -829,11 +874,13 @@ function buildRoom(){
       box(W*1.7,.06,.20,t.trim,0,4.19,z,roomGroup,false);lamp(0,3.8,z,.95);
     }
   }
-  // Entrance remains at the original coordinates used by walking path.
-  const dz0=L.door.z;
-  box(.11,2.15,1.13,t.trim,W-.03,1.07,dz0,roomGroup,false);
-  box(.07,1.96,.96,t.wood,W-.06,.98,dz0,roomGroup,false);
-  sph(.04,t.lamp,W-.1,1.0,dz0-.32,roomGroup,8);
+  // Existing 12-seat right-wall entrance remains unchanged.
+  if(!isClassRoom30(roomKey)){
+   const dz0=L.door.z;
+   box(.11,2.15,1.13,t.trim,W-.03,1.07,dz0,roomGroup,false);
+   box(.07,1.96,.96,t.wood,W-.06,.98,dz0,roomGroup,false);
+   sph(.04,t.lamp,W-.1,1.0,dz0-.32,roomGroup,8);
+  }
   const sign=makeSign(t.icon+' '+t.name);sign.position.set(W-.13,3.1,L.frontZ-.88);sign.rotation.y=-Math.PI/2;roomGroup.add(sign);
   // Shared tables are a single connected surface with two independent seat hitboxes.
   const dh=.76;
@@ -874,7 +921,11 @@ function buildRoom(){
     seatObjs.push({g,hit,char:null,x:p.x,z:p.z,lampGlow:glow,lampBulb:bulb,ring:null});
   });
   const batchReport30=batchStaticBoxes30(roomGroup);
-  if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch=batchReport30;}
+  if(isClassRoom30(roomKey)){
+   buildEntranceWall30(W,t);
+   frontWallBatch30=batchStaticBoxes30(entranceWall30);
+  }
+  if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch={interior:batchReport30,frontWall:frontWallBatch30};}
   rebuildChars();fitCamera(true);updateOceanDock20();updateSeatMap30();
 }
 
@@ -994,11 +1045,11 @@ function safeRoute30(i){
  // End aisles are fallbacks; internal lanes avoid the planters on side walls.
  const candidates=validAisles.sort((a,b)=>Math.abs(a-q.x)-Math.abs(b-q.x));
  // Side perimeter paths are deliberately avoided: plants, wall fixtures and windows live there.
- const source=[L.door.x,L.door.z];
+ const source=[L.door.x,L.frontZ-.45];
  for(const ax of candidates){
-  const path=[[ax,L.frontZ],[ax,stageZ],[q.x,stageZ],[q.x,q.z-.58]];
+  const path=[[ax,L.frontZ-.45],[ax,stageZ],[q.x,stageZ],[q.x,q.z-.58]];
   if(pathClear30(source,path,i)){
-   const saved={in:path,out:[[q.x,stageZ],[ax,stageZ],[ax,L.frontZ],[L.door.x+.2,L.door.z]],lane:ax};
+   const saved={in:path,out:[[q.x,stageZ],[ax,stageZ],[ax,L.frontZ-.45],[L.door.x,L.frontZ-.45]],lane:ax};
    L.routes30.set(i,saved);return saved;
   }
  }
@@ -1025,7 +1076,7 @@ function placeChar(i,mode,onArrive){
   roomGroup.add(c);so.char=c;
   const u=c.userData;
   if(mode==='enter'){
-    c.position.set(L.door.x,0,L.door.z);c.rotation.y=-Math.PI/2;
+    c.position.set(L.door.x,0,isClassRoom30(roomKey)?L.frontZ-.45:L.door.z);c.rotation.y=-Math.PI/2;
     u.path=pathIn(i);u.seated=false;u.onArrive=onArrive;
     u.parts.lL.rotation.x=u.parts.lR.rotation.x=0;
   }else{
