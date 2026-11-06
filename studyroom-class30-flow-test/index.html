@@ -1207,6 +1207,64 @@ function safeRoute30(i){
  console.warn('30석 좌석 이동 경로를 확보하지 못했습니다:',i);
  return null;
 }
+
+/* 30-seat pathfinder: plan from the free-roam avatar, never teleport back to the door. */
+function walkSegmentClear30(a,b){
+ const steps=Math.max(1,Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])/.075));
+ for(let i=0;i<=steps;i++){const t=i/steps;
+  if(visitorBlocked30(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false;
+ }
+ return true;
+}
+function routeFromVisitor30(seat,source){
+ const p=L?.seats?.[seat];if(!isClassRoom30(roomKey)||!p||!source)return null;
+ const from=[source[0],source[1]],stage=[p.x,p.z-1.32],chair=[p.x,p.z-.58];
+ if(![...from,...stage].every(Number.isFinite)||visitorBlocked30(...from)||visitorBlocked30(...stage))return null;
+ if(walkSegmentClear30(from,stage))return {from,points:[stage,chair],via:'direct'};
+ const x0=-L.halfW+.39,x1=L.halfW-.39,z0=-L.halfD+.38,z1=L.frontZ-.21,step=.17;
+ const nx=Math.ceil((x1-x0)/step)+1,nz=Math.ceil((z1-z0)/step)+1,sx=(x1-x0)/(nx-1),sz=(z1-z0)/(nz-1),total=nx*nz;
+ const coord=i=>[x0+(i%nx)*sx,z0+Math.floor(i/nx)*sz],walkable=new Uint8Array(total);
+ for(let i=0;i<total;i++){const p=coord(i);walkable[i]=visitorBlocked30(p[0],p[1])?0:1;}
+ const nearest=p=>{
+  const cx=Math.round((p[0]-x0)/sx),cz=Math.round((p[1]-z0)/sz);
+  for(let radius=0;radius<=7;radius++){
+   let best=-1,distance=Infinity;
+   for(let dx=-radius;dx<=radius;dx++)for(let dz=-radius;dz<=radius;dz++){
+    if(Math.max(Math.abs(dx),Math.abs(dz))!==radius)continue;
+    const x=cx+dx,z=cz+dz;if(x<0||z<0||x>=nx||z>=nz)continue;
+    const id=z*nx+x;if(!walkable[id])continue;
+    const q=coord(id),d=Math.hypot(q[0]-p[0],q[1]-p[1]);
+    if(d<distance&&walkSegmentClear30(p,q)){best=id;distance=d;}
+   }
+   if(best>=0)return best;
+  }
+  return -1;
+ };
+ const start=nearest(from),goal=nearest(stage);if(start<0||goal<0)return null;
+ const prev=new Int32Array(total);prev.fill(-1);
+ const seen=new Uint8Array(total);seen[start]=1;
+ const queue=[start];let found=start===goal;
+ for(let head=0;head<queue.length&&!found;head++){
+  const id=queue[head],x=id%nx,z=Math.floor(id/nx);
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const ix=x+dx,iz=z+dz;if(ix<0||iz<0||ix>=nx||iz>=nz)continue;
+   const next=iz*nx+ix;if(seen[next]||!walkable[next])continue;
+   prev[next]=id;seen[next]=1;queue.push(next);
+   if(next===goal){found=true;break;}
+  }
+ }
+ if(!found)return null;
+ const chain=[];for(let i=goal;i!==-1;i=prev[i]){chain.push(i);if(i===start)break;}chain.reverse();
+ const raw=[from,...chain.map(coord),stage],points=[];
+ for(let i=0;i<raw.length-1;){
+  let far=i+1;for(let j=raw.length-1;j>i+1;j--)if(walkSegmentClear30(raw[i],raw[j])){far=j;break;}
+  if(Math.hypot(raw[far][0]-raw[i][0],raw[far][1]-raw[i][1])>.03)points.push(raw[far]);
+  i=far;
+ }
+ points.push(chair);
+ return {from,points,via:'grid',visited:queue.length};
+}
+
 function pathIn(i){
  if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.in;return [];}
  const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
