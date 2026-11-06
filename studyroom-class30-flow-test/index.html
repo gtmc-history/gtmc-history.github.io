@@ -838,7 +838,7 @@ const freeKeys30=new Set();
 let freeMoving30=false,freeLastBlocked30=0;
 const FREE_SPEED30=2.55,FREE_RADIUS30=.26;
 function visitorCanMove30(){
- return isClassRoom30(roomKey)&&me.seat===null&&!!entranceAvatar30&&!!L&&!sheetMode&&!document.hidden;
+ return isClassRoom30(roomKey)&&me.seat===null&&!!entranceAvatar30&&!!L&&!sheetMode&&!pendingClaim&&!document.hidden;
 }
 function visitorBlocked30(x,z){
  if(!L||!isClassRoom30(roomKey))return true;
@@ -951,6 +951,8 @@ function followWalkingAvatar30(){
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
   entranceWall30=null;entranceAvatar30=null;frontWallBatch30=null;
+  plannedWalk30=null;
+  if(me.seat===null)activeWalk30=null;
   freeKeys30.clear();freeMoving30=false;
   if(!isOcean20()&&seaAudio20)stopOceanSound20();
   deskBlend20=0;deskSeat20=null;
@@ -1265,6 +1267,21 @@ function routeFromVisitor30(seat,source){
  return {from,points,via:'grid',visited:queue.length};
 }
 
+
+/* Reconcile a server claim with the exact standing position captured before the RPC. */
+let plannedWalk30=null,activeWalk30=null;
+function startRoute30(seat){
+ if(!isClassRoom30(roomKey)||!entranceAvatar30)return null;
+ const p=entranceAvatar30.position;
+ return routeFromVisitor30(seat,[p.x,p.z]);
+}
+function recoverWalk30(seat){
+ if(!isClassRoom30(roomKey)||!activeWalk30||activeWalk30.seat!==seat||activeWalk30.room!==roomKey)return null;
+ // Recalculate from the current world position if a screen rotation rebuilt the room.
+ const from=activeWalk30.current||activeWalk30.from;
+ return routeFromVisitor30(seat,from);
+}
+
 function pathIn(i){
  if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.in;return [];}
  const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
@@ -1275,7 +1292,7 @@ function pathOut(i){
  const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
  return [[q.x,cz],[ax,cz],[ax,L.frontZ],[L.door.x+.2,L.door.z]];
 }
-function placeChar(i,mode,onArrive){
+function placeChar(i,mode,onArrive,transit30=null){
   const so=seatObjs[i];const seat=rooms[roomKey].seats[i];
   if(so.char){roomGroup.remove(so.char);disposeObject6e(so.char);so.char=null}
   if(!seat.occ)return;
@@ -1284,8 +1301,18 @@ function placeChar(i,mode,onArrive){
   roomGroup.add(c);so.char=c;
   const u=c.userData;
   if(mode==='enter'){
-    c.position.set(L.door.x,0,isClassRoom30(roomKey)?L.frontZ-.45:L.door.z);c.rotation.y=-Math.PI/2;
-    u.path=pathIn(i);u.seated=false;u.onArrive=onArrive;
+    const plan=isClassRoom30(roomKey)&&mine?transit30:null;
+    if(plan?.from&&plan.points?.length){
+     c.position.set(plan.from[0],0,plan.from[1]);
+     u.path=plan.points.map(p=>p.slice());
+     // The locally controlled character has already been visible: don't spawn it twice.
+     u.pop=1;c.scale.setScalar(1);
+    }else{
+     c.position.set(L.door.x,0,isClassRoom30(roomKey)?L.frontZ-.45:L.door.z);
+     u.path=pathIn(i);
+    }
+    c.rotation.y=u.path?.length?Math.atan2(u.path[0][0]-c.position.x,u.path[0][1]-c.position.z):-Math.PI/2;
+    u.seated=false;u.onArrive=onArrive;
     u.parts.lL.rotation.x=u.parts.lR.rotation.x=0;
   }else{
     c.position.set(so.x,0,so.z-.58);u.seated=true;c.scale.setScalar(1);u.pop=1;
@@ -1302,7 +1329,11 @@ function rebuildChars(){
   // Rotation while entering must NOT skip the walking completion callback;
   // otherwise sr6_state / sr6_study_begin never run.
   seatObjs.forEach((_,i)=>{
-   if(me.seat===i&&me.state==='walk')placeChar(i,'enter',()=>onSeatArrived30(i));
+   if(me.seat===i&&me.state==='walk'){
+    const resumed=recoverWalk30(i);
+    if(resumed)activeWalk30={...resumed,seat:i,room:roomKey,current:resumed.from.slice()};
+    placeChar(i,'enter',()=>onSeatArrived30(i),resumed||activeWalk30);
+   }
    else placeChar(i,'sit');
   });
   rebuildLabels();
@@ -1810,14 +1841,21 @@ function showSit(i){const html=()=>`<h3>${i+1}번 ${isSharedSeat(i)?'공유 테�
 }
 async function claim(i){
  if(!activeTab||!liveConnected||pendingClaim)return;
- if(isClassRoom30(roomKey)&&!safeRoute30(i)){toast('이 좌석으로 가는 안전한 통로를 찾을 수 없어 앉기를 취소했습니다.');return;}
+ if(isClassRoom30(roomKey)){
+  // The route must be feasible BEFORE reserving a real server seat.
+  const route=startRoute30(i);
+  if(entranceAvatar30&&!route){toast('현재 위치에서 해당 책상까지 통로를 찾을 수 없어요. 조금 이동해 다시 선택해 주세요.');return;}
+  if(!route&&!safeRoute30(i)){toast('이 좌석으로 가는 안전한 통로가 없어요.');return;}
+  plannedWalk30=route?{...route,seat:i,room:roomKey}:null;
+ }else plannedWalk30=null;
  pendingClaim={seat:i};
  try{const r=checkOk(await rpc(isClassRoom30(roomKey)?'sr7_preview_claim':'sr6_claim',{p_room:roomKey,p_seat:i,p_nick:me.nick,p_subject:me.subject,p_look:{hair:me.hair,shirt:me.shirt,skin:me.skin,bun:me.bun},p_mode:modeSelected,p_show_school:false}));
   liveId=r.presence_id;me.mode=modeSelected;await refetch();
- }catch(e){pendingClaim=null;presentError(e)}
+ }catch(e){pendingClaim=null;plannedWalk30=null;presentError(e)}
 }
 function onSeatArrived30(i){
  if(me.seat!==i||me.state!=='walk')return;
+ activeWalk30=null;plannedWalk30=null;
 me.state='study';lastTickT=performance.now();lastWallT=Date.now();
   queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
     checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
@@ -1825,17 +1863,28 @@ me.state='study';lastTickT=performance.now();lastWallT=Date.now();
   updateHud();updateOceanDock20();refreshLabels();
  
 }
-function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
+function beginSitDown(i){
+ const s=rooms[roomKey].seats[i];
+ // Snapshot the local visitor BEFORE disposing of it. The real walking avatar begins here.
+ const route=isClassRoom30(roomKey)
+  ?(plannedWalk30?.seat===i&&plannedWalk30.room===roomKey?plannedWalk30:startRoute30(i)):null;
+ plannedWalk30=null;
+ activeWalk30=route?{...route,seat:i,room:roomKey,current:route.from.slice()}:null;
+ me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;
+ localSessionId=null;localStatus='idle';saveMe();
  s.occ={...s.occ,mine:true,state:'walk'};
  if(isClassRoom30(roomKey)){freeKeys30.clear();removeEntranceAvatar30();followWalkingAvatar30();}
- placeChar(i,'enter',()=>onSeatArrived30(i));$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
+ placeChar(i,'enter',()=>onSeatArrived30(i),activeWalk30);
+ $('#hud').classList.add('show');
+ if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}
+ renderStats();updateHud();updateOceanDock20();refreshLabels();
 }
 async function finishStudy(showReport=true){if(finishing||me.seat===null)return;const wasWalk=me.state==='walk';finishing=true;$('#hStop').disabled=true;
  try{if(!wasWalk&&!localSessionId){throw new Error('공부 기록을 아직 시작하지 못했어요. 연결 상태를 확인하고 다시 시도하세요.')}
   await queueTransition(async()=>{clearHistoryTimer();if(localSessionId&&['running','paused'].includes(localStatus))await histEvent('finish');
    checkOk(await rpc('sr6_release'));});
   const resultSeconds=me.elapsed;localSessionId=null;localStatus='idle';sessionErr=false;const i=me.seat;const s=rooms[roomKey].seats[i];if(s){s.occ=null;s.trace=null;if(seatObjs[i]?.char)walkOut(i)}
-  me.seat=null;me.room=null;me.state=null;me.pausedAway=false;me.elapsed=0;zoomTarget=1;following=false;$('#hud').classList.remove('show');if(isOcean20())cameraHome6d();updateOceanDock20();
+  me.seat=null;me.room=null;me.state=null;me.pausedAway=false;me.elapsed=0;plannedWalk30=activeWalk30=null;zoomTarget=1;following=false;$('#hud').classList.remove('show');if(isOcean20())cameraHome6d();updateOceanDock20();
   await refreshTotals();scheduleRefetch();renderStats();
   if(showReport){if(wasWalk)toast('공부 시작 전 자리를 취소했어요. 기록은 생성되지 않았습니다.');else showFinished(resultSeconds);}
  }catch(e){sessionErr=true;presentError(e);openSheet('<h3>기록 저장을 확인할 수 없어요</h3><p class="lead">서버 기록을 확인하지 못해 아직 자리를 정리하지 않았습니다. 다시 시도하거나 인터넷 연결을 확인하세요.</p><div class="acts"><button class="btn pri" data-a="retry">다시 마무리</button><button class="btn" data-a="close">닫기</button></div>','recording_error');$sheet.onclick=e=>{if(!e.target.closest('button'))return;const a=e.target.closest('button').dataset.a;closeSheet();if(a==='retry')finishStudy()}}
@@ -1982,6 +2031,11 @@ function frame(t){
     const c=so.char;if(!c)return;
     const seat=rooms[roomKey].seats[i];
     animChar(c,dt,seat.occ&&seat.occ.state==='break');
+    if(me.state==='walk'&&activeWalk30?.seat===i&&activeWalk30.room===roomKey){
+      activeWalk30.current=[c.position.x,c.position.z];
+      activeWalk30.from=activeWalk30.current;
+      activeWalk30.points=(c.userData.path||[]).map(p=>p.slice());
+    }
   });
   for(let k=walkers.length-1;k>=0;k--){const c=walkers[k];if(animChar(c,dt,false)){roomGroup.remove(c);disposeObject6e(c);walkers.splice(k,1)}}
   if(following&&me.seat!==null){const so=seatObjs[me.seat];if(so&&so.char){const r=camRange();camZTarget=Math.min(r[1],Math.max(r[0],so.char.position.z+.9))}}
