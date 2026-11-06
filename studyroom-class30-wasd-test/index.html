@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>[WASD TEST] STUDY ROOM 30석 · 캐릭터 자유 이동</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#3a2c1e; --muted:#7d6a55; --paper:#fbf6ea; --paper2:#f3ead6;
+  --green:#2f9b6c; --green2:#e3f6ec; --amber:#e39b2d; --line:#e4d7bd;
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'Gowun Dodum',system-ui,sans-serif;color:var(--ink)}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.jua{font-family:'Jua',sans-serif;font-weight:400}
+
+/* top */
+.top{position:fixed;left:0;right:0;top:0;padding:calc(var(--st) + 10px) 12px 0;pointer-events:none;
+  background:linear-gradient(#2b2118ee 55%,#2b211800)}
+.top *{pointer-events:auto}
+.row1{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.brand{color:#fff6e3;font-family:'Jua';font-size:20px;letter-spacing:.3px;line-height:1}
+.brand small{display:block;font-family:'Gowun Dodum';font-size:11px;color:#d9c7a6;margin-top:3px;letter-spacing:0}
+.dday{background:#ffe7a8;color:#5a3a10;border-radius:999px;padding:5px 10px;font-family:'Jua';font-size:14px;white-space:nowrap}
+.dday i{font-style:normal;font-family:'Gowun Dodum';font-size:10px;opacity:.7;margin-left:3px}
+.tabs{display:flex;gap:6px;margin-top:10px;background:#00000040;padding:4px;border-radius:14px}
+.tab{flex:1;border:0;border-radius:10px;padding:8px 6px;background:transparent;color:#e9dcc3;font-family:'Jua';font-size:14px;cursor:pointer}
+.tab.on{background:var(--paper);color:var(--ink)}
+.stats{display:flex;gap:10px;margin-top:8px;color:#efe3cc;font-size:12px;align-items:center}
+.stats b{font-family:'Jua';font-weight:400;font-size:15px;color:#fff}
+.mock{background:#ffffff1f;border-radius:99px;padding:2px 7px;font-size:10px;color:#e9dcc3}
+.dot{width:7px;height:7px;border-radius:50%;background:#57e39b;box-shadow:0 0 0 3px #57e39b33;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px #57e39b11}}
+
+/* goal */
+.goal{margin-top:8px;background:#fbf6eaee;border-radius:14px;padding:9px 11px;box-shadow:0 4px 14px #0003;cursor:pointer}
+.goal .gt{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+.goal .gt b{font-family:'Jua';font-weight:400;font-size:15px;color:var(--ink)}
+.bar{height:9px;background:var(--paper2);border-radius:99px;margin-top:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#45c487,#2f9b6c);border-radius:99px;transition:width .6s}
+.goal .gs{font-size:11px;color:var(--muted);margin-top:5px;display:flex;justify-content:space-between;gap:6px}
+.goal .gs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* labels */
+.bub{position:absolute;left:0;top:0;transform:translate(-50%,-100%);background:#fffaf0ee;border-radius:12px;padding:3px 8px 4px;
+  text-align:center;white-space:nowrap;box-shadow:0 2px 6px #0003;line-height:1.25;will-change:transform}
+.bub .n{font-size:10px;color:var(--muted)}
+.bub .s{font-size:12px;font-family:'Jua'}
+.bub.brk{background:#fff1d6ee}
+.bub.me{background:#e3f6ecf2;outline:2px solid var(--green)}
+.bub:after{content:"";position:absolute;left:50%;bottom:-4px;margin-left:-4px;border:4px solid transparent;border-bottom:0;border-top-color:#fffaf0ee}
+.bub.me:after{border-top-color:var(--green)}
+.trace{position:absolute;left:0;top:0;transform:translate(-50%,-50%);background:#1d150e99;color:#f3e6cf;font-size:10px;border-radius:99px;padding:2px 7px;white-space:nowrap}
+.emo{position:absolute;font-size:26px;transform:translate(-50%,-100%);animation:fly 1.8s ease-out forwards}
+@keyframes fly{0%{opacity:0;margin-top:0;scale:.5}15%{opacity:1;scale:1.2}100%{opacity:0;margin-top:-70px;scale:1}}
+
+/* hint & bottom chips */
+.hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--sb) + 52px);background:#fbf6eaf0;padding:8px 14px;border-radius:99px;
+  font-size:13px;box-shadow:0 4px 14px #0004;white-space:nowrap;transition:opacity .3s}
+.foot{position:fixed;left:10px;right:10px;bottom:calc(var(--sb) + 10px);display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;flex-wrap:wrap}
+.chip{pointer-events:auto;border:0;background:#00000066;color:#f0e2c8;font-size:11px;border-radius:99px;padding:7px 11px;font-family:inherit;cursor:pointer}
+.chip b{color:#fff}
+.chip.fast{background:var(--amber);color:#3a2205}
+
+/* hud */
+.hud{position:fixed;left:10px;right:10px;bottom:calc(var(--sb) + 48px);background:var(--paper);border-radius:20px;padding:12px 14px;box-shadow:0 8px 28px #0006;
+  display:none;max-width:480px;margin:0 auto}
+.hud.show{display:block;animation:up .3s}
+@keyframes up{from{transform:translateY(20px);opacity:0}}
+.hud .h1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub{background:var(--green2);color:#1f6e4b;border-radius:99px;padding:3px 10px;font-size:12px;font-family:'Jua'}
+.time{font-family:'Jua';font-size:40px;line-height:1;letter-spacing:1px}
+.hud .h2{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px;color:var(--muted);gap:8px}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-family:'Jua';font-size:15px;cursor:pointer;background:var(--paper2);color:var(--ink)}
+.btn.pri{background:var(--green);color:#fff}
+.btn.sm{padding:7px 11px;font-size:13px}
+.btn:active{transform:scale(.97)}
+
+/* sheet */
+.dim{position:fixed;inset:0;background:#0006;display:none}
+.dim.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-radius:22px 22px 0 0;padding:16px 16px calc(var(--sb) + 16px);
+  max-height:84vh;overflow:auto;transform:translateY(105%);transition:transform .28s ease;max-width:520px;margin:0 auto;box-shadow:0 -6px 30px #0005}
+.sheet.show{transform:none}
+.sheet h3{margin:2px 0 4px;font-family:'Jua';font-weight:400;font-size:21px}
+.sheet .lead{color:var(--muted);font-size:13px;margin:0 0 12px}
+.fld{margin:12px 0}
+.fld>label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 12px;font-family:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.opt.on{border-color:var(--green);background:var(--green2);color:#1f6e4b;font-weight:700}
+.sw{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line);cursor:pointer;padding:0}
+.sw.on{box-shadow:0 0 0 2.5px var(--green)}
+.nick{display:flex;align-items:center;gap:8px}
+.nick .nv{font-family:'Jua';font-size:20px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:6px 12px}
+.note{font-size:11px;color:var(--muted);margin-top:5px}
+.tog{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.tog input{width:44px;height:24px;accent-color:var(--green)}
+.acts{display:flex;gap:8px;margin-top:14px}
+.acts .btn{flex:1}
+.vstack{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.big{font-size:44px;text-align:center;margin:6px 0 2px}
+.rec{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;margin-top:6px}
+.rec b{font-family:'Jua';font-weight:400;font-size:16px}
+.rules{margin:6px 0 0;padding:0;list-style:none}
+.rules li{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px dashed var(--line);font-size:14px}
+.rules li b{font-family:'Jua';font-weight:400}
+.cheers{display:flex;gap:8px;margin-top:10px}
+.cheers .btn{flex:1;font-size:14px;padding:12px 4px}
+.cheers .btn span{display:block;font-size:24px}
+
+.toast{position:fixed;left:50%;top:calc(var(--st) + 14px);transform:translate(-50%,-140%);background:#2f2419f2;color:#fff6e3;padding:10px 16px;border-radius:14px;font-size:13px;
+  box-shadow:0 6px 20px #0006;transition:transform .3s;max-width:90vw;text-align:center;z-index:9}
+.toast.show{transform:translate(-50%,0)}
+.loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#e9dcc3;font-family:'Jua';font-size:18px}
+@media (min-width:760px){.top{padding-left:20px;padding-right:20px}.top .wrap{max-width:520px}}
+
+.school-choice{text-align:left;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.school-choice small,.rec small{display:block;color:var(--muted);font:12px 'Gowun Dodum',sans-serif}
+.section-caption{font-family:'Jua';font-size:15px;color:var(--green);margin:13px 0 6px}
+.record-notice{background:#f5ecd5;border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}
+.record-notice p{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.6}
+#schoolSearch:focus{outline:2px solid var(--green)}
+#hMsg{max-width:55%;line-height:1.3}
+@media(max-width:370px){.brand{font-size:16px}.chip{font-size:10px;padding:6px 8px}.h2{font-size:10px!important}}
+</style>
+<style>#sr-stage-label{position:fixed;right:12px;top:12px;z-index:999999;background:#1f2937;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:6px 9px;border-radius:7px;pointer-events:none;opacity:.92}</style>
+<style>
+/* Isolated design-preview camera controls. Never obstruct the study record modal. */
+#view6d{position:fixed;right:10px;top:calc(var(--st) + 215px);z-index:6;display:flex;flex-direction:column;gap:5px;align-items:flex-end;max-width:145px}
+#view6d .view-row{display:flex;gap:4px;align-items:center}
+#view6d button{min-width:35px;min-height:34px;padding:6px 8px;background:#172c36cc;border:1px solid #ffffff50;color:white;border-radius:11px;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 3px 8px #0004;cursor:pointer;touch-action:manipulation}
+#view6d button:focus-visible{outline:3px solid #ffca70}
+#view6d button:active{background:#3c746b}
+#view6d .wide{min-width:64px}
+#view6d .view-help{color:#fff7eb;background:#1c2a34bc;border-radius:8px;padding:5px 7px;font:10px/1.3 system-ui,sans-serif;text-align:right;max-width:132px}
+.dim{z-index:30}.sheet{z-index:31}.toast{z-index:33}
+@media(max-width:560px){#view6d{right:8px;top:calc(var(--st) + 212px)}#view6d button{min-width:32px;min-height:32px;padding:5px 7px}#view6d .view-help{font-size:9px}}
+
+/* Collapsible camera controls to avoid blocking seat name tags. */
+#view6d{right:8px;top:calc(var(--st) + 199px);width:150px;max-width:150px}
+#view6dPanel[hidden]{display:none!important}
+#view6dPanel{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+#view6d .view-row{width:100%}
+#view6d .view-row button{flex:1;min-width:0;white-space:nowrap}
+#view6d button{font-size:11px}
+#view6dToggle{width:100%;background:#20544ddd!important;border:1px solid #ffffff90!important}
+#view6d .view-help{max-width:150px}
+@media(max-width:560px){#view6d{top:calc(var(--st) + 181px)}}
+
+/* Ocean View 2.0: calm compact scene navigation; controls never appear in other themes. */
+#oceanDock20{position:fixed;top:calc(var(--st) + 194px);left:10px;z-index:7;display:none;
+  padding:9px;border:1px solid #ffffff79;border-radius:15px;
+  background:linear-gradient(145deg,#123c4fdf,#194b59db);color:#f4f7ed;box-shadow:0 5px 25px #081c2870;
+  width:160px;backdrop-filter:blur(9px);}
+#oceanDock20.show{display:block}
+#oceanDock20 .ocean-label20{font:700 10px/1.2 system-ui,sans-serif;letter-spacing:1.7px;color:#cae9e8;margin:0 0 7px 2px}
+#oceanDock20 .ocean-label20 strong{color:#fff0bb;font-size:11px}
+#oceanDock20 .ocean-actions20{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#oceanDock20 button{font:600 11px/1.2 system-ui,sans-serif;color:#fff;border:1px solid #a4d7d15e;background:#dff6f51b;
+  border-radius:10px;min-height:36px;padding:5px;touch-action:manipulation;cursor:pointer}
+#oceanDock20 button:active{background:#eff9ee4d}
+#oceanDock20 button:focus-visible{outline:2px solid #ffe5a0}
+#oceanDock20 button:disabled{opacity:.42;cursor:not-allowed}
+#oceanDock20 .ocean-caption20{font:10px/1.25 system-ui,sans-serif;opacity:.76;margin-top:7px;text-align:center}
+@media(max-width:560px){#oceanDock20{top:calc(var(--st) + 183px);width:148px;left:8px}
+  #oceanDock20 button{min-height:32px;font-size:10px}}
+
+/* 30-seat numbered directory: provides a dependable mobile route to every desk */
+#seatMap30{display:none}
+#seatMap30.show{display:inline-flex}
+.seat-map30{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0}
+.seat-map30 button{border:1px solid var(--line);border-radius:11px;padding:9px 2px;min-height:48px;font-family:'Jua',sans-serif;background:#fff;color:var(--ink);cursor:pointer}
+.seat-map30 button.empty{background:#e3f6ec;border-color:#89d8ad}
+.seat-map30 button.occupied{background:#ebe7df;color:#89847a}
+.seat-map30 button.mine{background:#f5e2a1;border-color:#e19b37}
+.seat-map30 button:disabled{cursor:default}
+.seat-map30 span{display:block;font:10px/1.3 system-ui,sans-serif;margin-top:3px}
+@media(max-width:390px){.seat-map30{gap:5px}.seat-map30 button{min-height:43px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<div id="oceanDock20" role="group" aria-label="오션뷰 2.0 공간 조작">
+ <div class="ocean-label20">OCEAN VIEW <strong>2.0</strong></div>
+ <div class="ocean-actions20">
+  <button type="button" id="oceanSea20" title="창밖 바다 감상">🌊 바다</button>
+  <button type="button" id="oceanDesk20" title="내 책상으로 이동" disabled>📖 책상</button>
+  <button type="button" id="oceanHome20" title="전체 열람실 보기">🏠 전체</button>
+  <button type="button" id="oceanEntrance30" title="캐릭터 뒤에서 입구 보기" hidden>👤 입구</button>
+  <button type="button" id="oceanSound20" title="파도 소리 켜기" aria-pressed="false">🔈 파도</button>
+ </div>
+ <div class="ocean-caption20">좌석 번호 메뉴로 먼 자리도 선택할 수 있어요</div>
+</div>
+
+<div id="view6d" role="group" aria-label="열람실 카메라 조정">
+ <button type="button" id="view6dToggle" aria-expanded="false" aria-controls="view6dPanel">🎥 시점 조정</button>
+ <div id="view6dPanel" hidden>
+  <div class="view-row"><button type="button" id="camLeft6d" aria-label="왼쪽 보기">◀</button><button type="button" id="camOut6d" class="wide">🌄 창밖</button><button type="button" id="camRight6d" aria-label="오른쪽 보기">▶</button></div>
+  <div class="view-row"><button type="button" id="camMinus6d" aria-label="화면 축소">−</button><button type="button" id="camHome6d" class="wide">⌂ 정면</button><button type="button" id="camPlus6d" aria-label="화면 확대">＋</button></div>
+  <div class="view-row"><button type="button" id="camForward6e" aria-label="앞줄 보기">↑앞</button><button type="button" id="camTiltUp6e" aria-label="위를 보기">↑시선</button><button type="button" id="camTiltDown6e" aria-label="아래를 보기">↓시선</button><button type="button" id="camBack6e" aria-label="뒷줄 보기">↓뒤</button></div>
+  <div class="view-row"><button type="button" id="camEco6e" class="wide" aria-pressed="false">⚡ 저사양</button></div>
+  <div class="view-help">모바일 좌우 드래그: 회전<br>상하 드래그: 앞·뒤 이동<br>두 손가락: 확대·위치<br>PC: 드래그 시선, Shift+드래그 이동</div>
+ </div>
+</div>
+<div class="loading" id="loading">열람실 불 켜는 중…</div>
+
+<div class="top"><div class="wrap">
+  <div class="row1">
+    <div class="brand">STUDY ROOM <small>WASD 자유 이동·충돌 방지 시험 · 공개 금지</small></div>
+    <div class="dday" id="dday">기말 D-27<i>가상</i></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="roomBtn">🚪 열람실 고르기 ▾</button>
+  </div>
+  <div class="stats"><span><span class="dot"></span>현재 착석 <b id="stNow">0명</b></span><span>열람실 접속 <b id="stToday">0명</b></span><span class="mock" id="conn">연결 중…</span></div>
+  <div class="goal" id="goal"></div>
+</div></div>
+
+<div class="hint" id="hint">빈 책상: 자리 선택 · 모바일 상하: 앞뒤 · 🎥 시점 조정</div>
+
+<div class="hud" id="hud">
+  <div class="h1">
+    <div><span class="sub" id="hSub">한국사</span><div class="time" id="hTime">25:00</div></div>
+    <div style="display:flex;gap:6px"><button class="btn sm" id="breakBtn" aria-label="쉬는 시간">☕ 쉬기</button><button class="btn sm" id="hStop">공부 끝내기</button></div>
+  </div>
+  <div class="bar"><i id="hBar" style="width:0%"></i></div>
+  <div class="h2"><span id="hMsg">서버 기록을 연결 중입니다</span><span id="hToday"></span></div>
+</div>
+
+<div class="foot">
+  <button class="chip" id="seatMap30" type="button" aria-label="30개 좌석 목록">🪑 30석 선택</button>
+  <button class="chip" id="myRec">📊 기록 불러오는 중…</button>
+  <button class="chip" id="schoolBtn">🏫 학교 선택</button>
+</div>
+
+<div class="dim" id="dim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const pad=n=>String(n).padStart(2,'0');
+const fmtClock=s=>{s=Math.max(0,Math.ceil(s));return pad(Math.floor(s/60))+':'+pad(s%60)};
+const fmtMin=s=>Math.floor(s/60)+'분';
+
+if(!window.THREE){$('#loading').textContent='3D 엔진을 불러오지 못했어요. 새로고침해 주세요.';return;}
+
+/* ---------- data ---------- */
+const SUBJECTS=['국어','수학','영어','한국사','통합사회','통합과학','기타'];
+const ADJ=['푸른','조용한','반짝','느긋한','단단한','새벽','포근한','맑은','작은','용감한','성실한','몽글'];
+const NOUN=['별','고래','연필','부엉이','나무','구름','책갈피','등대','다람쥐','노트','달','펭귄'];
+const genNick=()=>pick(ADJ)+pick(NOUN)+Math.floor(rnd(10,99));
+const SCHOOLS=['복정고','한빛고','새솔고'];
+const GRADES=['1학년','2학년','3학년'];
+const SKIN=['#f2c9a0','#e9b88f','#f6d6b8','#dda57c'];
+const HAIR=['#2a1d15','#3b2a1e','#151110','#5a3a22','#7a5634'];
+const SHIRT=['#efe8d6','#8fae8b','#c97b5a','#6d8fb3','#d9b45a','#a98bc0','#e58f8f'];
+const BOOK=['#2f4a3a','#7a3b2a','#c9b98a','#1f3550','#5a4a2a','#a8a07a','#3d2a1e','#e8dcc0','#4f6b4a','#8b5a3c','#26323f'];
+const AGO=['5분 전','30분 전','1시간 전','2시간 전','3시간 전'];
+
+function store(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem('sr4_'+k))}localStorage.setItem('sr4_'+k,JSON.stringify(v))}catch(e){return null}}
+const kstDay=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+const kstHour=()=>(+new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',hour:'numeric',hourCycle:'h23'}).format(new Date()))%24;
+const todayKey=kstDay();
+let saved=store('me')||{};
+// 날짜별 기록: hist[YYYY-MM-DD] = {sec: 공부 초, daySec: 심야 제외 초}
+let hist=store('hist')||{};
+if(saved.day&&saved.min&&!hist[saved.day]){hist[saved.day]={sec:saved.min*60,daySec:(saved.dayMin||0)*60};store('hist',hist)} // 이전 버전 기록은 바로 새 구조로 저장
+const H=3600e3,DAY=24*H,KST=9*H;
+const keyOf=ms=>new Date(Math.floor((ms+KST)/DAY)*DAY).toISOString().slice(0,10);
+// 실제 시각 구간 [a,b]를 한국 날짜·심야(0~6시) 단위로 나눔
+function splitInterval(a,b){
+  const out={};let t=a;
+  while(t<b){
+    const k=t+KST, ds=Math.floor(k/DAY)*DAY, six=ds+6*H, next=k<six?six:ds+DAY;
+    const end=Math.min(b,next-KST), sec=(end-t)/1000, key=new Date(ds).toISOString().slice(0,10);
+    const o=out[key]||(out[key]={sec:0,night:0});o.sec+=sec;if(k<six)o.night+=sec;
+    t=end;
+  }
+  return out;
+}
+const dayRec=d=>hist[d]||{sec:0,daySec:0};
+function saveHist(){const keys=Object.keys(hist).sort();while(keys.length>21)delete hist[keys.shift()];store('hist',hist)}
+const me={
+  nick:saved.nick||genNick(), hair:saved.hair??0, shirt:saved.shirt??3, skin:0, bun:true,
+  day:todayKey, buckets:{}, showSchool:false,
+  seat:null, room:null, subject:'한국사', len:1500, elapsed:0, state:null, breakLeft:0, wasHidden:false
+};
+const saveMe=()=>store('me',{day:me.day,nick:me.nick,hair:me.hair,shirt:me.shirt});
+const pointsFor=m=>(m>=20?1:0)+(m>=50?1:0);
+const ptsOf=d=>pointsFor(dayRec(d).daySec/60);
+const myPts=()=>ptsOf(kstDay());
+const todayMinF=()=>Math.floor(dayRec(kstDay()).sec/60);
+
+function npc(kind){
+  return {nick:genNick(),grade:pick(GRADES),school:kind==='school'?'복정고':pick(SCHOOLS),showSchool:Math.random()<.55,
+    subject:pick(SUBJECTS),elapsed:rnd(60,2600),len:pick([1500,3000,3000]),state:'study',breakLeft:0,
+    look:{skin:pick(SKIN),hair:pick(HAIR),shirt:pick(SHIRT),bun:Math.random()<.5}};
+}
+
+/* v0.7-class preview: versioned 30-seat rooms; existing 12-seat rooms unchanged. */
+function isClassRoom30(k){
+ return k==='public-3p'||/^sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-4$/.test(k||'');
+}
+function seatCapacity(k){return isClassRoom30(k)?30:12;}
+function sharedCount30(k){
+ let n=0;for(let i=0;i<seatCapacity(k);i++)if(isSharedSeat(i,k))n++;return n;
+}
+function makeSeats(kind,fill){return Array.from({length:seatCapacity(kind)},(_,idx)=>({idx,occ:null,trace:null}));}
+const rooms={};
+['public-1','public-2','public-3','public-4','public-5','public-3p'].forEach(k=>rooms[k]={seats:makeSeats(k,0),today:0,goal:{}});
+let roomKey='public-3p';
+/* STUDY ROOM v0.6-C: independent visual themes, no DB schema changes. */
+const ROOM_THEMES={
+  modern:{id:'modern',icon:'🏫',name:'캠퍼스 라운지',desc:'밝은 원목과 커다란 유리창',shared:8,bg:'#dcd4bf',wall:'#e7e7dd',floor:'#bdbdb4',rug:'#d7dbd2',wood:'#c9a37d',trim:'#6f8f89',chair:'#748f86',lamp:'#fff3cb',sun:'#fff7df',sky:'#c4e8ee'},
+  classic:{id:'classic',icon:'📚',name:'고풍 대학 도서관',desc:'서가·아치·황동 조명',shared:4,bg:'#35291e',wall:'#795437',floor:'#75543b',rug:'#813e42',wood:'#815331',trim:'#c6a26a',chair:'#6e4037',lamp:'#ffe4a0',sun:'#ffdfae',sky:'#d2c69b'},
+  coast:{id:'coast',icon:'🌊',name:'오션뷰 열람실',desc:'바다를 바라보는 공동 책상',shared:8,bg:'#b7dce5',wall:'#f1ede0',floor:'#d4d0bc',rug:'#91bcbf',wood:'#c8ac8b',trim:'#4b9bad',chair:'#6b98a5',lamp:'#fff7d9',sun:'#fff2d4',sky:'#8dd9f1'},
+  astral:{id:'astral',icon:'✨',name:'별빛 마법 도서관',desc:'별자리·스테인드글라스·빛나는 책',shared:6,bg:'#211c38',wall:'#4b3e64',floor:'#51415b',rug:'#49376c',wood:'#64435e',trim:'#d5ae64',chair:'#816088',lamp:'#ffdaa5',sun:'#f0d6ff',sky:'#8b70bc'},
+  forest:{id:'forest',icon:'🌿',name:'숲속 서재',desc:'큰 창과 실내 나무·초록빛',shared:8,bg:'#748e79',wall:'#d7dcc6',floor:'#a99f79',rug:'#7a996b',wood:'#a27d52',trim:'#587b5d',chair:'#7c9871',lamp:'#fff0b7',sun:'#f5e9c8',sky:'#c5dfaa'}
+};
+function themeFor(key){
+  if(isClassRoom30(key))return ROOM_THEMES.coast;
+  const n=Number((key||'public-1').split('-').pop());
+  const names=(key||'').startsWith('sch-')?['modern','coast','astral']:['modern','classic','coast','astral','forest'];
+  return ROOM_THEMES[names[Math.max(0,Math.min(names.length-1,(n||1)-1))]]||ROOM_THEMES.modern;
+}
+function isSharedSeat(i,key){
+ const k=key||roomKey;
+ if(!isClassRoom30(k))return i<themeFor(k).shared;
+ const cols=innerWidth/innerHeight<.85?3:6;
+ const row=Math.floor(i/cols),column=i%cols;
+ // 18 shared seats: PC three shared rows, mobile first two seats of nine rows.
+ return cols===6?row<3:row<9&&column<2;
+}
+
+let speed=1;
+
+/* ---------- three ---------- */
+const canvas=$('#c');
+let renderer;
+try { renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }
+catch(e){$('#loading').textContent='이 브라우저에서 3D를 실행할 수 없어요. Chrome을 최신 상태로 업데이트하고 그래픽 가속(WebGL)을 확인해 주세요.';return;}
+renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<600?1.3:1.8));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#2b2118');
+scene.fog=new THREE.Fog('#2b2118',22,42);
+const camera=new THREE.PerspectiveCamera(40,1,.1,100);
+scene.add(new THREE.HemisphereLight('#fff1dc','#5a4128',.78));
+const sun=new THREE.DirectionalLight('#ffe2b8',.62);
+sun.position.set(5,12,7);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-12,right:12,top:12,bottom:-12,near:1,far:40});
+sun.shadow.bias=-.002;
+scene.add(sun);
+const warm=new THREE.PointLight('#ffcf85',.35,18);warm.position.set(0,4,0);scene.add(warm);
+
+const matCache={};
+const M=(c,o)=>{const k=c+(o?JSON.stringify(o):'');return matCache[k]||(matCache[k]=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})))};
+const box=(w,h,d,c,x,y,z,parent,shadow=true)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);m.castShadow=shadow;m.receiveShadow=true;parent&&parent.add(m);return m};
+const sph=(r,c,x,y,z,parent,seg=16)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg,Math.round(seg*.75)),M(c));m.position.set(x,y,z);m.castShadow=true;parent&&parent.add(m);return m};
+const cyl=(rt,rb,h,c,x,y,z,parent,seg=14)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),M(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent&&parent.add(m);return m};
+
+
+/* v0.6-D.1: reclaim per-room geometry, noncached materials and CanvasTexture. */
+function disposeObject6e(root){
+ if(!root)return;
+ const shared=new Set(Object.values(matCache)),geos=new Set(),mats=new Set(),maps=new Set();
+ root.traverse(o=>{
+  if(o.userData)o.userData.disposed=true;
+  if(o.geometry&&!geos.has(o.geometry)){geos.add(o.geometry);o.geometry.dispose();}
+  for(const m of (Array.isArray(o.material)?o.material:[o.material])){
+   if(!m||shared.has(m)||mats.has(m))continue;
+   mats.add(m);
+   for(const k of ['map','alphaMap','aoMap','emissiveMap','normalMap','roughnessMap','metalnessMap','bumpMap','lightMap']){
+    const t=m[k];if(t&&!maps.has(t)){maps.add(t);t.dispose();}
+   }
+   m.dispose();
+  }
+ });
+}
+
+let L=null; // layout
+let roomGroup=null;
+const seatObjs=[]; // {g, hit, char, x, z, deskTopY}
+const plants=[];
+
+function computeLayout(){
+  const portrait=innerWidth/innerHeight<.85,large=isClassRoom30(roomKey);
+  const cols=large?(portrait?3:6):(portrait?2:4);
+  const count=seatCapacity(roomKey),rows=count/cols,dx=large?(portrait?1.85:2.1):(portrait?1.95:2.3),dz=large?2.08:2.15;
+  const seats=[];
+  for(let i=0;i<count;i++){const c=i%cols,r=Math.floor(i/cols);seats.push({x:(c-(cols-1)/2)*dx,z:(r-(rows-1)/2)*dz})}
+  const halfW=cols*dx/2+1.0, halfD=rows*dz/2+1.1, maxZ=Math.max(...seats.map(q=>q.z));
+  const aisles=[];for(let c=0;c<cols-1;c++)aisles.push((c+.5-(cols-1)/2)*dx);
+  return {portrait,cols,rows,dx,dz,seats,halfW,halfD,frontZ:maxZ+1.5,door:{x:large?halfW-1.05:halfW-.35,z:maxZ+1.5},aisles};
+}
+
+function bookshelf(w,h,parent,x,z,ry){
+  const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry||0;parent.add(g);
+  const d=.42, fc='#6b4a2e';
+  box(.08,h,d,fc,-w/2,h/2,0,g);box(.08,h,d,fc,w/2,h/2,0,g);box(w,h,.04,'#4e3522',0,h/2,-d/2+.02,g,false);
+  const shelves=Math.max(3,Math.round(h/.62));
+  for(let s=0;s<=shelves;s++){
+    const y=s*(h-.06)/shelves+.03;box(w,.06,d,fc,0,y,0,g);
+    if(s===shelves)break;
+    const sh=(h-.06)/shelves-.08;
+    let bx=-w/2+.08;
+    while(bx<w/2-.14){
+      const bw=rnd(.07,.15), bh=sh*rnd(.62,.95);
+      if(Math.random()<.08){bx+=bw*1.5;continue}
+      const b=box(bw,bh,d*.8,pick(BOOK),bx+bw/2,y+.03+bh/2,.02,g,false);
+      if(Math.random()<.06){b.rotation.z=-.18;b.position.x+=.03}
+      bx+=bw+.008;
+    }
+  }
+  return g;
+}
+
+
+/* v0.6-D: real window openings with lightweight 3D scenery (no borrowed photos). */
+
+/* OCEAN VIEW 2.0 — original lightweight panorama + layered exterior. No external photos/assets. */
+const oceanFx20=[];
+function buildOcean20(t,W,D){
+ const g=new THREE.Group();roomGroup.add(g);
+ const add=(mesh)=>{mesh.castShadow=false;mesh.receiveShadow=false;g.add(mesh);return mesh};
+ const flat=(w,h,d,color,x,y,z)=>{
+  const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color}));
+  o.position.set(x,y,z);return add(o);
+ };
+ // Painted panorama is one cached-on-scene CanvasTexture, freed on room change.
+ const c=document.createElement('canvas');c.width=1024;c.height=512;
+ const p=c.getContext('2d'),w=c.width,h=c.height;
+ const sky=p.createLinearGradient(0,0,0,h*.64);
+ sky.addColorStop(0,'#72b7dd');sky.addColorStop(.35,'#aedced');sky.addColorStop(.77,'#e7f5e4');sky.addColorStop(1,'#ffead2');
+ p.fillStyle=sky;p.fillRect(0,0,w,h*.59);
+ // Soft sunlight and cloud banks.
+ const sunGrad=p.createRadialGradient(730,93,8,730,93,150);
+ sunGrad.addColorStop(0,'rgba(255,253,224,.95)');sunGrad.addColorStop(.24,'rgba(255,246,213,.65)');sunGrad.addColorStop(1,'rgba(255,251,226,0)');
+ p.fillStyle=sunGrad;p.fillRect(550,-65,360,340);
+ p.beginPath();p.arc(730,93,35,0,Math.PI*2);p.fillStyle='#fff9e2';p.fill();
+ for(let i=0;i<12;i++){
+  const x=55+i*89,y=69+(i%4)*31,rad=22+(i%3)*11;
+  p.fillStyle='rgba(255,255,251,'+(.11+(i%3)*.07)+')';
+  p.beginPath();p.ellipse(x,y,rad*2,rad*.55,0,0,Math.PI*2);p.fill();
+ }
+ const sea=p.createLinearGradient(0,h*.57,0,h);
+ sea.addColorStop(0,'#3ba1be');sea.addColorStop(.22,'#51b6c7');sea.addColorStop(.7,'#75c8cd');sea.addColorStop(1,'#abdacb');
+ p.fillStyle=sea;p.fillRect(0,h*.57,w,h*.43);
+ p.fillStyle='rgba(245,255,243,.65)';p.fillRect(0,h*.57,w,2);
+ // Distant layered headlands, no copied photograph.
+ function hill(points,fill){
+  p.beginPath();p.moveTo(points[0][0],points[0][1]);
+  for(const [x,y] of points.slice(1))p.lineTo(x,y);
+  p.lineTo(points[points.length-1][0],h*.59);
+  p.lineTo(points[0][0],h*.59);p.closePath();p.fillStyle=fill;p.fill();
+ }
+ hill([[0,280],[44,248],[88,233],[147,241],[207,263],[256,291]],'#6bafa1');
+ hill([[0,293],[82,275],[155,281],[245,301]],'#81c1b6');
+ hill([[825,296],[900,268],[944,250],[988,255],[1024,268]],'#6da998');
+ hill([[905,300],[970,289],[1024,293]],'#8fc0a7');
+ // Receding crests, avoiding excessive tiny 3D meshes.
+ for(let i=0;i<86;i++){
+  const yy=h*.64+(i*37)%(h*.34),xx=(i*137+59)%w;
+  const a=.12+(yy/h)*.32,ww=8+(i%6)*10;
+  p.fillStyle='rgba(255,255,244,'+a.toFixed(2)+')';
+  p.fillRect(xx,yy,ww,1+(i%3===0?1:0));
+ }
+ const tex=new THREE.CanvasTexture(c);
+ if(THREE.sRGBEncoding!==undefined)tex.encoding=THREE.sRGBEncoding;
+ tex.anisotropy=2;
+ const pano=new THREE.Mesh(new THREE.PlaneGeometry(W*2+11,8.3),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,fog:false}));
+ pano.position.set(0,2.1,-D-7.8);add(pano);
+ // 3D sea layers add parallax from the viewing deck.
+ flat(W*2+8,.07,.14,'#f2f6e4',0,1.07,-D-5.35);
+ flat(W*2+8,.13,.2,'#67c0ca',0,.74,-D-5.28);
+ const foamColors=['#f1ffef','#e1f9ee','#d0efed'];
+ for(let i=0;i<9;i++){
+  const line=flat(.55+(i%4)*.45,.024,.035,foamColors[i%3],
+    -W-1.1+(i*1.29)%(W*2+2.0),.66+(i%4)*.17,-D-4.85+(i%3)*.15);
+  line.material.transparent=true;line.material.opacity=.45;
+  oceanFx20.push({type:'wave',obj:line,x:line.position.x,phase:i*1.38});
+ }
+ // Small coastal island, a white lighthouse, a distant sail.
+ const isle=new THREE.Mesh(new THREE.SphereGeometry(.82,12,8),M('#4f8e73'));
+ isle.position.set(-W*.55,1.13,-D-4.1);isle.scale.set(2.1,.42,.85);add(isle);
+ const tower=flat(.16,.92,.16,'#f9eee0',-W*.64,1.83,-D-4.04);
+ flat(.25,.14,.26,'#ad5947',-W*.64,2.34,-D-4.04);
+ flat(.72,.11,.27,'#b27b63',W*.57,.83,-D-3.3);
+ flat(.026,.9,.028,'#f6f5e9',W*.57,1.33,-D-3.3);
+ const sail=new THREE.Mesh(new THREE.ConeGeometry(.40,.82,3),new THREE.MeshBasicMaterial({color:'#fdf4df',side:THREE.DoubleSide}));
+ sail.rotation.y=Math.PI/2;sail.position.set(W*.57+.19,1.56,-D-3.3);add(sail);
+ // Two distant birds with subtle wing motion.
+ for(let i=0;i<2;i++){
+  const bird=new THREE.Group();
+  bird.position.set((-W*.4)+i*1.45,3.3+i*.43,-D-3.5-i*.6);g.add(bird);
+  const a=flat(.24,.027,.055,'#ffffff',0,0,0);
+  // Move the temporary wing mesh from global group to the animated bird.
+  g.remove(a);bird.add(a);
+  const b=flat(.24,.027,.055,'#ffffff',0,0,0);g.remove(b);bird.add(b);
+  a.position.x=-.13;b.position.x=.13;
+  oceanFx20.push({type:'bird',obj:bird,wingA:a,wingB:b,phase:i*2.2,y:bird.position.y,x:bird.position.x});
+ }
+ // Wooden exterior deck and rail in the near field, below the main ocean sightline.
+ const deck=box(W*2+.4,.12,1.45,'#d7b999',0,-.04,-D-.9,g,false);
+ for(let x=-W+.22;x<=W;x+=1.15){
+  const pole=box(.055,.85,.07,'#e8e9d9',x,.40,-D-1.56,g,false);
+  pole.castShadow=false;
+ }
+ box(W*2+.4,.07,.10,'#edf2e9',0,.85,-D-1.56,g,false);
+ // Ocean side windows: tinted sky and distant sea, rather than blank blocks.
+ for(const dir of [-1,1]){
+  const x=dir*(W+4.2),len=D*2+5;
+  flat(.10,5.4,len,'#acdbe7',x,2.0,0);
+  flat(.13,1.35,len,'#4faec6',dir*(W+4.0),.76,0);
+  for(let i=0;i<7;i++){
+   const z=-D+1.1+i*(D*2/7);
+   flat(.16,.03,.9,'#d9f5e8',dir*(W+3.9),1.19+(i%3)*.18,z);
+  }
+ }
+ // Exterior scenery does not cast expensive moving shadows.
+ g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false}});
+ // Material clean-up is performed by disposeObject6e when switching rooms.
+}
+function decorateOcean20(t,W,D){
+ const g=roomGroup;
+ // Coastal architecture: rhythmic pale beams, rattan pendants, soft furnishing at edges.
+ for(let z=-D+2;z<L.frontZ;z+=3.1){
+  box(W*2-.3,.12,.18,'#dec69e',0,4.27,z,g,false);
+  const fixture=cyl(.30,.21,.19,'#d9c19c',0,3.93,z,g,12);
+  fixture.castShadow=false;
+  const shade=sph(.20,'#fff5cf',0,3.80,z,g,10);
+  shade.material=new THREE.MeshBasicMaterial({color:'#ffe9b8',transparent:true,opacity:.87});
+ }
+ // Seaside lounge stays outside the clickable desk footprints.
+ for(const dir of [-1,1]){
+  const x=dir*(W-.4),z=L.frontZ-.1;
+  box(.42,.42,.48,'#8db7b7',x,.24,z,g,false);
+  const planter=cyl(.18,.14,.28,'#f2e6cf',x,.54,z-.48,g,10);
+  for(let i=0;i<4;i++){
+   const leaf=sph(.16,'#6b9b83',x+Math.sin(i*2)*.18,.89+i*.05,z-.48+Math.cos(i*2)*.12,g,8);
+   leaf.scale.set(.65,1.45,.8);
+  }
+ }
+ // Slim vertical curtains frame the edges without hiding the panorama.
+ for(const dir of [-1,1]){
+  const curtain=box(.3,2.35,.05,'#f6eee0',dir*(W-.28),2.51,-D+.13,g,false);
+  curtain.material=new THREE.MeshLambertMaterial({color:'#f9f2e4',transparent:true,opacity:.77,side:THREE.DoubleSide});
+  oceanFx20.push({type:'curtain',obj:curtain,base:curtain.rotation.z,phase:dir});
+ }
+}
+function animateOcean20(ms){
+ if(!oceanFx20.length||document.hidden||eco6e)return;
+ const time=ms/1000;
+ for(const e of oceanFx20){
+  if(e.type==='wave')e.obj.position.x=e.x+Math.sin(time*.55+e.phase)*.32;
+  else if(e.type==='bird'){
+   const a=Math.sin(time*3+e.phase)*.35;
+   e.wingA.rotation.z=a;e.wingB.rotation.z=-a;
+   e.obj.position.y=e.y+Math.sin(time*.85+e.phase)*.045;
+  }else if(e.type==='curtain')e.obj.rotation.z=e.base+Math.sin(time*.7+e.phase)*.018;
+ }
+}
+
+
+/* Ocean 2.0 focus camera + live desk-lamp lighting (visual only). */
+let deskBlend20=0,deskSeat20=null;
+const isOcean20=()=>themeFor(roomKey).id==='coast';
+function focusOceanDesk20(n){
+ if(!isOcean20()||n==null||!L?.seats?.[n])return;
+ deskSeat20=n;cameraMode6e='desk';following=false;pitchTarget=.65;yawTarget=0;zoomTarget=.94;
+}
+function updateOceanDock20(){
+ const d=document.getElementById('oceanDock20');if(!d)return;
+ d.classList.toggle('show',isOcean20());
+ const b=document.getElementById('oceanDesk20');
+ if(b)b.disabled=!isOcean20()||me.seat===null||me.state==='walk';
+ const entrance=document.getElementById('oceanEntrance30');if(entrance)entrance.hidden=!isClassRoom30(roomKey);
+}
+function oceanDeskLights20(dt){
+ if(!isOcean20())return;
+ for(let i=0;i<seatObjs.length;i++){
+  const so=seatObjs[i],occ=rooms[roomKey]?.seats[i]?.occ;
+  if(!so?.lampGlow)continue;
+  const goal=occ?.state==='study'?.49:occ?.state==='break'?.18:.045;
+  so.lampGlow.material.opacity+=(goal-so.lampGlow.material.opacity)*Math.min(1,dt*5);
+  if(so.lampBulb)so.lampBulb.material.color.set(occ?.state==='study'?'#fff4c5':'#d2d7c9');
+ }
+}
+
+
+/* Original procedural wave ambience, user-initiated and muted by default. */
+let seaAudio20=null,seaAudioSource20=null,seaAudioOsc20=null;
+function stopOceanSound20(){
+ try{seaAudioSource20?.stop()}catch(_){}
+ try{seaAudioOsc20?.stop()}catch(_){}
+ if(seaAudio20)seaAudio20.close().catch(()=>{});
+ seaAudio20=null;seaAudioSource20=null;seaAudioOsc20=null;
+ const b=document.getElementById('oceanSound20');
+ if(b){b.textContent='🔈 파도';b.setAttribute('aria-pressed','false')}
+}
+async function toggleOceanSound20(){
+ if(!isOcean20())return;
+ if(seaAudio20){stopOceanSound20();return}
+ const Audio=window.AudioContext||window.webkitAudioContext;
+ if(!Audio){toast('이 기기에서는 파도 소리를 지원하지 않아요');return}
+ let ctx;
+ try{
+  ctx=new Audio();const length=Math.round(ctx.sampleRate*2.5);
+  const buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
+  for(let i=0;i<length;i++)data[i]=(Math.random()*2-1);
+  const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;
+  const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=470;
+  const gain=ctx.createGain();gain.gain.value=.024;
+  const osc=ctx.createOscillator();osc.type='sine';osc.frequency.value=.12;
+  const depth=ctx.createGain();depth.gain.value=.015;
+  osc.connect(depth);depth.connect(gain.gain);
+  source.connect(low);low.connect(gain);gain.connect(ctx.destination);
+  await ctx.resume();source.start();osc.start();
+  seaAudio20=ctx;seaAudioSource20=source;seaAudioOsc20=osc;
+  const b=document.getElementById('oceanSound20');
+  if(b){b.textContent='🔊 파도 ON';b.setAttribute('aria-pressed','true')}
+ }catch(e){
+  try{await ctx?.close()}catch(_){}
+  stopOceanSound20();toast('파도 소리를 재생할 수 없어요');
+ }
+}
+
+function renderExterior6d(t,W,D){
+ if(t.id==='coast'){buildOcean20(t,W,D);return;}
+ const group=new THREE.Group();roomGroup.add(group);const backZ=-D-6,span=W*2+7,sky=t.id==='astral'?'#2b2449':t.id==='coast'?'#9bd8ed':t.id==='forest'?'#b5d8bc':t.id==='classic'?'#cfc3ac':'#bce1eb';
+ const block=(w,h,d,c,x,y,z)=>{const q=box(w,h,d,c,x,y,z,group,false);return q};
+ const backdrop=block(span,7,.12,sky,0,2,backZ);
+ backdrop.material=new THREE.MeshBasicMaterial({color:sky});
+ if(t.id==='coast'){
+   block(span,1.65,.14,'#41aaca',0,1.22,backZ+.28);
+   block(span,.12,.16,'#e8f7f1',0,1.85,backZ+.38);
+   for(let i=0;i<14;i++)block(.45,.028,.09,'#e6f9f5',-W-1+(i*1.19)%span,.6+i%4*.27,backZ+.55);
+   const isle=sph(.72,'#477f71',-W*.54,1.53,backZ+1.2,group,9);isle.scale.set(2,.4,.55);
+   // Tiny sail on the water.
+   block(.7,.13,.24,'#b07d55',W*.45,1.2,backZ+1.4);
+   block(.028,.72,.03,'#f8f5e5',W*.45,1.57,backZ+1.4);
+   const sail=new THREE.Mesh(new THREE.ConeGeometry(.29,.75,3),new THREE.MeshBasicMaterial({color:'#fff4d9'}));
+   sail.rotation.y=Math.PI/2;sail.position.set(W*.45+.23,1.68,backZ+1.4);group.add(sail);
+ }else if(t.id==='astral'){
+   block(span,1.4,.14,'#4d3b68',0,.72,backZ+.3);
+   for(let i=0;i<20;i++){const x=-W-2+(i*1.37)%span,y=2+(i*1.41)%2.5;
+     const star=sph(i%5===0?.082:.04,'#ffe6b5',x,y,backZ+.9,group,8);
+     star.material=new THREE.MeshBasicMaterial({color:'#ffe2a8'});}
+   const moon=sph(.42,'#ffe2ad',W*.48,3.2,backZ+1.0,group,16);
+   moon.material=new THREE.MeshBasicMaterial({color:'#ffe2ad'});
+   for(let i=-3;i<=3;i++){const ht=1.2+(i%3===0?.8:.2),x=i*1.3;
+     block(.78,ht,.55,'#443755',x,ht/2+.48,backZ+2);
+     const roof=new THREE.Mesh(new THREE.ConeGeometry(.56,.66,4),M('#302b49'));
+     roof.position.set(x,ht+1.0,backZ+2);roof.rotation.y=Math.PI/4;group.add(roof);}
+ }else if(t.id==='forest'){
+   block(span,1.8,.1,'#85b594',0,.74,backZ+.5);
+   for(let i=0;i<11;i++){
+     const x=-W-2+i*(span-1)/10,z=backZ+1.4+(i%3)*.38;
+     cyl(.09,.14,1.13,'#856948',x,1.05,z,group,8);
+     const crown=sph(.58,i%2?'#527a56':'#6b9b68',x,1.88,z,group,9);crown.scale.set(1,1.4,1);
+   }
+ }else{
+   block(span,1.7,.16,t.id==='classic'?'#bba688':'#97b6a3',0,.7,backZ+.5);
+   const palette=t.id==='classic'?['#b6a18d','#a68b76','#d6bca5']:['#e3e7dc','#b8d0d1','#ddd9ca'];
+   for(let i=-3;i<=3;i++){
+     const x=i*1.45,ht=1.5+Math.abs(i%3)*.55,zz=backZ+1.65+(i%2)*.4;
+     block(1.22,ht,.75,palette[(i+6)%3],x,ht/2+.8,zz);
+     for(let j=-1;j<=1;j++)for(let y=1.15;y<ht+.75;y+=.55)
+       block(.15,.23,.035,t.id==='classic'?'#736454':'#759ead',x+j*.3,y,zz+.4);
+     if(t.id==='classic'){
+       const roof=new THREE.Mesh(new THREE.ConeGeometry(.78,.55,4),M('#6b5149'));
+       roof.rotation.y=Math.PI/4;roof.position.set(x,ht+1.08,zz);group.add(roof);
+     }
+   }
+   for(let i=-3;i<=3;i++){
+     const x=i*2.08+.4,z=backZ+3.1;
+     cyl(.075,.09,.74,'#7c6451',x,.69,z,group,8);
+     const crown=sph(.4,'#53896c',x,1.2,z,group,8);crown.scale.set(1,1.2,.9);
+   }
+ }
+ // Views visible through left/right side openings.
+ for(const side of [-1,1]){
+   const x=side*(W+4.4),sideSky=block(.11,6,D*2+4,sky,x,2,0);
+   sideSky.material=new THREE.MeshBasicMaterial({color:sky});
+   block(.16,1.6,D*2+4,t.id==='coast'?'#43adca':t.id==='astral'?'#57416f':t.id==='forest'?'#80ac88':'#9eb4a4',side*(W+4.1),.75,0);
+   for(let i=0;i<Math.min(7,Math.ceil(D*2/2.5));i++){
+     const z=-D+1.4+i*2.5,xx=side*(W+2.9);
+     if(t.id==='coast'){block(.12,.035,1.15,'#d1f7f1',xx,1.28+(i%3)*.2,z);}
+     else if(t.id==='astral'){
+       const star=sph(.10,'#ffe1ab',xx,2+(i%3)*.44,z,group,8);star.material=new THREE.MeshBasicMaterial({color:'#ffe1ab'});
+     }else{
+       cyl(.07,.11,1,'#755a43',xx,.89,z,group,7);
+       const cl=sph(.49,t.id==='forest'?'#4c8559':'#608b70',xx,1.65,z,group,8);cl.scale.set(.8,1.3,1);
+     }
+   }
+ }
+ // Exterior geometry uses unshadowed low-cost rendering.
+ group.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;}});
+}
+function renderWindows6d(t,W,D){
+ const g=roomGroup,z=-D-.12,trim=t.trim;
+ // Three large back windows: no opaque wall or glass panels in the sightline.
+ box(W*2+.35,1.1,.22,t.wall,0,.55,z,g,false);
+ box(W*2+.35,.50,.22,t.wall,0,4.15,z,g,false);
+ const width=W*2-.55,unit=width/3,left=-width/2;
+ for(let j=0;j<=3;j++)box(.19,2.8,.27,trim,left+unit*j,2.5,z,g,false);
+ for(let j=0;j<3;j++){
+   const x=left+unit*(j+.5);
+   box(unit-.12,.11,.25,trim,x,1.14,z+.03,g,false);
+   box(unit-.12,.12,.25,trim,x,3.84,z+.03,g,false);
+   box(unit-.12,.06,.18,trim,x,2.55,z+.035,g,false);
+   if(t.id==='classic'||t.id==='astral')box(unit-.16,.09,.2,trim,x,3.47,z+.02,g,false);
+ }
+ // Side walls also have real open bays, with a solid front end around the entrance.
+ const start=-D-.85,end=L.frontZ+.9,len=end-start;
+ for(const side of [-1,1]){
+   const x=side*(W+.1),sill=1.1,upper=3.85;
+   box(.23,sill,len,t.wall,x,sill/2,(start+end)/2,g,false);
+   box(.23,.55,len,t.wall,x,4.125,(start+end)/2,g,false);
+   box(.25,3,.9,t.wall,x,2.5,end-.45,g,false);
+   const count=Math.max(2,Math.floor((len-1.7)/2.8)),lo=start+.45,hi=end-1.25,step=(hi-lo)/count;
+   for(let j=0;j<=count;j++)box(.26,3,.20,trim,x,2.53,lo+j*step,g,false);
+   for(let j=0;j<count;j++){
+     const zc=lo+(j+.5)*step;
+     box(.24,.09,step-.14,trim,x,sill+.025,zc,g,false);
+     box(.24,.12,step-.14,trim,x,upper-.015,zc,g,false);
+   }
+ }
+ renderExterior6d(t,W,D);
+}
+
+
+/* Static box instancing for 30-seat scenes: reduce draw calls, preserve independent seat hitboxes. */
+function batchStaticBoxes30(root){
+ if(!isClassRoom30(roomKey)||!THREE.InstancedMesh)return {batched:0,groups:0};
+ root.updateMatrixWorld(true);
+ const sharedMats=new Set(Object.values(matCache)),batches=new Map();
+ root.traverse(mesh=>{
+  if(!mesh.isMesh||mesh.geometry?.type!=='BoxGeometry'||!sharedMats.has(mesh.material))return;
+  if(mesh.userData?.seat!==undefined)return; // seat hitboxes must remain distinct
+  const p=mesh.geometry.parameters||{};
+  if(!Number.isFinite(p.width)||!Number.isFinite(p.height)||!Number.isFinite(p.depth))return;
+  const key=mesh.material.uuid+'_'+Number(Boolean(mesh.castShadow))+'_'+Number(Boolean(mesh.receiveShadow));
+  if(!batches.has(key))batches.set(key,{material:mesh.material,cast:mesh.castShadow,receive:mesh.receiveShadow,items:[]});
+  batches.get(key).items.push({mesh,transform:mesh.matrixWorld.clone().multiply(new THREE.Matrix4().makeScale(p.width,p.height,p.depth))});
+ });
+ let n=0,k=0;
+ for(const b of batches.values()){
+  if(b.items.length<4)continue;
+  const inst=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),b.material,b.items.length);
+  inst.castShadow=b.cast;inst.receiveShadow=b.receiveShadow;inst.frustumCulled=false;
+  b.items.forEach((v,i)=>{inst.setMatrixAt(i,v.transform);v.mesh.parent.remove(v.mesh);v.mesh.geometry.dispose()});
+  inst.instanceMatrix.needsUpdate=true;
+  root.add(inst);n+=b.items.length;k++;
+ }
+ return {batched:n,groups:k};
+}
+
+
+/* Four-sided library interior: front entrance wall with real doorway and shelves.
+   The entrance wall is shown in person-height views and cut away in overhead overview. */
+let entranceWall30=null, entranceAvatar30=null, frontWallBatch30=null;
+function buildEntranceWall30(W,t){
+ const g=new THREE.Group();g.name='library-front-wall-30';roomGroup.add(g);
+ entranceWall30=g;
+ const z=L.frontZ+.74,doorX=L.door.x,doorHalf=.72;
+ const openingL=doorX-doorHalf,openingR=doorX+doorHalf;
+ const a=openingL+W,b=W-openingR;
+ const wall=(width,height,depth,color,x,y,zz)=>box(width,height,depth,color,x,y,zz,g,false);
+ wall(a,4.3,.22,t.wall,(-W+openingL)/2,2.15,z);
+ if(b>.05)wall(b,4.3,.22,t.wall,(openingR+W)/2,2.15,z);
+ wall(doorHalf*2,1.0,.22,t.wall,doorX,3.8,z);
+ // Framed opening is aligned to the avatar's spawn position; do not block path.
+ for(const x of [openingL,openingR]){
+  wall(.17,3.4,.27,t.trim,x,1.7,z-.06);
+  wall(.25,.20,.37,'#c6a47a',x,3.43,z-.06);
+ }
+ wall(doorHalf*2+.25,.18,.30,t.trim,doorX,3.36,z-.07);
+ wall(doorHalf*2,.08,.28,'#f1ddad',doorX,3.22,z-.07);
+ // Solid timber-backed shelves turn the missing fourth face into a true library wall.
+ const innerL=-W+.28,innerR=openingL-.27;
+ const span=innerR-innerL,cols=Math.max(2,Math.floor(span/1.45)),step=span/cols;
+ for(let i=0;i<cols;i++){
+  const x=innerL+(i+.5)*step,unit=Math.max(.84,Math.min(1.3,step-.10));
+  bookshelf(unit,3.22,g,x,z-.43,0);
+ }
+ // Subtle library wall fixtures at either end; avoid the center walkway.
+ for(const x of [-W+.27,openingL-.16]){
+  wall(.22,3.62,.35,t.trim,x,1.81,z-.22);
+  const s=sph(.12,'#fce8b4',x,3.50,z-.51,g,8);
+  s.material=new THREE.MeshBasicMaterial({color:'#fff0c9'});
+ }
+ // Transparent cutaway is not needed: in overview mode this whole fourth face is hidden.
+ g.visible=true;
+ return g;
+}
+function refreshEntranceWall30(){
+ if(!entranceWall30)return;
+ // Zoomed-out map view requires an unobstructed seat overview.
+ entranceWall30.visible=cameraMode6e!=='room';
+}
+
+
+/* Local entrance avatar: only a visual preview, never a server seat or study session. */
+function removeEntranceAvatar30(){
+ if(!entranceAvatar30)return;
+ const avatar=entranceAvatar30;entranceAvatar30=null;
+ avatar.parent?.remove(avatar);disposeObject6e(avatar);
+}
+function createEntranceAvatar30(){
+ if(!isClassRoom30(roomKey)||me.seat!==null||entranceAvatar30||!roomGroup||!L)return;
+ const avatar=makeChar(myLook(),false);
+ avatar.position.set(L.door.x,0,L.frontZ-.45);
+ avatar.rotation.y=Math.PI;avatar.scale.setScalar(1);
+ avatar.userData.pop=1;avatar.userData.seated=false;avatar.userData.path=null;
+ avatar.userData.phase=0;
+ avatar.name='local-entrance-preview-not-seated';
+ roomGroup.add(avatar);entranceAvatar30=avatar;
+}
+function animateEntranceAvatar30(dt){
+ if(!entranceAvatar30||!entranceAvatar30.userData?.parts)return;
+ const u=entranceAvatar30.userData;
+ u.phase+=dt;
+ u.parts.head.rotation.x=Math.sin(u.phase*1.1)*.045;
+ u.parts.rA.rotation.x=-.42+Math.sin(u.phase*.95)*.035;
+ u.parts.lA.rotation.x=-.42-Math.sin(u.phase*.95)*.035;
+ // Never move the visitor avatar through a desk or claim a seat automatically.
+}
+function cameraEntrance30(){
+ if(!isClassRoom30(roomKey))return;
+ cameraMode6e='entrance';following=false;
+ yawTarget=0;pitchTarget=.69;lookYTarget=1.3;zoomTarget=1;
+}
+function followWalkingAvatar30(){
+ if(!isClassRoom30(roomKey))return;
+ cameraMode6e='walking';following=false;
+ yawTarget=0;pitchTarget=.62;zoomTarget=1;
+}
+
+function buildRoom(){
+  if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
+  entranceWall30=null;entranceAvatar30=null;frontWallBatch30=null;
+  if(!isOcean20()&&seaAudio20)stopOceanSound20();
+  deskBlend20=0;deskSeat20=null;
+  seatObjs.length=0;plants.length=0;walkers.length=0;oceanFx20.length=0;
+  L=computeLayout();
+  roomGroup=new THREE.Group();scene.add(roomGroup);
+  const W=L.halfW,D=L.halfD,t=themeFor(roomKey);
+  scene.background.set(t.bg);if(scene.fog){scene.fog.color.set(t.bg)}
+  sun.color.set(t.sun);warm.color.set(t.lamp);
+  sun.intensity=t.id==='astral'?.33:.68;warm.intensity=t.id==='astral'?.85:.36;
+  // Surfaces: theme scene keeps every server seat ID (12 standard / 30 preview).
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(W*2,D*2+4),M(t.floor));
+  f.rotation.x=-Math.PI/2;f.position.z=1.5;f.receiveShadow=true;roomGroup.add(f);
+  const planks=t.id==='modern'||t.id==='coast'?1.1:.65;
+  for(let x=-W+.1;x<W;x+=planks){
+    const g=new THREE.Mesh(new THREE.PlaneGeometry(t.id==='modern'?.012:.023,D*2+4),M(t.id==='modern'?'#d2d0c6':t.id==='coast'?'#d1c4ad':t.id==='astral'?'#645372':t.id==='forest'?'#806d52':'#5c3c29'));
+    g.rotation.x=-Math.PI/2;g.position.set(x,.003,1.5);roomGroup.add(g);
+  }
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(W*2-1.8,D*2-1.8),M(t.rug));rug.rotation.x=-Math.PI/2;rug.position.y=.005;roomGroup.add(rug);
+  renderWindows6d(t,W,D);
+  if(t.id==='coast')decorateOcean20(t,W,D);
+  // New windows remain unobstructed; compact details stay at room corners.
+  function lamp(x,y,z,scale){
+    cyl(.07*scale,.11*scale,.25*scale,t.trim,x,y,z,roomGroup,12);
+    const bulb=sph(.16*scale,t.lamp,x,y-.16*scale,z,roomGroup,12);
+    bulb.material=new THREE.MeshBasicMaterial({color:t.lamp});
+  }
+  function plant(x,z,scale){
+    cyl(.2*scale,.14*scale,.3*scale,t.wood,x,.15*scale,z,roomGroup,10);
+    for(let j=0;j<4;j++){
+      const px=x+Math.sin(j*2.4)*.17*scale,pz=z+Math.cos(j*2.4)*.14*scale;
+      const a=sph(.18*scale,j%2?'#4f8659':'#75a46c',px,.45*scale+(j%3)*.13*scale,pz,roomGroup,8);
+      a.scale.set(.95,1.5,.75);
+    }
+  }
+  if(t.id==='classic'){
+    for(const x of [-W+.55,W-.55])bookshelf(1.0,3,roomGroup,x,-D+.55,0);
+  }
+  if(t.id==='astral'){
+    for(let j=0;j<16;j++){
+      const x=-W+.5+(j*1.97)%(W*2-1),z=-D+.6+(j*1.29)%(D*2+1);
+      const s=sph(j%4===0?.07:.035,'#f9d88c',x,4.12,z,roomGroup,7);
+      s.material=new THREE.MeshBasicMaterial({color:'#f9d88c'});
+    }
+  }
+  for(const x of [-W+.47,W-.47])plant(x,-D+.8,t.id==='forest'?1.25:.9);
+  // Hanging lights and roof accents, away from camera/seat hit areas.
+  for(let z=-D+1.5;z<L.frontZ;z+=3.0){
+    if(t.id==='coast'){
+      box(W*1.8,.12,.18,'#c6a47c',0,4.15,z,roomGroup,false);
+      lamp(0,3.9,z,1.35);
+    }else if(t.id==='classic'){
+      box(W*1.8,.15,.22,'#583521',0,4.12,z,roomGroup,false);lamp(0,3.75,z,1.4);
+    }else if(t.id==='astral'){
+      box(W*1.8,.11,.20,'#6c5484',0,4.16,z,roomGroup,false);lamp(0,3.8,z,1.25);
+    }else{
+      box(W*1.7,.06,.20,t.trim,0,4.19,z,roomGroup,false);lamp(0,3.8,z,.95);
+    }
+  }
+  // Existing 12-seat right-wall entrance remains unchanged.
+  if(!isClassRoom30(roomKey)){
+   const dz0=L.door.z;
+   box(.11,2.15,1.13,t.trim,W-.03,1.07,dz0,roomGroup,false);
+   box(.07,1.96,.96,t.wood,W-.06,.98,dz0,roomGroup,false);
+   sph(.04,t.lamp,W-.1,1.0,dz0-.32,roomGroup,8);
+  }
+  const sign=makeSign(t.icon+' '+t.name);sign.position.set(W-.13,3.1,L.frontZ-.88);sign.rotation.y=-Math.PI/2;roomGroup.add(sign);
+  // Shared tables are a single connected surface with two independent seat hitboxes.
+  const dh=.76;
+  L.seats.forEach((p,i)=>{
+    const shared=isSharedSeat(i,roomKey);
+    if(shared&&(i%L.cols)%2===0&&L.seats[i+1]&&isSharedSeat(i+1,roomKey)&&Math.abs(L.seats[i+1].z-p.z)<.01){
+      const other=L.seats[i+1],center=(p.x+other.x)/2,width=Math.abs(p.x-other.x)+1.12;
+      const tableGroup=new THREE.Group();tableGroup.position.set(center,0,p.z);roomGroup.add(tableGroup);
+      box(width,.09,.82,t.wood,0,dh,0,tableGroup);
+      box(width-.1,.24,.04,t.trim,0,dh-.17,.38,tableGroup);
+      [-1,1].forEach(side=>{
+        const xx=side*(width/2-.16);
+        [-1,1].forEach(front=>box(.09,dh,.09,t.trim,xx,dh/2,front*.29,tableGroup));
+      });
+      // Divider is low: both people share one top but remain clearly separated.
+      box(.07,.095,.45,t.trim,0,dh+.075,.03,tableGroup);
+    }
+    const g=new THREE.Group();g.position.set(p.x,0,p.z);roomGroup.add(g);
+    if(!shared){
+      box(1.16,.08,.76,t.wood,0,dh,0,g);
+      box(1.08,.33,.06,t.trim,0,dh-.2,.33,g);
+      [-1,1].forEach(side=>[-1,1].forEach(front=>box(.07,dh,.07,t.trim,side*.48,dh/2,front*.27,g)));
+      // One-person focus partition.
+      box(1.1,.32,.06,t.trim,0,dh+.18,.34,g,false);
+    }
+    cyl(.08,.09,.045,t.trim,-.32,dh+.07,-.18,g,10);
+    cyl(.018,.018,.28,t.trim,-.32,dh+.2,-.18,g,8);
+    const bulb=sph(.115,t.lamp,-.32,dh+.36,-.18,g,10);bulb.material=new THREE.MeshBasicMaterial({color:t.lamp});
+    const glow=sph(.25,t.lamp,-.32,dh+.36,-.18,g,10);glow.material=new THREE.MeshBasicMaterial({color:t.lamp,transparent:true,opacity:.13,depthWrite:false});
+    box(.31,.008,.22,'#f9f4e8',.11,dh+.05,.07,g,false);
+    box(.25,.045,.15,t.trim,.37,dh+.08,-.19,g,false);
+    const cz=-.62;
+    box(.5,.065,.46,t.chair,0,.45,cz,g);
+    box(.5,.48,.06,t.chair,0,.72,cz-.22,g);
+    [-1,1].forEach(side=>[-1,1].forEach(front=>box(.05,.45,.05,t.trim,side*.21,.22,cz+front*.19,g)));
+    const hit=new THREE.Mesh(new THREE.BoxGeometry(1.43,1.5,1.7),new THREE.MeshBasicMaterial({visible:false}));
+    hit.position.set(0,.72,-.25);hit.userData.seat=i;g.add(hit);
+    seatObjs.push({g,hit,char:null,x:p.x,z:p.z,lampGlow:glow,lampBulb:bulb,ring:null});
+  });
+  const batchReport30=batchStaticBoxes30(roomGroup);
+  if(isClassRoom30(roomKey)){
+   buildEntranceWall30(W,t);
+   frontWallBatch30=batchStaticBoxes30(entranceWall30);
+   // Always-visible structural outline makes the fourth face legible in cutaway overview.
+   const entranceZ=L.frontZ+.74;
+   box(W*2+.2,.12,.22,t.trim,0,4.26,entranceZ,roomGroup,false);
+   for(const side of [-1,1])box(.16,4.15,.22,t.trim,side*(W-.09),2.08,entranceZ,roomGroup,false);
+  }
+  if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch={interior:batchReport30,frontWall:frontWallBatch30};}
+  rebuildChars();fitCamera(true);
+  if(isClassRoom30(roomKey)&&me.seat===null){createEntranceAvatar30();cameraEntrance30();entranceBlend30=1;walkingBlend30=0;}
+  else if(isClassRoom30(roomKey)&&me.seat!==null){if(me.state==='walk')followWalkingAvatar30();else focusOceanDesk20(me.seat);}
+  updateOceanDock20();updateSeatMap30();refreshEntranceWall30();
+}
+
+function makeSign(text){
+  const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');
+  x.fillStyle='#4e3522';x.fillRect(0,0,512,96);x.strokeStyle='#c9a46a';x.lineWidth=6;x.strokeRect(6,6,500,84);
+  x.fillStyle='#ffe9b8';x.font='44px Jua, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,52);
+  const t=new THREE.CanvasTexture(c);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.49),new THREE.MeshBasicMaterial({map:t}));m.position.z=.12;
+  m.userData.redraw=()=>{if(m.userData.disposed)return;x.fillStyle='#4e3522';x.fillRect(8,8,496,80);x.fillStyle='#ffe9b8';x.font='44px Jua, sans-serif';x.fillText(text,256,52);t.needsUpdate=true};
+  document.fonts&&document.fonts.ready.then(()=>m.userData.redraw());
+  return m;
+}
+
+function makePlant(x,y,z,s){
+  const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(.001);roomGroup.add(g);
+  cyl(.16*s,.12*s,.24*s,'#c07a4f',0,.12*s,0,g);
+  const leaf=['#4f8a4a','#5fa055','#3f7a3f'];
+  for(let i=0;i<5;i++){const l=sph(.13*s,pick(leaf),rnd(-.08,.08)*s,(.3+i*.07)*s,rnd(-.08,.08)*s,g,8);l.scale.set(1,1.4,1)}
+  g.userData.target=0;return g;
+}
+function updatePlants(instant){
+  const on=false;
+  plants.forEach(p=>{p.userData.target=on?1:0;if(instant)p.scale.setScalar(on?1:.001)});
+}
+
+/* character */
+function makeChar(look,mine){
+  const g=new THREE.Group();
+  const body=cyl(.2,.25,.5,look.shirt,0,.7,0,g);
+  const neck=cyl(.07,.07,.08,look.skin,0,.97,0,g);
+  const head=new THREE.Group();head.position.set(0,1.18,0);g.add(head);
+  sph(.23,look.skin,0,0,0,head,20);
+  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.245,20,14,0,Math.PI*2,0,Math.PI*.56),M(look.hair));hairCap.rotation.x=-.42;hairCap.castShadow=true;head.add(hairCap);
+  if(look.bun)sph(.11,look.hair,0,.2,-.13,head,12);
+  else{const fr=new THREE.Mesh(new THREE.SphereGeometry(.25,16,10,0,Math.PI*2,0,Math.PI*.32),M(look.hair));fr.rotation.x=.25;head.add(fr)}
+  sph(.027,'#2a1d15',-.085,-.01,.205,head,8);sph(.027,'#2a1d15',.085,-.01,.205,head,8);
+  sph(.04,'#f0a0a0',-.13,-.07,.17,head,8);sph(.04,'#f0a0a0',.13,-.07,.17,head,8);
+  sph(.022,'#d98a6a',0,-.05,.225,head,8);
+  const arm=(side)=>{
+    const p=new THREE.Group();p.position.set(side*.24,.88,0);g.add(p);
+    cyl(.06,.055,.4,look.shirt,0,-.2,0,p,10);
+    sph(.06,look.skin,0,-.42,0,p,10);
+    p.rotation.x=-1.15;p.rotation.z=side*-.25;
+    return p;
+  };
+  const rA=arm(1), lA=arm(-1);
+  const leg=(side)=>{
+    const p=new THREE.Group();p.position.set(side*.1,.47,0);g.add(p);
+    cyl(.075,.068,.44,'#45405a',0,-.22,0,p,10);
+    const shoe=sph(.085,'#2a2420',0,-.45,.04,p,8);shoe.scale.set(1,.7,1.3);
+    p.rotation.x=-1.5;return p;
+  };
+  const lL=leg(-1), lR=leg(1);
+  const pen=cyl(.012,.012,.2,'#222',0,-.44,.05,rA,6);pen.rotation.x=.6;
+  if(mine){
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.42,.52,32),new THREE.MeshBasicMaterial({color:'#57e39b',transparent:true,opacity:.85,side:THREE.DoubleSide}));
+    ring.rotation.x=-Math.PI/2;ring.position.y=.012;g.add(ring);g.userData.ring=ring;
+  }
+  g.userData.parts={head,rA,lA,body,lL,lR};g.userData.phase=Math.random()*10;
+  g.userData.pop=0;g.userData.leaving=false;
+  g.scale.setScalar(.001);
+  return g;
+}
+const myLook=()=>({skin:SKIN[me.skin],hair:HAIR[me.hair],shirt:SHIRT[me.shirt],bun:me.bun});
+
+const walkers=[]; // characters walking out (no seat)
+const WALK=2.8;
+const aisleX=x=>L.aisles.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a,L.aisles[0]);
+
+/* Safe aisle routing for 30-seat shared tables. Seat IDs/DB contracts unchanged. */
+function furnitureFootprints30(){
+ const obs=[];
+ for(let i=0;i<L.seats.length;i++){
+  const p=L.seats[i],shared=isSharedSeat(i,roomKey);
+  if(shared&&(i%L.cols)%2===0&&isSharedSeat(i+1,roomKey)&&L.seats[i+1]){
+   const q=L.seats[i+1],w=Math.abs(q.x-p.x)+1.12;
+   obs.push({kind:'desk',owner:i,x:(p.x+q.x)/2,z:p.z,hx:w/2,hz:.43});
+  }else if(!shared){
+   obs.push({kind:'desk',owner:i,x:p.x,z:p.z,hx:.59,hz:.40});
+  }
+  // Chairs are also solid while walking; the destination chair is exempt only at arrival.
+  obs.push({kind:'chair',owner:i,x:p.x,z:p.z-.65,hx:.31,hz:.31});
+ }
+ return obs;
+}
+function pathClear30(from,points,destination){
+ const obstacles=furnitureFootprints30();
+ let prev=from;
+ for(let segment=0;segment<points.length;segment++){
+  const to=points[segment],finalApproach=segment===points.length-1;
+  const distance=Math.hypot(prev[0]-to[0],prev[1]-to[1]),steps=Math.max(1,Math.ceil(distance/.075));
+  for(let i=0;i<=steps;i++){
+   const t=i/steps,x=prev[0]+(to[0]-prev[0])*t,z=prev[1]+(to[1]-prev[1])*t;
+   for(const o of obstacles){
+    if(o.kind==='chair'&&o.owner===destination)continue;
+    // Last half-metre intentionally ends at the destination chair. The destination
+    // desk is not a corridor obstacle during this short sitting animation.
+    if(finalApproach&&o.kind==='desk'&&(
+      o.owner===destination||
+      (isSharedSeat(destination,roomKey)&&(destination%L.cols)%2===1&&o.owner===destination-1)
+    ))continue;
+    const pad=.24; // approximately the avatar's footprint, not just its center point
+    if(Math.abs(x-o.x)<o.hx+pad&&Math.abs(z-o.z)<o.hz+pad)return false;
+   }
+  }
+  prev=to;
+ }
+ return true;
+}
+function safeRoute30(i){
+ if(!isClassRoom30(roomKey))return null;
+ if(!L.routes30)L.routes30=new Map();
+ if(L.routes30.has(i))return L.routes30.get(i);
+ const q=L.seats[i],stageZ=q.z-1.30,cols=L.cols;
+ const validAisles=L.aisles.filter((ax,c)=>{
+  // Never put a vertical walking corridor between the two halves of a shared table.
+  for(let r=0;r<L.rows;r++){
+   const a=r*cols+c,b=a+1;
+   if(isSharedSeat(a,roomKey)&&isSharedSeat(b,roomKey)&&c%2===0)return false;
+  }
+  return true;
+ });
+ // End aisles are fallbacks; internal lanes avoid the planters on side walls.
+ const candidates=validAisles.sort((a,b)=>Math.abs(a-q.x)-Math.abs(b-q.x));
+ // Side perimeter paths are deliberately avoided: plants, wall fixtures and windows live there.
+ const source=[L.door.x,L.frontZ-.45];
+ for(const ax of candidates){
+  const path=[[ax,L.frontZ-.45],[ax,stageZ],[q.x,stageZ],[q.x,q.z-.58]];
+  if(pathClear30(source,path,i)){
+   const saved={in:path,out:[[q.x,stageZ],[ax,stageZ],[ax,L.frontZ-.45],[L.door.x,L.frontZ-.45]],lane:ax};
+   L.routes30.set(i,saved);return saved;
+  }
+ }
+ // Do not animate straight through desks when architecture leaves no passable lane.
+ console.warn('30석 좌석 이동 경로를 확보하지 못했습니다:',i);
+ return null;
+}
+function pathIn(i){
+ if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.in;return [];}
+ const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
+ return [[ax,L.frontZ],[ax,cz],[q.x,cz],[q.x,q.z-.58]];
+}
+function pathOut(i){
+ if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.out;return [[L.door.x+.2,L.door.z]];}
+ const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
+ return [[q.x,cz],[ax,cz],[ax,L.frontZ],[L.door.x+.2,L.door.z]];
+}
+function placeChar(i,mode,onArrive){
+  const so=seatObjs[i];const seat=rooms[roomKey].seats[i];
+  if(so.char){roomGroup.remove(so.char);disposeObject6e(so.char);so.char=null}
+  if(!seat.occ)return;
+  const mine=seat.occ.mine;
+  const c=makeChar(mine?myLook():seat.occ.look,mine);
+  roomGroup.add(c);so.char=c;
+  const u=c.userData;
+  if(mode==='enter'){
+    c.position.set(L.door.x,0,isClassRoom30(roomKey)?L.frontZ-.45:L.door.z);c.rotation.y=-Math.PI/2;
+    u.path=pathIn(i);u.seated=false;u.onArrive=onArrive;
+    u.parts.lL.rotation.x=u.parts.lR.rotation.x=0;
+  }else{
+    c.position.set(so.x,0,so.z-.58);u.seated=true;c.scale.setScalar(1);u.pop=1;
+  }
+}
+function walkOut(i){
+  const so=seatObjs[i];const c=so.char;if(!c)return;
+  so.char=null;const u=c.userData;
+  u.seated=false;u.path=pathOut(i);u.exiting=true;u.onArrive=null;
+  walkers.push(c);
+}
+function rebuildChars(){
+  walkers.length=0;
+  // Rotation while entering must NOT skip the walking completion callback;
+  // otherwise sr6_state / sr6_study_begin never run.
+  seatObjs.forEach((_,i)=>{
+   if(me.seat===i&&me.state==='walk')placeChar(i,'enter',()=>onSeatArrived30(i));
+   else placeChar(i,'sit');
+  });
+  rebuildLabels();
+}
+
+/* ---------- labels ---------- */
+const labelsEl=$('#labels');
+let labelEls=[];
+function rebuildLabels(){
+  labelsEl.innerHTML='';labelEls=[];
+  rooms[roomKey].seats.forEach((s,i)=>{
+    const b=document.createElement('div');labelsEl.appendChild(b);
+    labelEls[i]=b;
+  });
+  refreshLabels();
+}
+function nameOf(o){return (o.mine?'나 · ':'')+o.nick;}
+function refreshLabels(){
+  rooms[roomKey].seats.forEach((s,i)=>{
+    const b=labelEls[i];if(!b)return;
+    if(s.occ){
+      const o=s.occ;
+      b.className='bub'+(o.mine?' me':'')+(o.state==='break'?' brk':'');
+      let line;
+      if(o.state==='walk')line='🚶 자리 찾는 중';
+      else if(o.mine){line=me.state==='break'?'☕ 휴식 '+fmtClock(me.breakLeft):(me.subject+' · '+fmtClock(me.len-me.elapsed))}
+      else line=o.state==='offline'?'📶 연결 확인 중':o.state==='away'?'💤 잠시 자리 비움':o.state==='break'?'☕ 휴식 중':o.state==='check'?'✅ 마무리 중':o.subject+' · 집중 '+fmtMin(o.elapsed||0);
+      b.innerHTML='<div class="n">'+nameOf(o)+'</div><div class="s">'+line+'</div>';
+      b.dataset.kind='bub';
+    }else if(s.trace){
+      b.className='trace';b.textContent=s.trace.ago+' · '+s.trace.subject+' '+s.trace.min+'분';b.dataset.kind='trace';
+    }else{b.className='';b.textContent='';b.dataset.kind=''}
+  });
+}
+const v3=new THREE.Vector3();
+function positionLabels(){
+  const w=innerWidth,h=innerHeight;
+  seatObjs.forEach((so,i)=>{
+    const b=labelEls[i];if(!b||!b.dataset.kind){b&&(b.style.display='none');return}
+    if(b.dataset.kind==='bub'){if(!so.char){b.style.display='none';return}v3.set(so.char.position.x,1.62+so.char.position.y,so.char.position.z)}else v3.set(so.x,.82,so.z+.25);
+    v3.project(camera);
+    if(v3.z>1||v3.x<-1.2||v3.x>1.2||v3.y<-1.2||v3.y>1.2){b.style.display='none';return}
+    b.style.display='';
+    const sx=(v3.x*.5+.5)*w, sy=(-v3.y*.5+.5)*h;
+    b.style.transform='translate('+sx.toFixed(1)+'px,'+sy.toFixed(1)+'px) translate(-50%,'+(b.dataset.kind==='bub'?'-100%':'-50%')+')';
+    b.style.zIndex=Math.round((1-v3.z)*10000);
+  });
+}
+function floatEmoji(i,emo){
+  const so=seatObjs[i];if(!so)return;
+  const cp=so.char?so.char.position:{x:so.x,z:so.z-.58};v3.set(cp.x,1.75,cp.z).project(camera);
+  const e=document.createElement('div');e.className='emo';e.textContent=emo;
+  e.style.left=((v3.x*.5+.5)*innerWidth)+'px';e.style.top=((-v3.y*.5+.5)*innerHeight-28)+'px';
+  labelsEl.appendChild(e);setTimeout(()=>e.remove(),1900);
+}
+
+/* ---------- camera ---------- */
+/* v0.6-D: adjustable camera angle, window-focus mode and pinch zoom. */
+
+/* v0.6-D.1 camera review fixes: accessible seats, safe window observation, true pinch. */
+let camZ=0,camZTarget=0,zoom=1,zoomTarget=1;
+let yaw=0,yawTarget=0,pitch=.693,pitchTarget=.693,lookY=.7,lookYTarget=.7;
+let viewBlend6e=0,cameraMode6e='room',windowShift6e=0,windowShiftTarget6e=0,eco6e=false;
+let entranceBlend30=0,walkingBlend30=0;
+const clamp6d=(v,a,b)=>Math.min(b,Math.max(a,v));
+function camRange(){const zs=L.seats.map(p=>p.z),mn=Math.min(...zs),mx=Math.max(...zs);return L.portrait?[mn+.6,mx-1.2]:[mn*.5-.3,mx*.3]}
+function yawLimit6e(){return cameraMode6e==='window'?.65:.39}
+function cameraHome6d(){
+ if(!L)return;
+ const r=camRange();cameraMode6e='room';following=false;
+ camZTarget=L.portrait?r[0]+.6:-.6;
+ yawTarget=0;pitchTarget=.693;lookYTarget=.7;zoomTarget=1;windowShiftTarget6e=0;
+}
+function cameraWindow6d(){
+ if(!L)return;
+ cameraMode6e='window';following=false;
+ windowShiftTarget6e=0;lookYTarget=.7;pitchTarget=0;
+ yawTarget=0;zoomTarget=1;
+}
+function rotateCam6e(delta){following=false;yawTarget=clamp6d(yawTarget+delta,-yawLimit6e(),yawLimit6e())}
+function moveCam6e(amount){
+ following=false;
+ if(isClassRoom30(roomKey)&&(cameraMode6e==='entrance'||cameraMode6e==='walking'))cameraMode6e='room';
+ if(cameraMode6e==='window'){windowShiftTarget6e=clamp6d(windowShiftTarget6e+amount*.25,-.65,.85);return}
+ const r=camRange();camZTarget=clamp6d(camZTarget+amount,r[0],r[1]);
+}
+function tiltCam6e(amount){
+ following=false;pitchTarget=clamp6d(pitchTarget+amount,cameraMode6e==='window'?-.18:.18,cameraMode6e==='window'?.30:1.02);
+}
+function applyEco6e(){
+ renderer.setPixelRatio(eco6e?1:Math.min(devicePixelRatio,innerWidth<600?1.3:1.8));
+ renderer.shadowMap.enabled=!eco6e;renderer.setSize(innerWidth,innerHeight,false);
+ const btn=document.getElementById('camEco6e');
+ if(btn){btn.textContent=eco6e?'⚡ 절전 ON':'⚡ 저사양';btn.setAttribute('aria-pressed',eco6e?'true':'false')}
+}
+function fitCamera(reset){
+ const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
+ camera.fov=L.portrait?44:38;camera.updateProjectionMatrix();
+ if(reset){
+  const r=camRange();camZ=camZTarget=L.portrait?r[0]+.6:-.6;
+  yaw=yawTarget=0;pitch=pitchTarget=.693;lookY=lookYTarget=.7;zoom=zoomTarget=1;
+  viewBlend6e=0;cameraMode6e='room';windowShift6e=windowShiftTarget6e=0;
+  deskBlend20=0;deskSeat20=null;entranceBlend30=0;walkingBlend30=0;
+ }
+}
+function updateCamera(dt){
+ const k=1-Math.pow(.002,Math.max(.001,dt));
+ const desired=cameraMode6e==='window'?1:0;viewBlend6e+=(desired-viewBlend6e)*k;
+ const deskDesired=isOcean20()&&cameraMode6e==='desk'&&deskSeat20!==null?1:0;
+ deskBlend20+=(deskDesired-deskBlend20)*k;
+ const enterDesired=isClassRoom30(roomKey)&&cameraMode6e==='entrance'?1:0;
+ const walkDesired=isClassRoom30(roomKey)&&cameraMode6e==='walking'&&me.seat!==null?1:0;
+ entranceBlend30+=(enterDesired-entranceBlend30)*k;
+ walkingBlend30+=(walkDesired-walkingBlend30)*k;
+ camZ+=(camZTarget-camZ)*k;zoom+=(zoomTarget-zoom)*k;
+ yaw+=(yawTarget-yaw)*k;pitch+=(pitchTarget-pitch)*k;lookY+=(lookYTarget-lookY)*k;
+ windowShift6e+=(windowShiftTarget6e-windowShift6e)*k;
+ const need=L.cols*L.dx/2+.55;
+ let d=need/(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect);
+ d=Math.max(L.portrait?8:12.5,d)*zoom;
+ const cp=Math.cos(pitch),sp=Math.sin(pitch);
+ const roomY=lookY+d*sp,roomZ=camZ+d*cp;
+ const targetX=-d*cp*Math.sin(yaw),targetY=lookY,targetZ=camZ+d*cp*(1-Math.cos(yaw));
+ // Window camera stays in the central aisle, BELOW every hanging light.
+ const windowZ=clamp6d(-L.halfD+3.25+windowShift6e+(zoom-1)*1.15,-L.halfD+1.75,-L.halfD+5.2);
+ const windowY=1.85;
+ const x=-11*Math.sin(yaw),y=2.08+pitch*5,z=-L.halfD-7*Math.cos(yaw),v=viewBlend6e;
+ let cx=0,cy=roomY*(1-v)+windowY*v,cz=roomZ*(1-v)+windowZ*v;
+ let tx=targetX*(1-v)+x*v,ty=targetY*(1-v)+y*v,tz=targetZ*(1-v)+z*v;
+ if(deskBlend20>.001&&deskSeat20!==null&&L.seats[deskSeat20]){
+  const p=L.seats[deskSeat20],b=deskBlend20;
+  const dx=p.x+(p.x<0?-.3:.3),dy=1.86,dz=Math.min(L.frontZ+.30,p.z+2.0);
+  cx=cx*(1-b)+dx*b;cy=cy*(1-b)+dy*b;cz=cz*(1-b)+dz*b;
+  tx=tx*(1-b)+p.x*b;ty=ty*(1-b)+.77*b;tz=tz*(1-b)+(p.z-.16)*b;
+ }
+ if(isClassRoom30(roomKey)&&L){
+  const e=entranceBlend30;
+  if(e>.001){
+   const px=L.door.x,pz=L.frontZ-.45;
+   // Doorway third-person composition: keep the entire avatar inside portrait FOV.
+   // Camera looks through the new fourth-wall portal instead of being clipped by it.
+   const ex=px-.12,ey=1.95+(zoom-1)*.18;
+   const ez=L.frontZ+clamp6d(1.55*zoom,1.10,2.0);
+   const ax=px-.15-1.5*Math.sin(yaw),ay=-.55-(pitch-.69)*1.5,az=pz-3.5;
+   cx=cx*(1-e)+ex*e;cy=cy*(1-e)+ey*e;cz=cz*(1-e)+ez*e;
+   tx=tx*(1-e)+ax*e;ty=ty*(1-e)+ay*e;tz=tz*(1-e)+az*e;
+  }
+  const w=walkingBlend30;
+  if(w>.001&&me.seat!==null){
+   const char=seatObjs[me.seat]?.char;
+   if(char){
+    const px=char.position.x,pz=char.position.z;
+    const ex=clamp6d(px-.43,-L.halfW+.42,L.halfW-.42);
+    const ey=2.46,ez=Math.min(L.frontZ+.53,pz+1.35*zoom);
+    const ax=px,ay=1.24,az=pz-1.75;
+    cx=cx*(1-w)+ex*w;cy=cy*(1-w)+ey*w;cz=cz*(1-w)+ez*w;
+    tx=tx*(1-w)+ax*w;ty=ty*(1-w)+ay*w;tz=tz*(1-w)+az*w;
+   }
+  }
+ }
+ camera.position.set(cx,cy,cz);camera.lookAt(tx,ty,tz);
+}
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();
+const pointers6d=new Map();let drag6d=null,pinch6d=null,hadMulti6e=false;
+function pinchState6d(){
+ const p=[...pointers6d.values()].slice(0,2);
+ return {distance:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),centerY:(p[0].y+p[1].y)/2};
+}
+canvas.addEventListener('pointerdown',e=>{
+ pointers6d.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+ if(pointers6d.size===1){
+  hadMulti6e=false;
+  drag6d={id:e.pointerId,x:e.clientX,y:e.clientY,yaw:yawTarget,pitch:pitchTarget,z:camZTarget,shift:windowShiftTarget6e,moved:false,type:e.pointerType,axis:null};
+  pinch6d=null;
+ }else if(pointers6d.size===2){
+  hadMulti6e=true;if(drag6d)drag6d.moved=true;
+  const p=pinchState6d();
+  pinch6d={distance:Math.max(20,p.distance),centerY:p.centerY,zoom:zoomTarget,z:camZTarget,shift:windowShiftTarget6e};
+ }
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!pointers6d.has(e.pointerId))return;
+ pointers6d.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointers6d.size>=2){
+  if(!pinch6d)return;const p=pinchState6d();following=false;
+  // original distance / CURRENT distance (not the same original distance twice).
+  zoomTarget=clamp6d(pinch6d.zoom*pinch6d.distance/Math.max(20,p.distance),.65,1.55);
+  const dy=p.centerY-pinch6d.centerY;
+  if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(pinch6d.shift-dy*.012,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(pinch6d.z-dy*.026,r[0],r[1])}
+  return;
+ }
+ if(!drag6d||drag6d.id!==e.pointerId)return;
+ const dx=e.clientX-drag6d.x,dy=e.clientY-drag6d.y;
+ if(Math.hypot(dx,dy)>9)drag6d.moved=true;
+ if(!drag6d.moved)return;following=false;
+ if(drag6d.type==='touch'){
+  if(!drag6d.axis)drag6d.axis=Math.abs(dx)>Math.abs(dy)*1.1?'yaw':'move';
+  if(drag6d.axis==='yaw')yawTarget=clamp6d(drag6d.yaw-dx*.0035,-yawLimit6e(),yawLimit6e());
+  else if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(drag6d.shift-dy*.01,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(drag6d.z-dy*.04,r[0],r[1])}
+ }else if(e.shiftKey){
+  if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(drag6d.shift-dy*.011,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(drag6d.z-dy*.025,r[0],r[1])}
+ }else{
+  yawTarget=clamp6d(drag6d.yaw-dx*.0035,-yawLimit6e(),yawLimit6e());
+  pitchTarget=clamp6d(drag6d.pitch+dy*.003,cameraMode6e==='window'?-.18:.18,cameraMode6e==='window'?.30:1.02);
+ }
+});
+function release6d(e,canceled){
+ const tap=!canceled&&!hadMulti6e&&pointers6d.size===1&&drag6d&&drag6d.id===e.pointerId&&!drag6d.moved;
+ pointers6d.delete(e.pointerId);
+ if(pointers6d.size===0){drag6d=null;pinch6d=null;hadMulti6e=false}
+ else{drag6d=null;pinch6d=null}
+ if(!tap)return;
+ ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
+ ray.setFromCamera(ptr,camera);
+ const hits=ray.intersectObjects(seatObjs.map(s=>s.hit));
+ if(hits.length)onSeatTap(hits[0].object.userData.seat);
+}
+canvas.addEventListener('pointerup',e=>release6d(e,false));
+canvas.addEventListener('pointercancel',e=>release6d(e,true));
+canvas.addEventListener('wheel',e=>{
+ if(e.cancelable)e.preventDefault();
+ if(e.altKey)moveCam6e(e.deltaY*.014);
+ else{zoomTarget=clamp6d(zoomTarget+e.deltaY*.001,.65,1.55);following=false}
+},{passive:false});
+const camButton6d=(id,fn)=>document.getElementById(id).addEventListener('click',e=>{e.stopPropagation();fn()});
+camButton6d('camLeft6d',()=>rotateCam6e(.16));
+camButton6d('camRight6d',()=>rotateCam6e(-.16));
+camButton6d('camOut6d',cameraWindow6d);
+camButton6d('camHome6d',cameraHome6d);
+camButton6d('camPlus6d',()=>{zoomTarget=clamp6d(zoomTarget*.85,.65,1.55);following=false});
+camButton6d('camMinus6d',()=>{zoomTarget=clamp6d(zoomTarget*1.15,.65,1.55);following=false});
+camButton6d('camForward6e',()=>moveCam6e(-1.4));
+camButton6d('camBack6e',()=>moveCam6e(1.4));
+camButton6d('camTiltUp6e',()=>tiltCam6e(-.14));
+camButton6d('camTiltDown6e',()=>tiltCam6e(.14));
+camButton6d('camEco6e',()=>{eco6e=!eco6e;applyEco6e()});
+camButton6d('view6dToggle',()=>{
+ const panel=document.getElementById('view6dPanel');panel.hidden=!panel.hidden;
+ const toggle=document.getElementById('view6dToggle');
+ toggle.setAttribute('aria-expanded',panel.hidden?'false':'true');
+ toggle.textContent=panel.hidden?'🎥 시점 조정':'🎥 시점 닫기';
+});
+/* STUDY ROOM v0.6-C visual preview, separate from v0.5.2 and v0.6-B. */
+/* ---------- UI + network ---------- */
+const $sheet = $('#sheet'), $dim = $('#dim');
+let sheetMode = null, toastHandle;
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const id4 = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{const r=crypto.getRandomValues(new Uint8Array(1))[0]&15;return (c==='x'?r:(r&3|8)).toString(16)}));
+function openSheet(html, mode){$sheet.innerHTML=html;sheetMode=mode;$dim.classList.add('show');requestAnimationFrame(()=>$sheet.classList.add('show'))}
+function closeSheet(){$sheet.classList.remove('show');$dim.classList.remove('show');sheetMode=null;$sheet.onclick=null}
+$dim.addEventListener('click',()=>{if(['auth','captcha','auth_error','sit','recording_error'].includes(sheetMode))return;closeSheet()});
+function toast(msg,ms=2800){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastHandle);toastHandle=setTimeout(()=>el.classList.remove('show'),ms)}
+function presentError(e){const msg=(e&&e.message)||String(e)||'unknown';if(msg.includes('rate_limited'))return toast('접속 요청이 많아요. 잠시 후 다시 시도해 주세요.',5000);toast('오류: '+msg.slice(0,110),5500)}
+
+const SB_URL='https://onsjszszvtclmtpfivjt.supabase.co';
+const SB_KEY='sb_publishable_1DkbZFhimFE-pHGztz4JhA_cMEesM2k'; // browser-safe publishable key, NOT a secret
+const TURNSTILE_SITE_KEY='0x4AAAAAAF1uiPf1JVADknYM'; // Public Turnstile sitekey only; NEVER commit secret
+const CAPTCHA_SERVER_READY=true; // Supabase CAPTCHA enabled by operator; verify sign-in in a real browser
+const ROOM_KEYS=['public-3p','public-1','public-2','public-3','public-4','public-5'];
+const ROOM_RE=/^(?:public-[1-5]|public-3p|sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-[1-4])$/;
+let sb=null, session=null, schoolChoice=null, schoolName='', serverTotals=null, serverHistory=[];
+let liveConnected=false, liveOccupied=0, liveViewers=0, liveId=null, serverOffset=0;
+let roomChannel=null, activeTab=false, isConnecting=false, hbTimer=null, refetchT=null, pendingClaim=null;
+let lastCheerSent=0, lastTickT=performance.now(), lastWallT=Date.now();
+let following=false, recoveryActive=false, finishing=false, sessionErr=false, localSessionId=null, localStatus='idle', modeSelected='focus';
+let historyTimer=null, historyQueue=Promise.resolve(), stateQueue=Promise.resolve();
+let foregroundActive=!document.hidden&&document.hasFocus();
+let tabWaiting=false;
+const roomName=k=>isClassRoom30(k)?(k.startsWith('sch-')?(schoolName||'우리 학교')+' · 🌊 학급 오션뷰 30석':'🌊 오션뷰 학급형 30석'):(k.startsWith('sch-')?(schoolName||'우리 학교')+' · ':'')+themeFor(k).icon+' '+themeFor(k).name;
+function ensureRoom(k){if(!rooms[k])rooms[k]={seats:makeSeats(k,0),today:0,goal:{}}}
+function getTodaySec(mode){return +(serverTotals?.today?.[mode+'_seconds']||0)}
+function getAllSec(mode){return +(serverTotals?.all?.[mode+'_seconds']||0)}
+const fmtDuration=sec=>{const n=Math.max(0,Math.floor(Number(sec)||0)),h=Math.floor(n/3600),m=Math.floor((n%3600)/60),s=n%60;return h?`${h}시간 ${m}분${s?' '+s+'초':''}`:m?`${m}분${s?' '+s+'초':''}`:`${s}초`};
+function roomTitle(){return roomName(roomKey)}
+function renderRoomButton(){$('#roomBtn').textContent='🚪 '+roomName(roomKey)+' · 방 변경 ▾'}
+function renderGoal(){const capacity=seatCapacity(roomKey),pct=liveOccupied/capacity*100;$('#goal').innerHTML=`<div class="gt"><span>📚 ${escapeHtml(roomName(roomKey))} · 실시간</span><b>${liveOccupied} / ${capacity}석</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="gs"><span>가상 학생 0명 · 실제 입장자만 표시</span><span>${escapeHtml(schoolChoice?.name||'학교 미선택')}</span></div>`}
+function renderStats(){ $('#stNow').textContent=liveOccupied+'명';$('#stToday').textContent=liveViewers+'명';$('#myRec').innerHTML='📊 오늘 집중 <b>'+fmtDuration(getTodaySec('focus'))+'</b> · 자율 <b>'+fmtDuration(getTodaySec('self'))+'</b>';$('#hint').style.opacity=me.seat===null?'1':'0';$('#conn').textContent=liveConnected?(session?.user?.is_anonymous===false?'● 계정 접속':'● 익명 접속'):(isConnecting?'인증·연결 중…':'연결 대기');}
+async function rpc(name,args={}){if(!sb)throw new Error('connection_unavailable');const {data,error}=await sb.rpc(name,args);if(error)throw error;return data}
+function checkOk(r){if(!r||r.ok===false)throw new Error(r?.error||'server_response_failed');return r}
+function queueTransition(fn){const task=stateQueue.catch(()=>{}).then(fn);stateQueue=task.catch(presentError);return task}
+function queueHistory(fn){const task=historyQueue.catch(()=>{}).then(fn);historyQueue=task;return task}
+async function histEvent(action){if(!localSessionId)return null;return queueHistory(async()=>{
+ const sid=localSessionId, requestId=id4();let response;
+ for(let attempt=0;attempt<2;attempt++){
+   try{response=checkOk(await rpc('sr6_study_event',{p_session_id:sid,p_action:action,p_request_id:requestId}));break}
+   catch(e){if(attempt)throw e}
+ }
+ localStatus=response.status;
+ if(response.credited_seconds!=null)me.elapsed=Math.max(me.elapsed,+response.credited_seconds);
+ if(localStatus==='interrupted'||localStatus==='completed'){clearInterval(historyTimer);historyTimer=null;}
+ return response;
+});}
+function clearHistoryTimer(){clearInterval(historyTimer);historyTimer=null}
+function startHistoryTimer(){clearHistoryTimer();if(localStatus!=='running'||!activeTab)return;
+ const delay=me.mode==='self'?45000:15000;
+ historyTimer=setInterval(()=>{if(!activeTab||localStatus!=='running')return;histEvent('ping').then(r=>{
+ if(!r)return;if(r.status==='interrupted'){toast('연결이 끊겨 공부 기록이 중단됐어요. 다시 시작해 주세요.',5000);sessionErr=true;updateHud()}
+ }).catch(e=>{sessionErr=true;presentError(e);updateHud()})},delay);
+}
+async function startHistory(){
+ if(localSessionId&&localStatus==='running'){startHistoryTimer();return}
+ if(localSessionId&&localStatus==='paused'){
+  const r=await histEvent('resume');
+  if(r?.status==='running'){sessionErr=false;startHistoryTimer();return}
+ }
+ const reqId=id4();
+ let response;
+ for(let a=0;a<2;a++){
+   try{response=checkOk(await rpc('sr6_study_begin',{p_request_id:reqId}));break}
+   catch(e){if(a===1)throw e}
+ }
+ localSessionId=response.session_id;localStatus=response.status;me.mode=response.mode||me.mode;
+ sessionErr=false;me.elapsed=+response.credited_seconds||0;startHistoryTimer();updateHud();
+}
+async function refreshTotals(){try{serverTotals=await rpc('sr6_study_totals');renderStats()}catch(e){presentError(e)}}
+async function fetchHistory(){try{serverHistory=await rpc('sr6_study_history',{p_limit:20})||[];return serverHistory}catch(e){presentError(e);return []}}
+function updateHud(){if(me.seat===null)return;const kind=me.mode==='self'?'자율 기록':'집중 기록';const label=me.subject+' · '+kind;
+ if(me.state==='walk'){$('#hSub').textContent=label;$('#hTime').textContent=fmtClock(me.len);$('#hBar').style.width='0%';$('#hMsg').textContent='🚶 자리에 앉으면 서버 기록을 시작해요';}
+ else if(me.state==='break'){$('#hSub').textContent='☕ 휴식';$('#hTime').textContent=fmtClock(me.breakLeft);$('#hBar').style.width=(100-me.breakLeft/300*100)+'%';$('#hMsg').textContent='휴식 시간은 기록하지 않아요';}
+ else {$('#hSub').textContent=label;$('#hTime').textContent=fmtClock(Math.max(0,me.len-me.elapsed));$('#hBar').style.width=Math.min(100,me.elapsed/me.len*100)+'%';
+ $('#hMsg').textContent=sessionErr?'⚠ 기록 연결 오류 · 종료하지 말고 재시도':me.pausedAway?'⏸ 다른 창 이용 중 · 집중 시간 정지':me.mode==='self'?'☑ 자율 기록 중 · 자기 신고 시간':'✅ 서버에 공부 시간 저장 중';}
+ $('#hStop').textContent=me.state==='walk'?'앉기 취소':me.state==='break'?'그만하기':'공부 끝내기';$('#breakBtn').textContent=me.state==='break'?'▶ 계속':'☕ 쉬기';$('#breakBtn').disabled=me.state==='walk';$('#hToday').textContent='누적 집중 '+fmtDuration(getAllSec('focus'))+' · 자율 '+fmtDuration(getAllSec('self'));
+}
+
+/* ---------- authorization ---------- */
+async function captchaToken(){if(!TURNSTILE_SITE_KEY)return null;
+ openSheet('<h3>안전한 접속 확인</h3><p class="lead">봇 접속을 차단하기 위한 확인입니다.</p><div id="captcha-slot"></div>','captcha');
+ if(!window.turnstile){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+ return new Promise((resolve,reject)=>{window.turnstile.render('#captcha-slot',{sitekey:TURNSTILE_SITE_KEY,callback:resolve,'error-callback':()=>reject(new Error('captcha_failed'))})});
+}
+function authError(e){isConnecting=false;renderStats();openSheet(`<h3>익명 인증을 확인해 주세요</h3><p class="lead">가입 없이 입장하려면 Supabase의 Anonymous Sign-Ins가 활성화되어 있어야 합니다. 캡차를 켰다면 공개 사이트 키도 설정해야 합니다.</p><div class="note" style="overflow-wrap:anywhere">${escapeHtml(e?.message||e)}</div><div class="vstack"><button class="btn pri" data-a="retry">다시 연결</button></div>`,'auth_error');$sheet.onclick=e=>{if(e.target.closest('[data-a=retry]')){closeSheet();connect()}}}
+async function authorize(){if(!CAPTCHA_SERVER_READY)throw new Error('Supabase CAPTCHA 서버 설정 확인 전이므로 시험판 인증이 잠겨 있습니다.');if(!window.supabase)throw new Error('Supabase JS 라이브러리 로드 실패');if(!sb)sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ let {data,error}=await sb.auth.getSession();if(error)throw error;
+ if(!data.session){if(!TURNSTILE_SITE_KEY)throw new Error('시험판 인증 준비 중입니다. Cloudflare Turnstile Site Key 연결 후 새 익명 계정을 생성할 수 있습니다.');const cap=await captchaToken();const a=await sb.auth.signInAnonymously(cap?{options:{captchaToken:cap}}:undefined);if(a.error)throw a.error;data=a.data;}
+ session=data.session;if(!session?.user?.id)throw new Error('anonymous_session_missing');
+ closeSheet();return session;
+}
+async function connect(){if(!activeTab||isConnecting)return;isConnecting=true;renderStats();
+ try{await authorize();const t0=Date.now();const hb=await rpc('sr6_heartbeat');const t1=Date.now();serverOffset=Date.parse(hb.now)-(t0+t1)/2;
+  const sc=hb.school;if(sc?.code){schoolChoice={code:sc.code,name:sc.name,sido:sc.sido};schoolName=sc.name;}
+  else{schoolChoice=null;schoolName='';}
+  let k='public-3p';if(hb.seat){k=hb.seat.room;ensureRoom(k);liveId=hb.seat.presence_id;recoveryActive=true;
+    me.seat=hb.seat.seat;me.room=k;me.mode=hb.seat.mode;me.state=hb.seat.state==='break'?'break':'study';me.pausedAway=hb.seat.state!=='study';
+    $('#hud').classList.add('show');
+    const h=await fetchHistory();const running=h.find(v=>v.status==='running'||v.status==='paused');
+    if(running){localSessionId=running.id;localStatus=running.status;me.elapsed=+running.credited_seconds||0;me.subject='한국사';
+      if(localStatus==='running')startHistoryTimer();}
+  }
+  liveConnected=true;isConnecting=false;
+  await enterRoom(k);
+  await refreshTotals();renderStats();renderGoal();renderRoomButton();
+  clearInterval(hbTimer);hbTimer=setInterval(heartbeat,20000);
+  if(recoveryActive){recoveryActive=false;toast('이전 자리를 확인했어요. 공부 기록을 동기화합니다.',3500);
+   if(me.mode==='focus'&&studyWindowActive()&&me.pausedAway)reenterFocus();
+   else if(!localSessionId&&me.state==='study'&&(me.mode==='self'||studyWindowActive()))queueTransition(async()=>{checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory()}).catch(()=>{sessionErr=true;updateHud()});
+  }
+ }catch(e){isConnecting=false;liveConnected=false;renderStats();authError(e)}
+}
+async function heartbeat(){if(!activeTab||!sb||!session)return;try{const t=Date.now();const h=await rpc('sr6_heartbeat');serverOffset=Date.parse(h.now)-t;if(!liveConnected){liveConnected=true;renderStats();refetch();}
+ if(me.seat!==null&&!h.seat){clearHistoryTimer();sessionErr=true;me.seat=null;me.room=null;me.state=null;$('#hud').classList.remove('show');toast('서버에서 자리가 종료됐어요. 누적 기록은 보존됩니다.',4600);await refreshTotals();}
+ }catch(e){liveConnected=false;renderStats();presentError(e)}}
+
+/* ---------- school, rooms ---------- */
+async function schoolSearch(term){const q=term.trim();if(q.length<2)return[];
+ const {data,error}=await sb.from('schools').select('code,name,kind,sido,sigungu').eq('active',true).ilike('name','%'+q.replace(/[%_\\]/g,'')+'%').order('name',{ascending:true}).limit(30);
+ if(error)throw error;return data||[];
+}
+function schoolCard(s){return `<button class="btn school-choice" data-code="${escapeHtml(s.code)}" data-name="${escapeHtml(s.name)}" data-sido="${escapeHtml(s.sido||'')}"><b>${escapeHtml(s.name)}</b><small>${escapeHtml(s.sido||'')} ${escapeHtml(s.sigungu||'')} · ${escapeHtml(s.kind)}</small></button>`}
+function showSchoolPicker(){if(!liveConnected){toast('먼저 익명 연결을 확인해 주세요');return}if(me.seat!==null){toast('학교 변경은 자리에서 일어난 뒤 가능해요');return}
+ openSheet(`<h3>🏫 우리 학교 선택</h3><p class="lead">학교는 본인이 선택하며 재학 여부를 확인하지 않습니다. 실명·학번을 묻지 않아요.</p><div class="fld"><input id="schoolSearch" placeholder="학교명 두 글자 이상 검색" autocomplete="off" spellcheck="false" style="width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px"></div><div id="schoolResults" class="vstack"><p class="lead">학교를 검색해 주세요.</p></div><div class="vstack"><button class="btn" data-a="clear-school">학교 선택 해제</button><button class="btn" data-a="close">닫기</button></div>`,'school');
+ const list=$('#schoolResults'), search=$('#schoolSearch');let seq=0,timer=null;
+ search.addEventListener('input',()=>{clearTimeout(timer);const value=search.value;const run=++seq;if(value.trim().length<2){list.innerHTML='<p class="lead">두 글자 이상 입력하세요.</p>';return}list.innerHTML='<p class="lead">찾는 중…</p>';timer=setTimeout(async()=>{try{const found=await schoolSearch(value);if(run!==seq||sheetMode!=='school')return;list.innerHTML=found.length?found.map(schoolCard).join(''):'<p class="lead">검색 결과가 없습니다.</p>'}catch(e){list.innerHTML='<p class="lead">검색에 실패했습니다.</p>';presentError(e)}},250)});
+ $sheet.onclick=async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.a==='close'){closeSheet();return}
+ const code=b.dataset.a==='clear-school'?null:b.dataset.code;if(code===undefined)return;
+ b.disabled=true;try{checkOk(await rpc('sr6_set_school',{p_code:code}));schoolChoice=code?{code,name:b.dataset.name,sido:b.dataset.sido}:null;schoolName=schoolChoice?.name||'';closeSheet();if(roomKey.startsWith('sch-')&&(!schoolChoice||!roomKey.startsWith('sch-'+schoolChoice.code+'-')))await enterRoom('public-1');renderGoal();renderRoomButton();toast(code?'학교를 선택했어요. 학교 열람실을 열 수 있어요.':'학교 선택을 해제했어요');showRoomPicker()}catch(err){b.disabled=false;presentError(err)}
+ };
+}
+
+/* Seat index works when deep 3D rows are off-screen on small phones. */
+function updateSeatMap30(){
+ const el=document.getElementById('seatMap30');
+ if(el)el.classList.toggle('show',isClassRoom30(roomKey));
+}
+function showSeatMap30(){
+ if(!isClassRoom30(roomKey)){toast('30석 학급형 열람실에서 사용할 수 있어요');return}
+ if(!liveConnected){toast('서버 연결을 확인하는 중입니다');return}
+ const seats=rooms[roomKey]?.seats||[];
+ let items='';
+ for(let i=0;i<seats.length;i++){
+  const occ=seats[i]?.occ,mine=Boolean(occ?.mine),kind=mine?'mine':occ?'occupied':'empty';
+  const sub=mine?'내 자리':occ?'사용 중':isSharedSeat(i,roomKey)?'공유 · 빈자리':'1인 · 빈자리';
+  items+='<button type="button" class="'+kind+'" data-seat="'+i+'" '+(occ&&!mine?'disabled':'')+'>'+String(i+1)+'번<span>'+sub+'</span></button>';
+ }
+ openSheet('<h3>🪑 30석 자리 선택</h3><p class="lead">빈 좌석을 누르면 공부를 시작할 수 있어요.</p><div class="seat-map30">'+items+'</div><div class="acts"><button class="btn" data-a="close">닫기</button></div>','seatMap30');
+ $sheet.onclick=e=>{
+  const button=e.target.closest('button');if(!button)return;
+  if(button.dataset.a==='close'){closeSheet();return}
+  const n=Number(button.dataset.seat);
+  if(!Number.isInteger(n)||n<0||n>=seatCapacity(roomKey)||button.disabled)return;
+  closeSheet();onSeatTap(n);
+ };
+}
+
+async function roomCounts(){
+ const r=await rpc('sr6_rooms'),c={...(r.public||{}),...(r.school?.rooms||{})};
+ const more=['public-3p'];
+ if(schoolChoice?.code)more.push('sch-'+schoolChoice.code+'-4');
+ for(const k of more){
+  const {count,error}=await sb.from('seats6').select('presence_id',{count:'exact',head:true}).eq('room',k);
+  if(error)throw error;c[k]=count||0;
+ }
+ return c;
+}
+async function showRoomPicker(){if(!liveConnected){toast('연결 중이에요');return}if(me.seat!==null){toast('공부 중에는 방을 옮길 수 없어요');return}
+ let counts;try{counts=await roomCounts()}catch(e){presentError(e);return}
+ const options=ROOM_KEYS.concat(schoolChoice?[1,2,3,4].map(i=>'sch-'+schoolChoice.code+'-'+i):[]);
+ openSheet(`<h3>🚪 열람실 선택</h3><p class="lead">공용 오션뷰 30석과 학교별 학급형 30석을 추가했습니다. 기존 열람실은 12석입니다.</p><div class="vstack">${options.map(k=>`<button class="btn ${k===roomKey?'pri':''}" data-room="${escapeHtml(k)}" ${(counts[k]||0)>=seatCapacity(k)&&k!==roomKey?'disabled':''}>${escapeHtml(roomName(k))} · ${counts[k]||0}/${seatCapacity(k)}석${k===roomKey?' · 현재 방':''}<small style="display:block;opacity:.74;margin-top:4px">${themeFor(k).desc} · 1인 ${seatCapacity(k)-sharedCount30(k)}석 / 공유 ${sharedCount30(k)}석</small></button>`).join('')}<button class="btn" data-a="school">🏫 ${schoolChoice?escapeHtml(schoolChoice.name)+' · 학교 변경':'학교 선택하기'}</button></div>`,'rooms');
+ $sheet.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.a==='school'){showSchoolPicker();return}if(b.dataset.room){closeSheet();if(b.dataset.room!==roomKey)enterRoom(b.dataset.room).catch(presentError)}};
+}
+async function enterRoom(k){if(!ROOM_RE.test(k))throw new Error('invalid_room');if(k.startsWith('sch-')&&(!schoolChoice||!k.startsWith('sch-'+schoolChoice.code+'-')))throw new Error('not_my_school');
+ if(roomChannel){try{await sb.removeChannel(roomChannel)}catch(e){}roomChannel=null}
+ ensureRoom(k);roomKey=k;rooms[k].seats=makeSeats(k,0);liveOccupied=0;liveViewers=0;
+ buildRoom();renderRoomButton();renderGoal();renderStats();
+ if(innerWidth<700){eco6e=isClassRoom30(roomKey);applyEco6e();}
+ const ch=sb.channel('room6:'+k,{config:{presence:{key:session.user.id.slice(0,8)}}});
+ ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'seats6',filter:'room=eq.'+k},scheduleRefetch)
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'seats6',filter:'room=eq.'+k},scheduleRefetch)
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'seats6'},scheduleRefetch)
+  .on('presence',{event:'sync'},()=>{liveViewers=Object.keys(ch.presenceState()).length;renderStats()})
+  .on('broadcast',{event:'cheer'},({payload})=>{if(!payload||!Number.isInteger(payload.seat)||!['👏','🔥','☕'].includes(payload.emoji))return;
+    if(seatObjs[payload.seat])floatEmoji(payload.seat,payload.emoji);if(me.seat===payload.seat)toast('누군가 응원을 보냈어요 '+payload.emoji);})
+  .subscribe(async status=>{if(status==='SUBSCRIBED'){try{await ch.track({at:Date.now()})}catch(e){}scheduleRefetch()}});
+ roomChannel=ch;await refetch();
+}
+function scheduleRefetch(){clearTimeout(refetchT);refetchT=setTimeout(refetch,160)}
+async function refetch(){if(!sb||!roomKey)return;const key=roomKey;
+ const {data,error}=await sb.from('seats6').select('room,seat_no,presence_id,nick,subject,look,mode,state,focus_acc,state_at').eq('room',key);
+ if(key!==roomKey)return;if(error){presentError(error);return}
+ const now=Date.now()+serverOffset;const seats=Array(seatCapacity(key)).fill(null);
+ (data||[]).forEach(r=>{if(!Number.isInteger(r.seat_no)||r.seat_no<0||r.seat_no>=seats.length)return;const extra=r.mode==='focus'&&r.state==='study'?Math.max(0,(now-Date.parse(r.state_at))/1000):0;
+ seats[r.seat_no]={id:r.presence_id,nick:r.nick,subject:r.subject,look:r.look||{},mode:r.mode,state:r.state,elapsed:Math.floor((r.focus_acc||0)+extra)};});
+ applySnapshot(key,seats);
+}
+function applySnapshot(k, snapshot){if(k!==roomKey)return;liveOccupied=snapshot.filter(Boolean).length;const seats=rooms[k].seats;
+ snapshot.forEach((raw,i)=>{const s=seats[i],old=s.occ;if(!raw){if(old&&seatObjs[i]?.char)walkOut(i);s.occ=null;return}
+ const mine=raw.id===liveId;const look={skin:SKIN[Math.max(0,Math.min(3,Number(raw.look.skin)||0))],hair:HAIR[Math.max(0,Math.min(4,Number(raw.look.hair)||0))],shirt:SHIRT[Math.max(0,Math.min(6,Number(raw.look.shirt)||0))],bun:raw.look.bun!==false};
+ const fresh=!old||old.id!==raw.id;
+ s.occ={...raw,mine,look};s.trace=null;
+ if(mine&&pendingClaim&&pendingClaim.seat===i){pendingClaim=null;beginSitDown(i);}
+ else if(fresh)placeChar(i,raw.state==='walk'?'enter':'sit',()=>{if(seats[i]?.occ?.state==='walk'){seats[i].occ.state='study';refreshLabels()}});
+ if(mine&&me.seat===i&&me.subject!==raw.subject)me.subject=raw.subject;
+ });
+ if(me.seat!==null&&me.room===roomKey&&!pendingClaim&&!snapshot.some(s=>s&&s.id===liveId)&&!recoveryActive){
+  // Never silently claim a new seat: a lost seat must be recovered by explicit user action.
+  me.seat=null;me.room=null;me.state=null;clearHistoryTimer();$('#hud').classList.remove('show');if(isOcean20()){cameraHome6d();updateOceanDock20()}sessionErr=true;toast('좌석이 반환됐습니다. 공부 이력은 서버에 남아 있어요.',5000);refreshTotals();
+ }
+ refreshLabels();renderGoal();renderStats();updateHud();
+}
+
+/* ---------- seating, sessions ---------- */
+function studyWindowActive(){return !document.hidden&&document.hasFocus()}
+function onSeatTap(i){if(sheetMode)return;const s=rooms[roomKey].seats[i];if(s.occ?.mine)return;if(s.occ){showCheer(i);return}
+ if(me.seat!==null){toast('이미 자리에 앉아 있어요');return}if(!liveConnected){toast('서버에 연결 중이에요');return}showSit(i);
+}
+function showSit(i){const html=()=>`<h3>${i+1}번 ${isSharedSeat(i)?'공유 테이블':'1인 집중석'}에 앉기</h3><p class="lead">${isSharedSeat(i)?'친구와 한 책상을 공유하지만 좌석·공부 기록은 개인별로 관리합니다.':'칸막이가 있는 독립 좌석입니다.'} 서버에 공부 시간이 누적됩니다. 익명 계정으로 시작하며 실명·학번은 받지 않습니다.</p>
+ <div class="fld"><label>별명</label><div class="nick"><span class="nv">${escapeHtml(me.nick)}</span><button class="btn sm" data-a="reroll">🎲 다시 뽑기</button></div></div>
+ <div class="fld"><label>옷 색상</label><div class="opts">${SHIRT.map((c,k)=>`<button class="sw ${k===me.shirt?'on':''}" style="background:${c}" data-shirt="${k}" aria-label="옷 색 ${k+1}"></button>`).join('')}</div></div>
+ <div class="fld"><label>공부할 과목</label><div class="opts">${SUBJECTS.map(s=>`<button class="opt ${s===me.subject?'on':''}" data-sub="${s}">${s}</button>`).join('')}</div></div>
+ <div class="fld"><label>기록 방식</label><div class="opts"><button class="opt ${modeSelected==='focus'?'on':''}" data-mode="focus">🎯 집중 모드</button><button class="opt ${modeSelected==='self'?'on':''}" data-mode="self">✍️ 자율 기록</button></div><p class="note">집중: 창 이탈 시 시간 정지 / 자율: 다른 탭 사용 중에도 자율 기록(별도 표시)</p></div>
+ <div class="fld"><label>공부 시간</label><div class="opts">${[25,50].map(m=>`<button class="opt ${me.len===m*60?'on':''}" data-len="${m}">${m}분</button>`).join('')}</div></div>
+ <div class="acts"><button class="btn" data-a="cancel">취소</button><button class="btn pri" data-a="go">공부 시작하기</button></div>`;
+ openSheet(html(),'sit');$sheet.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.a==='cancel'){closeSheet();return}
+ if(b.dataset.a==='go'){closeSheet();claim(i).catch(presentError);return}
+ if(b.dataset.a==='reroll')me.nick=genNick();if(b.dataset.shirt!==undefined)me.shirt=+b.dataset.shirt;
+ if(b.dataset.sub)me.subject=b.dataset.sub;if(b.dataset.mode)modeSelected=b.dataset.mode;if(b.dataset.len)me.len=+b.dataset.len*60;
+ const scroll=$sheet.scrollTop;$sheet.innerHTML=html();$sheet.scrollTop=scroll;
+ };
+}
+async function claim(i){
+ if(!activeTab||!liveConnected||pendingClaim)return;
+ if(isClassRoom30(roomKey)&&!safeRoute30(i)){toast('이 좌석으로 가는 안전한 통로를 찾을 수 없어 앉기를 취소했습니다.');return;}
+ pendingClaim={seat:i};
+ try{const r=checkOk(await rpc(isClassRoom30(roomKey)?'sr7_preview_claim':'sr6_claim',{p_room:roomKey,p_seat:i,p_nick:me.nick,p_subject:me.subject,p_look:{hair:me.hair,shirt:me.shirt,skin:me.skin,bun:me.bun},p_mode:modeSelected,p_show_school:false}));
+  liveId=r.presence_id;me.mode=modeSelected;await refetch();
+ }catch(e){pendingClaim=null;presentError(e)}
+}
+function onSeatArrived30(i){
+ if(me.seat!==i||me.state!=='walk')return;
+me.state='study';lastTickT=performance.now();lastWallT=Date.now();
+  queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
+    checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
+  if(isOcean20())focusOceanDesk20(i);
+  updateHud();updateOceanDock20();refreshLabels();
+ 
+}
+function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
+ s.occ={...s.occ,mine:true,state:'walk'};
+ if(isClassRoom30(roomKey)){removeEntranceAvatar30();followWalkingAvatar30();}
+ placeChar(i,'enter',()=>onSeatArrived30(i));$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
+}
+async function finishStudy(showReport=true){if(finishing||me.seat===null)return;const wasWalk=me.state==='walk';finishing=true;$('#hStop').disabled=true;
+ try{if(!wasWalk&&!localSessionId){throw new Error('공부 기록을 아직 시작하지 못했어요. 연결 상태를 확인하고 다시 시도하세요.')}
+  await queueTransition(async()=>{clearHistoryTimer();if(localSessionId&&['running','paused'].includes(localStatus))await histEvent('finish');
+   checkOk(await rpc('sr6_release'));});
+  const resultSeconds=me.elapsed;localSessionId=null;localStatus='idle';sessionErr=false;const i=me.seat;const s=rooms[roomKey].seats[i];if(s){s.occ=null;s.trace=null;if(seatObjs[i]?.char)walkOut(i)}
+  me.seat=null;me.room=null;me.state=null;me.pausedAway=false;me.elapsed=0;zoomTarget=1;following=false;$('#hud').classList.remove('show');if(isOcean20())cameraHome6d();updateOceanDock20();
+  await refreshTotals();scheduleRefetch();renderStats();
+  if(showReport){if(wasWalk)toast('공부 시작 전 자리를 취소했어요. 기록은 생성되지 않았습니다.');else showFinished(resultSeconds);}
+ }catch(e){sessionErr=true;presentError(e);openSheet('<h3>기록 저장을 확인할 수 없어요</h3><p class="lead">서버 기록을 확인하지 못해 아직 자리를 정리하지 않았습니다. 다시 시도하거나 인터넷 연결을 확인하세요.</p><div class="acts"><button class="btn pri" data-a="retry">다시 마무리</button><button class="btn" data-a="close">닫기</button></div>','recording_error');$sheet.onclick=e=>{if(!e.target.closest('button'))return;const a=e.target.closest('button').dataset.a;closeSheet();if(a==='retry')finishStudy()}}
+ finally{finishing=false;$('#hStop').disabled=false;}
+}
+function showFinished(s){openSheet(`<h3>🎉 공부를 마쳤어요</h3><p class="lead">이번 기록은 서버에 저장됐습니다. 같은 익명 계정이면 이 기기에서 계속 볼 수 있어요.</p><div class="rec"><span>이번 공부(화면 기준)</span><b>${fmtDuration(s)}</b></div><div class="rec"><span>오늘 집중 누적</span><b>${fmtDuration(getTodaySec('focus'))}</b></div><div class="rec"><span>오늘 자율 누적</span><b>${fmtDuration(getTodaySec('self'))}</b></div><div class="vstack"><button class="btn pri" data-a="record">나의 누적 기록 보기</button><button class="btn" data-a="close">닫기</button></div>`,'done');$sheet.onclick=e=>{const a=e.target.closest('button')?.dataset.a;closeSheet();if(a==='record')showMyRecord()}}
+async function breakStudy(){if(me.seat===null||me.state!=='study')return;
+ try{await queueTransition(async()=>{if(localSessionId&&localStatus==='running')await histEvent('pause');checkOk(await rpc('sr6_state',{p_state:'break'}));});
+  me.state='break';me.breakLeft=300;if(isOcean20())cameraWindow6d();updateHud();toast('5분 휴식 중입니다. 공부 시간은 누적되지 않아요.');
+ }catch(e){sessionErr=true;presentError(e)}
+}
+async function resumeStudy(){if(me.seat===null||me.state!=='break')return;
+ try{await queueTransition(async()=>{checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory()});me.state='study';me.pausedAway=false;lastTickT=performance.now();if(isOcean20())focusOceanDesk20(me.seat);updateHud();toast('다시 공부를 시작해요');}
+ catch(e){sessionErr=true;presentError(e)}
+}
+function syncForeground(){const active=studyWindowActive();if(active===foregroundActive)return;
+ foregroundActive=active;lastTickT=performance.now();lastWallT=Date.now();
+ if(!active&&me.seat!==null&&me.state==='study'&&me.mode==='focus'&&!me.pausedAway){me.pausedAway=true;clearHistoryTimer();
+   queueTransition(async()=>{if(localSessionId&&localStatus==='running')await histEvent('pause');checkOk(await rpc('sr6_state',{p_state:'away'}))}).catch(()=>{sessionErr=true});updateHud();}
+ else if(active&&me.seat!==null&&me.state==='study'&&me.mode==='focus'&&me.pausedAway){reenterFocus();}
+}
+function reenterFocus(){if(me.seat===null||me.mode!=='focus'||!studyWindowActive())return;
+ queueTransition(async()=>{checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();me.pausedAway=false;lastTickT=performance.now();updateHud()}).catch(()=>{sessionErr=true;updateHud()});
+}
+window.addEventListener('blur',syncForeground);window.addEventListener('focus',syncForeground);document.addEventListener('visibilitychange',syncForeground);
+$('#hStop').addEventListener('click',()=>finishStudy());
+$('#myRec').addEventListener('click',showMyRecord);
+$('#seatMap30').addEventListener('click',showSeatMap30);
+$('#roomBtn').addEventListener('click',showRoomPicker);
+$('#goal').addEventListener('click',()=>showRoomPicker());
+$('#schoolBtn').addEventListener('click',showSchoolPicker);
+$('#breakBtn').addEventListener('click',()=>me.state==='break'?resumeStudy():breakStudy());
+
+/* ---------- privacy, record, cheer ---------- */
+async function showMyRecord(){if(!liveConnected){toast('기록은 접속 후 확인할 수 있어요');return}
+ await Promise.all([refreshTotals(),fetchHistory()]);
+ const row=(title,x)=>`<div class="rec"><span>${title}</span><b>${fmtDuration(x)}</b></div>`;
+ const sessions=serverHistory.slice(0,10).map(r=>`<div class="rec"><span>${escapeHtml((r.started_at||'').slice(0,10))} · ${r.mode==='self'?'✍️ 자율':'🎯 집중'}<small>${escapeHtml(r.status||'')}</small></span><b>${fmtDuration(r.credited_seconds)}</b></div>`).join('');
+ openSheet(`<h3>📊 나의 누적 공부 기록</h3><p class="lead">서버에 저장된 익명 계정의 공부 기록이에요. 실제 공부 여부는 스스로 판단해 주세요.</p>
+ <div class="section-caption">오늘</div>${row('🎯 집중',serverTotals?.today?.focus_seconds)}${row('✍️ 자율 기록',serverTotals?.today?.self_seconds)}
+ <div class="section-caption">최근 7일</div>${row('집중',serverTotals?.last_7_days?.focus_seconds)}${row('자율 기록',serverTotals?.last_7_days?.self_seconds)}
+ <div class="section-caption">전체</div>${row('집중',getAllSec('focus'))}${row('자율 기록',getAllSec('self'))}
+ <div class="section-caption">최근 공부</div>${sessions||'<p class="lead">아직 공부 기록이 없습니다.</p>'}
+ <div class="record-notice"><b>${session?.user?.is_anonymous===false?'계정 연결됨':'익명 이용 중'}</b><p>${session?.user?.is_anonymous===false?'연결된 계정으로 다른 기기에서도 자신의 누적 기록을 불러올 수 있습니다.':'브라우저 데이터를 지우거나 다른 기기로 이동하면 같은 계정으로 돌아오지 못할 수 있어요. 구글 계정 연결은 인증 설정과 테스트를 마친 뒤 제공됩니다.'}</p></div>
+ <div class="vstack"><button class="btn" data-a="rules">기록·개인정보 기준</button><button class="btn" data-a="close">닫기</button></div>`,'records');
+ $sheet.onclick=e=>{const a=e.target.closest('button')?.dataset.a;if(a==='close')closeSheet();if(a==='rules')showRules()};
+}
+function showRules(){openSheet(`<h3>기록과 개인정보 안내</h3><p class="lead">익명 인증 사용자 ID로 서버에 공부 시간과 날짜별 이력을 저장합니다.</p>
+ <ul class="rules"><li><span>집중 모드</span><b>현재 창에서만</b></li><li><span>자율 기록</span><b>다른 창 이용도 가능</b></li><li><span>학교 선택</span><b>자기 신고 · 재학 검증 아님</b></li><li><span>학급 공식 기록</span><b>아직 미지원</b></li><li><span>계정 연결</span><b>추후 선택 제공</b></li></ul>
+ <p class="note">실명·학번 입력을 요구하지 않지만, 익명 계정 식별자·선택 학교·공부 시간은 서버에 기록됩니다. 창 닫힘·인터넷 단절 중에는 일부 시간이 인정되지 않을 수 있습니다.</p><div class="acts"><button class="btn pri" data-a="close">확인</button></div>`,'rules');$sheet.onclick=e=>{if(e.target.closest('button'))closeSheet()}}
+function showCheer(i){const o=rooms[roomKey].seats[i].occ;openSheet(`<h3>${escapeHtml(nameOf(o))}</h3><p class="lead">${escapeHtml(o.subject)} 공부 중 · 정해진 응원만 보낼 수 있어요</p><div class="cheers">${[['👏','힘내요'],['🔥','집중!'],['☕','쉬어가요']].map(([emoji,text])=>`<button class="btn" data-emoji="${emoji}"><span>${emoji}</span>${text}</button>`).join('')}</div>`,'cheer');
+ $sheet.onclick=e=>{const emoji=e.target.closest('button')?.dataset.emoji;if(!emoji)return;closeSheet();if(Date.now()-lastCheerSent<5000){toast('응원은 5초에 한 번만 보내요');return}lastCheerSent=Date.now();roomChannel?.send({type:'broadcast',event:'cheer',payload:{seat:i,emoji}});floatEmoji(i,emoji)};
+}
+
+/* ---------- single-tab safety ---------- */
+const tabId=id4(), bc=('BroadcastChannel' in window)?new BroadcastChannel('sr6b_tabs'):null;
+if(bc)bc.onmessage=e=>{const p=e.data||{};if(p.t==='who'&&activeTab)bc.postMessage({t:'here',to:p.from});
+ if(p.t==='here'&&p.to===tabId&&tabWaiting){tabWaiting=false;openSheet('<h3>다른 탭에서 열려 있어요</h3><p class="lead">같은 계정의 열람실을 한 탭에서만 사용하세요. 옮기면 기존 탭의 공부가 중단될 수 있습니다.</p><div class="vstack"><button class="btn pri" data-a="take">이 탭으로 옮기기</button><button class="btn" data-a="stay">그대로 두기</button></div>','tab');$sheet.onclick=e=>{const a=e.target.closest('button')?.dataset.a;if(!a)return;closeSheet();if(a==='take'){bc.postMessage({t:'yield',from:tabId});setTimeout(()=>{activeTab=true;connect()},350)}}}
+ if(p.t==='yield'&&p.from!==tabId){activeTab=false;liveConnected=false;clearInterval(hbTimer);clearHistoryTimer();if(roomChannel){sb?.removeChannel(roomChannel);roomChannel=null}renderStats();toast('다른 탭에서 이어서 사용 중입니다.',5000)}
+};
+function startLive(){if(!bc){activeTab=true;connect();return}tabWaiting=true;bc.postMessage({t:'who',from:tabId});setTimeout(()=>{if(tabWaiting){tabWaiting=false;activeTab=true;connect()}},450)}
+addEventListener('pagehide',()=>{stopOceanSound20();clearHistoryTimer();clearInterval(hbTimer);/* Do not send unauthenticated keepalive RPCs or imply server success. */});
+
+
+/* Ocean-only controls: local camera and optional audio; no new network calls. */
+document.getElementById('oceanSea20').addEventListener('click',()=>cameraWindow6d());
+document.getElementById('oceanDesk20').addEventListener('click',()=>{
+ if(me.seat===null||me.state==='walk'){toast('먼저 공부할 자리에 앉아 주세요');return;}
+ focusOceanDesk20(me.seat);
+});
+document.getElementById('oceanHome20').addEventListener('click',()=>cameraHome6d());
+document.getElementById('oceanEntrance30').addEventListener('click',cameraEntrance30);
+document.getElementById('oceanSound20').addEventListener('click',toggleOceanSound20);
+
+/* ---------- clock ---------- */
+function tick(){const now=performance.now(),step=Math.min(2,Math.max(0,(now-lastTickT)/1000));lastTickT=now;
+ if(me.seat!==null&&liveConnected){if(me.state==='study'&&!sessionErr&&localStatus==='running'&&(me.mode==='self'||studyWindowActive())&&!me.pausedAway){
+  me.elapsed+=step;if(me.elapsed>=me.len&&!finishing){finishStudy();}
+ }else if(me.state==='break'){
+  me.breakLeft=Math.max(0,me.breakLeft-step);if(me.breakLeft<=0)resumeStudy();
+ }updateHud();}
+ for(const s of rooms[roomKey].seats){if(s.occ&&!s.occ.mine&&s.occ.state==='study')s.occ.elapsed=(s.occ.elapsed||0)+step}
+ refreshLabels();
+}
+setInterval(()=>{syncForeground();tick()},1000);
+
+/* ---------- start ---------- */
+$('#dday').innerHTML='CLASS<i>30 SEATS · TEST</i>';
+$('#conn').textContent='익명 인증 준비…';
+window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-wasd-test',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,view:cameraMode6e,localEntranceAvatar:!!entranceAvatar30,fourthWall:!!entranceWall30,fourthWallVisible:!!entranceWall30?.visible,batch:window.__sr.lastBatch||null})};
+function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
+initialUI();
+if(isClassRoom30(roomKey)&&innerWidth<700)eco6e=true;
+applyEco6e();
+
+/* ---------- loop ---------- */
+function lerpAng(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI;if(d<-Math.PI)d+=Math.PI*2;return a+d*t}
+function animChar(c,dt,brk){ // returns true when it should be removed
+  const u=c.userData,p=u.parts;const ph=(u.phase+=dt);
+  if(u.pop<1&&!u.vanish){u.pop=Math.min(1,u.pop+dt*2.5);const e=1+Math.sin(u.pop*Math.PI)*.18;c.scale.setScalar(Math.max(.001,u.pop*e))}
+  if(u.vanish){u.pop-=dt*2.5;c.scale.setScalar(Math.max(.001,u.pop));return u.pop<=0}
+  if(u.path&&u.path.length){
+    const [tx,tz]=u.path[0];const dx=tx-c.position.x,dz=tz-c.position.z,d=Math.hypot(dx,dz),st=WALK*dt;
+    if(d>.001)c.rotation.y=lerpAng(c.rotation.y,Math.atan2(dx,dz),Math.min(1,dt*12));
+    if(d<=st){c.position.x=tx;c.position.z=tz;u.path.shift();
+      if(!u.path.length){
+        if(u.exiting){u.vanish=true}else{u.seated=true;const f=u.onArrive;u.onArrive=null;f&&f()}
+      }}
+    else{c.position.x+=dx/d*st;c.position.z+=dz/d*st}
+    const sw=Math.sin(ph*11);
+    p.lL.rotation.x=sw*.6;p.lR.rotation.x=-sw*.6;
+    p.lA.rotation.x=-sw*.5;p.rA.rotation.x=sw*.5;p.lA.rotation.z=.12;p.rA.rotation.z=-.12;
+    p.head.rotation.x=0;p.head.rotation.z=0;
+    c.position.y=Math.abs(Math.cos(ph*11))*.05;
+    return false;
+  }
+  c.position.y+=(0-c.position.y)*.3;
+  if(u.seated){
+    c.rotation.y=lerpAng(c.rotation.y,0,Math.min(1,dt*10));
+    p.lL.rotation.x+=(-1.5-p.lL.rotation.x)*.2;p.lR.rotation.x+=(-1.5-p.lR.rotation.x)*.2;
+  }
+  if(brk){
+    p.rA.rotation.x+=((-2.7)-p.rA.rotation.x)*.08;p.lA.rotation.x+=((-2.7)-p.lA.rotation.x)*.08;
+    p.head.rotation.z=Math.sin(ph*1.2)*.12;p.head.rotation.x=-.15;
+  }else{
+    p.rA.rotation.x+=((-1.15+Math.sin(ph*9)*.05)-p.rA.rotation.x)*.2;
+    p.rA.rotation.z=-.25+Math.sin(ph*7)*.06;
+    p.lA.rotation.x+=((-1.05)-p.lA.rotation.x)*.1;p.lA.rotation.z=.25;
+    p.head.rotation.x=.1+Math.sin(ph*.8)*.04;p.head.rotation.z=Math.sin(ph*.5)*.05;
+    p.body.rotation.z=Math.sin(ph*.7)*.02;
+  }
+  if(u.ring)u.ring.material.opacity=.55+Math.sin(ph*3)*.3;
+  return false;
+}
+let last=performance.now(),lastDraw6e=0;
+function frame(t){
+  if(document.hidden){last=t;requestAnimationFrame(frame);return;}
+  if(eco6e&&t-lastDraw6e<33){requestAnimationFrame(frame);return;}
+  lastDraw6e=t;
+  const dt=Math.min(.1,(t-last)/1000);last=t;
+  updateCamera(dt);
+  seatObjs.forEach((so,i)=>{
+    const c=so.char;if(!c)return;
+    const seat=rooms[roomKey].seats[i];
+    animChar(c,dt,seat.occ&&seat.occ.state==='break');
+  });
+  for(let k=walkers.length-1;k>=0;k--){const c=walkers[k];if(animChar(c,dt,false)){roomGroup.remove(c);disposeObject6e(c);walkers.splice(k,1)}}
+  if(following&&me.seat!==null){const so=seatObjs[me.seat];if(so&&so.char){const r=camRange();camZTarget=Math.min(r[1],Math.max(r[0],so.char.position.z+.9))}}
+  plants.forEach(p=>{const s=p.scale.x;const tg=Math.max(.001,p.userData.target);if(Math.abs(s-tg)>.002)p.scale.setScalar(s+(tg-s)*.06)});
+  if(isOcean20()){animateOcean20(t);oceanDeskLights20(dt)}
+  if(isClassRoom30(roomKey)){
+   if(me.seat===null&&walkers.length===0&&!entranceAvatar30)createEntranceAvatar30();
+   animateEntranceAvatar30(dt);refreshEntranceWall30();
+  }
+  renderer.render(scene,camera);
+  positionLabels();
+  requestAnimationFrame(frame);
+}
+
+let lastPortrait=null;
+addEventListener('resize',()=>{
+  const p=innerWidth/innerHeight<.85;
+  if(p!==lastPortrait&&(me.seat===null||isClassRoom30(roomKey))){lastPortrait=p;buildRoom();if(isClassRoom30(roomKey)&&me.seat!==null)focusOceanDesk20(me.seat)}else fitCamera(false);
+ if(innerWidth<700){eco6e=isClassRoom30(roomKey);applyEco6e();}
+});
+
+})();
+</script>
+</body>
+</html>
