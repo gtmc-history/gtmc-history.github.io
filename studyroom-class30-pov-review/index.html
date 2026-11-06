@@ -813,6 +813,43 @@ function refreshEntranceWall30(){
  entranceWall30.visible=cameraMode6e!=='room';
 }
 
+
+/* Local entrance avatar: only a visual preview, never a server seat or study session. */
+function removeEntranceAvatar30(){
+ if(!entranceAvatar30)return;
+ const avatar=entranceAvatar30;entranceAvatar30=null;
+ avatar.parent?.remove(avatar);disposeObject6e(avatar);
+}
+function createEntranceAvatar30(){
+ if(!isClassRoom30(roomKey)||me.seat!==null||entranceAvatar30||!roomGroup||!L)return;
+ const avatar=makeChar(myLook(),false);
+ avatar.position.set(L.door.x,0,L.frontZ-.45);
+ avatar.rotation.y=Math.PI;avatar.scale.setScalar(1);
+ avatar.userData.pop=1;avatar.userData.seated=false;avatar.userData.path=null;
+ avatar.userData.phase=0;
+ avatar.name='local-entrance-preview-not-seated';
+ roomGroup.add(avatar);entranceAvatar30=avatar;
+}
+function animateEntranceAvatar30(dt){
+ if(!entranceAvatar30||!entranceAvatar30.userData?.parts)return;
+ const u=entranceAvatar30.userData;
+ u.phase+=dt;
+ u.parts.head.rotation.x=Math.sin(u.phase*1.1)*.045;
+ u.parts.rA.rotation.x=-.42+Math.sin(u.phase*.95)*.035;
+ u.parts.lA.rotation.x=-.42-Math.sin(u.phase*.95)*.035;
+ // Never move the visitor avatar through a desk or claim a seat automatically.
+}
+function cameraEntrance30(){
+ if(!isClassRoom30(roomKey))return;
+ cameraMode6e='entrance';following=false;
+ yawTarget=0;pitchTarget=.69;lookYTarget=1.3;zoomTarget=1;
+}
+function followWalkingAvatar30(){
+ if(!isClassRoom30(roomKey))return;
+ cameraMode6e='walking';following=false;
+ yawTarget=0;pitchTarget=.62;zoomTarget=1;
+}
+
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
   entranceWall30=null;entranceAvatar30=null;frontWallBatch30=null;
@@ -926,7 +963,10 @@ function buildRoom(){
    frontWallBatch30=batchStaticBoxes30(entranceWall30);
   }
   if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch={interior:batchReport30,frontWall:frontWallBatch30};}
-  rebuildChars();fitCamera(true);updateOceanDock20();updateSeatMap30();
+  rebuildChars();fitCamera(true);
+  if(isClassRoom30(roomKey)&&me.seat===null){createEntranceAvatar30();cameraEntrance30();entranceBlend30=1;walkingBlend30=0;}
+  else if(isClassRoom30(roomKey)&&me.seat!==null)focusOceanDesk20(me.seat);
+  updateOceanDock20();updateSeatMap30();refreshEntranceWall30();
 }
 
 function makeSign(text){
@@ -1152,6 +1192,7 @@ function floatEmoji(i,emo){
 let camZ=0,camZTarget=0,zoom=1,zoomTarget=1;
 let yaw=0,yawTarget=0,pitch=.693,pitchTarget=.693,lookY=.7,lookYTarget=.7;
 let viewBlend6e=0,cameraMode6e='room',windowShift6e=0,windowShiftTarget6e=0,eco6e=false;
+let entranceBlend30=0,walkingBlend30=0;
 const clamp6d=(v,a,b)=>Math.min(b,Math.max(a,v));
 function camRange(){const zs=L.seats.map(p=>p.z),mn=Math.min(...zs),mx=Math.max(...zs);return L.portrait?[mn+.6,mx-1.2]:[mn*.5-.3,mx*.3]}
 function yawLimit6e(){return cameraMode6e==='window'?.65:.39}
@@ -1170,6 +1211,7 @@ function cameraWindow6d(){
 function rotateCam6e(delta){following=false;yawTarget=clamp6d(yawTarget+delta,-yawLimit6e(),yawLimit6e())}
 function moveCam6e(amount){
  following=false;
+ if(isClassRoom30(roomKey)&&(cameraMode6e==='entrance'||cameraMode6e==='walking'))cameraMode6e='room';
  if(cameraMode6e==='window'){windowShiftTarget6e=clamp6d(windowShiftTarget6e+amount*.25,-.65,.85);return}
  const r=camRange();camZTarget=clamp6d(camZTarget+amount,r[0],r[1]);
 }
@@ -1189,7 +1231,7 @@ function fitCamera(reset){
   const r=camRange();camZ=camZTarget=L.portrait?r[0]+.6:-.6;
   yaw=yawTarget=0;pitch=pitchTarget=.693;lookY=lookYTarget=.7;zoom=zoomTarget=1;
   viewBlend6e=0;cameraMode6e='room';windowShift6e=windowShiftTarget6e=0;
-  deskBlend20=0;deskSeat20=null;
+  deskBlend20=0;deskSeat20=null;entranceBlend30=0;walkingBlend30=0;
  }
 }
 function updateCamera(dt){
@@ -1197,6 +1239,10 @@ function updateCamera(dt){
  const desired=cameraMode6e==='window'?1:0;viewBlend6e+=(desired-viewBlend6e)*k;
  const deskDesired=isOcean20()&&cameraMode6e==='desk'&&deskSeat20!==null?1:0;
  deskBlend20+=(deskDesired-deskBlend20)*k;
+ const enterDesired=isClassRoom30(roomKey)&&cameraMode6e==='entrance'?1:0;
+ const walkDesired=isClassRoom30(roomKey)&&cameraMode6e==='walking'&&me.seat!==null?1:0;
+ entranceBlend30+=(enterDesired-entranceBlend30)*k;
+ walkingBlend30+=(walkDesired-walkingBlend30)*k;
  camZ+=(camZTarget-camZ)*k;zoom+=(zoomTarget-zoom)*k;
  yaw+=(yawTarget-yaw)*k;pitch+=(pitchTarget-pitch)*k;lookY+=(lookYTarget-lookY)*k;
  windowShift6e+=(windowShiftTarget6e-windowShift6e)*k;
@@ -1217,6 +1263,30 @@ function updateCamera(dt){
   const dx=p.x+(p.x<0?-.3:.3),dy=1.86,dz=Math.min(L.frontZ+.30,p.z+2.0);
   cx=cx*(1-b)+dx*b;cy=cy*(1-b)+dy*b;cz=cz*(1-b)+dz*b;
   tx=tx*(1-b)+p.x*b;ty=ty*(1-b)+.77*b;tz=tz*(1-b)+(p.z-.16)*b;
+ }
+ if(isClassRoom30(roomKey)&&L){
+  const e=entranceBlend30;
+  if(e>.001){
+   const px=L.door.x,pz=L.frontZ-.45;
+   const ex=clamp6d(px-.42,-L.halfW+.36,L.halfW-.36);
+   const ey=2.34+(zoom-1)*.22;
+   const ez=Math.min(L.frontZ+.54,pz+1.03*zoom);
+   const ax=px-2.2-2.1*Math.sin(yaw),ay=1.42-(pitch-.69)*2.2,az=pz-3.5;
+   cx=cx*(1-e)+ex*e;cy=cy*(1-e)+ey*e;cz=cz*(1-e)+ez*e;
+   tx=tx*(1-e)+ax*e;ty=ty*(1-e)+ay*e;tz=tz*(1-e)+az*e;
+  }
+  const w=walkingBlend30;
+  if(w>.001&&me.seat!==null){
+   const char=seatObjs[me.seat]?.char;
+   if(char){
+    const px=char.position.x,pz=char.position.z;
+    const ex=clamp6d(px-.43,-L.halfW+.42,L.halfW-.42);
+    const ey=2.46,ez=Math.min(L.frontZ+.53,pz+1.35*zoom);
+    const ax=px,ay=1.24,az=pz-1.75;
+    cx=cx*(1-w)+ex*w;cy=cy*(1-w)+ey*w;cz=cz*(1-w)+ez*w;
+    tx=tx*(1-w)+ax*w;ty=ty*(1-w)+ay*w;tz=tz*(1-w)+az*w;
+   }
+  }
  }
  camera.position.set(cx,cy,cz);camera.lookAt(tx,ty,tz);
 }
@@ -1546,7 +1616,9 @@ async function claim(i){if(!activeTab||!liveConnected||pendingClaim)return;pendi
  }catch(e){pendingClaim=null;presentError(e)}
 }
 function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
- s.occ={...s.occ,mine:true,state:'walk'};placeChar(i,'enter',()=>{
+ s.occ={...s.occ,mine:true,state:'walk'};
+ if(isClassRoom30(roomKey)){removeEntranceAvatar30();followWalkingAvatar30();}
+ placeChar(i,'enter',()=>{
   if(me.seat!==i)return;me.state='study';lastTickT=performance.now();lastWallT=Date.now();
   queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
     checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
@@ -1709,6 +1781,10 @@ function frame(t){
   if(following&&me.seat!==null){const so=seatObjs[me.seat];if(so&&so.char){const r=camRange();camZTarget=Math.min(r[1],Math.max(r[0],so.char.position.z+.9))}}
   plants.forEach(p=>{const s=p.scale.x;const tg=Math.max(.001,p.userData.target);if(Math.abs(s-tg)>.002)p.scale.setScalar(s+(tg-s)*.06)});
   if(isOcean20()){animateOcean20(t);oceanDeskLights20(dt)}
+  if(isClassRoom30(roomKey)){
+   if(me.seat===null&&walkers.length===0&&!entranceAvatar30)createEntranceAvatar30();
+   animateEntranceAvatar30(dt);refreshEntranceWall30();
+  }
   renderer.render(scene,camera);
   positionLabels();
   requestAnimationFrame(frame);
