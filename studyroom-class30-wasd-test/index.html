@@ -832,14 +832,108 @@ function createEntranceAvatar30(){
  avatar.name='local-entrance-preview-not-seated';
  roomGroup.add(avatar);entranceAvatar30=avatar;
 }
+
+/* 30-seat visitor free-roam: genuine keyboard movement, local-only until a seat is claimed. */
+const freeKeys30=new Set();
+let freeMoving30=false,freeLastBlocked30=0;
+const FREE_SPEED30=2.55,FREE_RADIUS30=.26;
+function visitorCanMove30(){
+ return isClassRoom30(roomKey)&&me.seat===null&&!!entranceAvatar30&&!!L&&!sheetMode&&!document.hidden;
+}
+function visitorBlocked30(x,z){
+ if(!L||!isClassRoom30(roomKey))return true;
+ if(x<-L.halfW+.39||x>L.halfW-.39||z< -L.halfD+.38||z>L.frontZ-.21)return true;
+ const obstacles=L.freeFootprints30||(L.freeFootprints30=furnitureFootprints30());
+ for(const o of obstacles){
+  if(Math.abs(x-o.x)<o.hx+FREE_RADIUS30&&Math.abs(z-o.z)<o.hz+FREE_RADIUS30)return true;
+ }
+ return false;
+}
+function visitorStep30(dx,dz){
+ if(!visitorCanMove30()||!Number.isFinite(dx)||!Number.isFinite(dz))return false;
+ const o=entranceAvatar30;
+ let moved=false;
+ // Separate axes preserve wall sliding while protecting against frame-rate tunneling.
+ const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));
+ for(let i=0;i<steps;i++){
+  const x=o.position.x+dx/steps,z=o.position.z+dz/steps;
+  if(!visitorBlocked30(x,o.position.z)){o.position.x=x;moved=true;}
+  if(!visitorBlocked30(o.position.x,z)){o.position.z=z;moved=true;}
+ }
+ return moved;
+}
+function cameraVisitor30(){
+ if(!isClassRoom30(roomKey)||me.seat!==null||!entranceAvatar30)return;
+ cameraMode6e='explore';following=false;zoomTarget=1;
+}
+function updateVisitor30(dt){
+ if(!visitorCanMove30()){freeMoving30=false;return;}
+ const down=code=>freeKeys30.has(code);
+ let dx=Number(down('KeyD')||down('ArrowRight'))-Number(down('KeyA')||down('ArrowLeft'));
+ let dz=Number(down('KeyS')||down('ArrowDown'))-Number(down('KeyW')||down('ArrowUp'));
+ if(!dx&&!dz){freeMoving30=false;return;}
+ const mag=Math.hypot(dx,dz);dx/=mag;dz/=mag;
+ const avatar=entranceAvatar30;
+ avatar.rotation.y=lerpAng(avatar.rotation.y,Math.atan2(dx,dz),Math.min(1,dt*13));
+ freeMoving30=visitorStep30(dx*FREE_SPEED30*dt,dz*FREE_SPEED30*dt);
+ cameraVisitor30();
+ if(!freeMoving30&&performance.now()-freeLastBlocked30>2300){
+  freeLastBlocked30=performance.now();
+  const help=document.getElementById('walkStatus30');
+  if(help){help.textContent='책상·의자·벽을 통과할 수 없어요. 통로로 돌아가세요.';}
+ }
+}
+function nearestVisitorSeat30(){
+ if(!visitorCanMove30())return null;
+ const x=entranceAvatar30.position.x,z=entranceAvatar30.position.z;
+ let closest=null,distance=1.65;
+ for(let i=0;i<L.seats.length;i++){
+  const p=L.seats[i],chairZ=p.z-.64;
+  const d=Math.hypot(x-p.x,z-chairZ);
+  if(d<distance){closest=i;distance=d;}
+ }
+ return closest;
+}
+function visitorKeysAllowed30(e){
+ if(!isClassRoom30(roomKey)||me.seat!==null||!entranceAvatar30||sheetMode)return false;
+ if(e.ctrlKey||e.metaKey||e.altKey)return false;
+ const node=e.target;
+ if(node&&((node.isContentEditable)||['INPUT','TEXTAREA','SELECT'].includes(node.tagName)))return false;
+ return true;
+}
+const freeMoveCodes30=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
+window.addEventListener('keydown',e=>{
+ if(!visitorKeysAllowed30(e))return;
+ if(freeMoveCodes30.has(e.code)){
+  e.preventDefault();freeKeys30.add(e.code);
+  cameraVisitor30();
+ }else if(e.code==='KeyE'&&!e.repeat){
+  const nearest=nearestVisitorSeat30();
+  if(nearest!==null){e.preventDefault();onSeatTap(nearest);}
+  else toast('책상 근처로 이동한 후 E를 눌러 주세요.');
+ }
+});
+window.addEventListener('keyup',e=>freeKeys30.delete(e.code));
+window.addEventListener('blur',()=>freeKeys30.clear());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)freeKeys30.clear()});
+
 function animateEntranceAvatar30(dt){
  if(!entranceAvatar30||!entranceAvatar30.userData?.parts)return;
- const u=entranceAvatar30.userData;
+ const avatar=entranceAvatar30,u=avatar.userData,p=u.parts;
  u.phase+=dt;
- u.parts.head.rotation.x=Math.sin(u.phase*1.1)*.045;
- u.parts.rA.rotation.x=-.42+Math.sin(u.phase*.95)*.035;
- u.parts.lA.rotation.x=-.42-Math.sin(u.phase*.95)*.035;
- // Never move the visitor avatar through a desk or claim a seat automatically.
+ if(freeMoving30){
+  const swing=Math.sin(u.phase*11);
+  p.lL.rotation.x=swing*.65;p.lR.rotation.x=-swing*.65;
+  p.lA.rotation.x=-swing*.46;p.rA.rotation.x=swing*.46;
+  p.head.rotation.x=0;
+  avatar.position.y=Math.abs(Math.sin(u.phase*11))*.035;
+ }else{
+  for(const limb of [p.lL,p.lR])limb.rotation.x+=(0-limb.rotation.x)*Math.min(1,dt*9);
+  p.lA.rotation.x+=(-.38-p.lA.rotation.x)*Math.min(1,dt*9);
+  p.rA.rotation.x+=(-.38-p.rA.rotation.x)*Math.min(1,dt*9);
+  p.head.rotation.x=Math.sin(u.phase*1.1)*.025;
+  avatar.position.y+=(0-avatar.position.y)*Math.min(1,dt*9);
+ }
 }
 function cameraEntrance30(){
  if(!isClassRoom30(roomKey))return;
@@ -855,6 +949,7 @@ function followWalkingAvatar30(){
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
   entranceWall30=null;entranceAvatar30=null;frontWallBatch30=null;
+  freeKeys30.clear();freeMoving30=false;
   if(!isOcean20()&&seaAudio20)stopOceanSound20();
   deskBlend20=0;deskSeat20=null;
   seatObjs.length=0;plants.length=0;walkers.length=0;oceanFx20.length=0;
@@ -1649,7 +1744,7 @@ me.state='study';lastTickT=performance.now();lastWallT=Date.now();
 }
 function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
  s.occ={...s.occ,mine:true,state:'walk'};
- if(isClassRoom30(roomKey)){removeEntranceAvatar30();followWalkingAvatar30();}
+ if(isClassRoom30(roomKey)){freeKeys30.clear();removeEntranceAvatar30();followWalkingAvatar30();}
  placeChar(i,'enter',()=>onSeatArrived30(i));$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
 }
 async function finishStudy(showReport=true){if(finishing||me.seat===null)return;const wasWalk=me.state==='walk';finishing=true;$('#hStop').disabled=true;
@@ -1810,7 +1905,7 @@ function frame(t){
   if(isOcean20()){animateOcean20(t);oceanDeskLights20(dt)}
   if(isClassRoom30(roomKey)){
    if(me.seat===null&&walkers.length===0&&!entranceAvatar30)createEntranceAvatar30();
-   animateEntranceAvatar30(dt);refreshEntranceWall30();
+   updateVisitor30(dt);animateEntranceAvatar30(dt);refreshEntranceWall30();
   }
   renderer.render(scene,camera);
   positionLabels();
