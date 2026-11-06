@@ -742,6 +742,33 @@ function renderWindows6d(t,W,D){
  renderExterior6d(t,W,D);
 }
 
+
+/* Static box instancing for 30-seat scenes: reduce draw calls, preserve independent seat hitboxes. */
+function batchStaticBoxes30(root){
+ if(!isClassRoom30(roomKey)||!THREE.InstancedMesh)return {batched:0,groups:0};
+ root.updateMatrixWorld(true);
+ const sharedMats=new Set(Object.values(matCache)),batches=new Map();
+ root.traverse(mesh=>{
+  if(!mesh.isMesh||mesh.geometry?.type!=='BoxGeometry'||!sharedMats.has(mesh.material))return;
+  if(mesh.userData?.seat!==undefined)return; // seat hitboxes must remain distinct
+  const p=mesh.geometry.parameters||{};
+  if(!Number.isFinite(p.width)||!Number.isFinite(p.height)||!Number.isFinite(p.depth))return;
+  const key=mesh.material.uuid+'_'+Number(Boolean(mesh.castShadow))+'_'+Number(Boolean(mesh.receiveShadow));
+  if(!batches.has(key))batches.set(key,{material:mesh.material,cast:mesh.castShadow,receive:mesh.receiveShadow,items:[]});
+  batches.get(key).items.push({mesh,transform:mesh.matrixWorld.clone().multiply(new THREE.Matrix4().makeScale(p.width,p.height,p.depth))});
+ });
+ let n=0,k=0;
+ for(const b of batches.values()){
+  if(b.items.length<4)continue;
+  const inst=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),b.material,b.items.length);
+  inst.castShadow=b.cast;inst.receiveShadow=b.receiveShadow;inst.frustumCulled=false;
+  b.items.forEach((v,i)=>{inst.setMatrixAt(i,v.transform);v.mesh.parent.remove(v.mesh);v.mesh.geometry.dispose()});
+  inst.instanceMatrix.needsUpdate=true;
+  root.add(inst);n+=b.items.length;k++;
+ }
+ return {batched:n,groups:k};
+}
+
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
   if(!isOcean20()&&seaAudio20)stopOceanSound20();
@@ -846,6 +873,8 @@ function buildRoom(){
     hit.position.set(0,.72,-.25);hit.userData.seat=i;g.add(hit);
     seatObjs.push({g,hit,char:null,x:p.x,z:p.z,lampGlow:glow,lampBulb:bulb,ring:null});
   });
+  const batchReport30=batchStaticBoxes30(roomGroup);
+  if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch=batchReport30;}
   rebuildChars();fitCamera(true);updateOceanDock20();updateSeatMap30();
 }
 
@@ -1498,7 +1527,7 @@ setInterval(()=>{syncForeground();tick()},1000);
 /* ---------- start ---------- */
 $('#dday').innerHTML='CLASS<i>30 SEATS · TEST</i>';
 $('#conn').textContent='익명 인증 준비…';
-window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-preview'};
+window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-preview',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,batch:window.__sr.lastBatch||null})};
 function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
 initialUI();
 if(isClassRoom30(roomKey)&&innerWidth<700)eco6e=true;
