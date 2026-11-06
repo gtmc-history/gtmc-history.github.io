@@ -1276,11 +1276,20 @@ function showSchoolPicker(){if(!liveConnected){toast('먼저 익명 연결을 �
  b.disabled=true;try{checkOk(await rpc('sr6_set_school',{p_code:code}));schoolChoice=code?{code,name:b.dataset.name,sido:b.dataset.sido}:null;schoolName=schoolChoice?.name||'';closeSheet();if(roomKey.startsWith('sch-')&&(!schoolChoice||!roomKey.startsWith('sch-'+schoolChoice.code+'-')))await enterRoom('public-1');renderGoal();renderRoomButton();toast(code?'학교를 선택했어요. 학교 열람실을 열 수 있어요.':'학교 선택을 해제했어요');showRoomPicker()}catch(err){b.disabled=false;presentError(err)}
  };
 }
-async function roomCounts(){const r=await rpc('sr6_rooms');const c={...(r.public||{}),...(r.school?.rooms||{})};return c}
+async function roomCounts(){
+ const r=await rpc('sr6_rooms'),c={...(r.public||{}),...(r.school?.rooms||{})};
+ const more=['public-3p'];
+ if(schoolChoice?.code)more.push('sch-'+schoolChoice.code+'-4');
+ for(const k of more){
+  const {count,error}=await sb.from('seats6').select('presence_id',{count:'exact',head:true}).eq('room',k);
+  if(error)throw error;c[k]=count||0;
+ }
+ return c;
+}
 async function showRoomPicker(){if(!liveConnected){toast('연결 중이에요');return}if(me.seat!==null){toast('공부 중에는 방을 옮길 수 없어요');return}
  let counts;try{counts=await roomCounts()}catch(e){presentError(e);return}
- const options=ROOM_KEYS.concat(schoolChoice?[1,2,3].map(i=>'sch-'+schoolChoice.code+'-'+i):[]);
- openSheet(`<h3>🚪 열람실 선택</h3><p class="lead">전국 공용 5개 방과 선택한 학교의 열람실 3개, 각 12자리입니다.</p><div class="vstack">${options.map(k=>`<button class="btn ${k===roomKey?'pri':''}" data-room="${escapeHtml(k)}" ${(counts[k]||0)>=12&&k!==roomKey?'disabled':''}>${escapeHtml(roomName(k))} · ${counts[k]||0}/12석${k===roomKey?' · 현재 방':''}<small style="display:block;opacity:.74;margin-top:4px">${themeFor(k).desc} · 1인 ${12-themeFor(k).shared}석 / 공유 ${themeFor(k).shared}석</small></button>`).join('')}<button class="btn" data-a="school">🏫 ${schoolChoice?escapeHtml(schoolChoice.name)+' · 학교 변경':'학교 선택하기'}</button></div>`,'rooms');
+ const options=ROOM_KEYS.concat(schoolChoice?[1,2,3,4].map(i=>'sch-'+schoolChoice.code+'-'+i):[]);
+ openSheet(`<h3>🚪 열람실 선택</h3><p class="lead">공용 오션뷰 30석과 학교별 학급형 30석을 추가했습니다. 기존 열람실은 12석입니다.</p><div class="vstack">${options.map(k=>`<button class="btn ${k===roomKey?'pri':''}" data-room="${escapeHtml(k)}" ${(counts[k]||0)>=seatCapacity(k)&&k!==roomKey?'disabled':''}>${escapeHtml(roomName(k))} · ${counts[k]||0}/${seatCapacity(k)}석${k===roomKey?' · 현재 방':''}<small style="display:block;opacity:.74;margin-top:4px">${themeFor(k).desc} · 1인 ${seatCapacity(k)-sharedCount30(k)}석 / 공유 ${sharedCount30(k)}석</small></button>`).join('')}<button class="btn" data-a="school">🏫 ${schoolChoice?escapeHtml(schoolChoice.name)+' · 학교 변경':'학교 선택하기'}</button></div>`,'rooms');
  $sheet.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.a==='school'){showSchoolPicker();return}if(b.dataset.room){closeSheet();if(b.dataset.room!==roomKey)enterRoom(b.dataset.room).catch(presentError)}};
 }
 async function enterRoom(k){if(!ROOM_RE.test(k))throw new Error('invalid_room');if(k.startsWith('sch-')&&(!schoolChoice||!k.startsWith('sch-'+schoolChoice.code+'-')))throw new Error('not_my_school');
