@@ -224,7 +224,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
   <div class="goal" id="goal"></div>
 </div></div>
 
-<div class="hint" id="hint">🎮 WASD / 방향키로 이동 · E: 가까운 좌석 선택 · 책상 통과 불가</div>
+<div class="hint" id="hint">🎮 WASD·방향키 이동 → E로 자리 선택 → 캐릭터 뒤에서 책상 보기</div>
 
 <div class="hud" id="hud">
   <div class="h1">
@@ -1332,7 +1332,14 @@ function rebuildChars(){
    if(me.seat===i&&me.state==='walk'){
     const resumed=recoverWalk30(i);
     if(resumed)activeWalk30={...resumed,seat:i,room:roomKey,current:resumed.from.slice()};
-    placeChar(i,'enter',()=>onSeatArrived30(i),resumed||activeWalk30);
+    else if(isClassRoom30(roomKey)){
+      // An orientation change can invalidate the prior world coordinates.
+      // Prefer a safe doorway path rather than crossing the reflowed desks.
+      const door=[L.door.x,L.frontZ-.45],fallback=routeFromVisitor30(i,door);
+      if(fallback)activeWalk30={...fallback,seat:i,room:roomKey,current:door};
+      else activeWalk30=null;
+    }
+    placeChar(i,'enter',()=>onSeatArrived30(i),activeWalk30);
    }
    else placeChar(i,'sit');
   });
@@ -1867,6 +1874,7 @@ async function claim(i){
 function onSeatArrived30(i){
  if(me.seat!==i||me.state!=='walk')return;
  activeWalk30=null;plannedWalk30=null;
+ const status=document.getElementById('walkStatus30');if(status)status.textContent='착석 완료 · 책상을 캐릭터 뒤에서 바라봅니다.';
 me.state='study';lastTickT=performance.now();lastWallT=Date.now();
   queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
     checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
@@ -1886,6 +1894,7 @@ function beginSitDown(i){
  s.occ={...s.occ,mine:true,state:'walk'};
  if(isClassRoom30(roomKey)){freeKeys30.clear();removeEntranceAvatar30();followWalkingAvatar30();}
  placeChar(i,'enter',()=>onSeatArrived30(i),activeWalk30);
+ const status=document.getElementById('walkStatus30');if(status)status.textContent='현재 위치에서 선택한 자리로 이동 중입니다.';
  $('#hud').classList.add('show');
  if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}
  renderStats();updateHud();updateOceanDock20();refreshLabels();
@@ -1985,7 +1994,7 @@ setInterval(()=>{syncForeground();tick()},1000);
 /* ---------- start ---------- */
 $('#dday').innerHTML='CLASS<i>30 SEATS · TEST</i>';
 $('#conn').textContent='익명 인증 준비…';
-window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-flow-test',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,view:cameraMode6e,localEntranceAvatar:!!entranceAvatar30,fourthWall:!!entranceWall30,fourthWallVisible:!!entranceWall30?.visible,batch:window.__sr.lastBatch||null})};
+window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-flow-test',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,view:cameraMode6e,plannedPathPoints:plannedWalk30?.points?.length||0,walkingPathPoints:activeWalk30?.points?.length||0,localEntranceAvatar:!!entranceAvatar30,fourthWall:!!entranceWall30,fourthWallVisible:!!entranceWall30?.visible,batch:window.__sr.lastBatch||null})};
 function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
 initialUI();
 if(isClassRoom30(roomKey)&&innerWidth<700)eco6e=true;
