@@ -864,7 +864,9 @@ function visitorStep30(dx,dz){
 }
 function cameraVisitor30(){
  if(!isClassRoom30(roomKey)||me.seat!==null||!entranceAvatar30)return;
- cameraMode6e='explore';following=false;zoomTarget=1;
+ // Keep user's wheel/+/- zoom while WASD is held. Only reset on the first switch.
+ if(cameraMode6e!=='explore')zoomTarget=1;
+ cameraMode6e='explore';following=false;
 }
 function updateVisitor30(dt){
  if(!visitorCanMove30()){freeMoving30=false;return;}
@@ -1350,6 +1352,13 @@ function fitCamera(reset){
 }
 function updateCamera(dt){
  const k=1-Math.pow(.002,Math.max(.001,dt));
+ // Explore and entrance use a slightly wider lens so desk aisles remain visible.
+ const desiredFov=isClassRoom30(roomKey)&&['explore','entrance'].includes(cameraMode6e)
+   ?(L.portrait?50:45):(L.portrait?44:38);
+ if(Math.abs(camera.fov-desiredFov)>.01){
+  camera.fov+=(desiredFov-camera.fov)*k;
+  camera.updateProjectionMatrix();
+ }
  const desired=cameraMode6e==='window'?1:0;viewBlend6e+=(desired-viewBlend6e)*k;
  const deskDesired=isOcean20()&&cameraMode6e==='desk'&&deskSeat20!==null?1:0;
  deskBlend20+=(deskDesired-deskBlend20)*k;
@@ -1386,8 +1395,8 @@ function updateCamera(dt){
    const px=L.door.x,pz=L.frontZ-.45;
    // Doorway third-person composition: keep the entire avatar inside portrait FOV.
    // Camera looks through the new fourth-wall portal instead of being clipped by it.
-   const ex=px-.12,ey=1.95+(zoom-1)*.18;
-   const ez=L.frontZ+clamp6d(1.55*zoom,1.10,2.0);
+   const ex=px-.12,ey=2.09+(zoom-1)*.18;
+   const ez=L.frontZ+clamp6d(2.10*zoom,1.45,2.65);
    const ax=px-.15-1.5*Math.sin(yaw),ay=-.55-(pitch-.69)*1.5,az=pz-3.5;
    cx=cx*(1-e)+ex*e;cy=cy*(1-e)+ey*e;cz=cz*(1-e)+ez*e;
    tx=tx*(1-e)+ax*e;ty=ty*(1-e)+ay*e;tz=tz*(1-e)+az*e;
@@ -1409,8 +1418,8 @@ function updateCamera(dt){
    const p=entranceAvatar30.position,px=p.x,pz=p.z;
    // Follow the visitor at eye level; maintain a view through the rear doorway.
    const ex=clamp6d(px-.18,-L.halfW+.33,L.halfW-.33);
-   const ey=2.35,ez=Math.min(L.frontZ+.46,pz+2.55*zoom);
-   const ax=px,ay=.94,az=Math.max(-L.halfD+.1,pz-1.60);
+   const ey=2.52,ez=Math.min(L.frontZ+.46,pz+(L.portrait?3.0:3.4)*zoom);
+   const ax=px,ay=1.05,az=Math.max(-L.halfD+.1,pz-1.90);
    cx=cx*(1-explore)+ex*explore;
    cy=cy*(1-explore)+ey*explore;
    cz=cz*(1-explore)+ez*explore;
