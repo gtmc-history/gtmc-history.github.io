@@ -944,8 +944,78 @@ const myLook=()=>({skin:SKIN[me.skin],hair:HAIR[me.hair],shirt:SHIRT[me.shirt],b
 const walkers=[]; // characters walking out (no seat)
 const WALK=2.8;
 const aisleX=x=>L.aisles.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a,L.aisles[0]);
-function pathIn(i){const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;return [[ax,L.frontZ],[ax,cz],[q.x,cz],[q.x,q.z-.58]]}
-function pathOut(i){const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;return [[q.x,cz],[ax,cz],[ax,L.frontZ],[L.door.x+.2,L.door.z]]}
+
+/* Safe aisle routing for 30-seat shared tables. Seat IDs/DB contracts unchanged. */
+function furnitureFootprints30(){
+ const obs=[];
+ for(let i=0;i<L.seats.length;i++){
+  const p=L.seats[i],shared=isSharedSeat(i,roomKey);
+  if(shared&&(i%L.cols)%2===0&&isSharedSeat(i+1,roomKey)&&L.seats[i+1]){
+   const q=L.seats[i+1],w=Math.abs(q.x-p.x)+1.12;
+   obs.push({kind:'desk',owner:i,x:(p.x+q.x)/2,z:p.z,hx:w/2,hz:.43});
+  }else if(!shared){
+   obs.push({kind:'desk',owner:i,x:p.x,z:p.z,hx:.59,hz:.40});
+  }
+  // Chairs are also solid while walking; the destination chair is exempt only at arrival.
+  obs.push({kind:'chair',owner:i,x:p.x,z:p.z-.65,hx:.31,hz:.31});
+ }
+ return obs;
+}
+function pathClear30(from,points,destination){
+ const obstacles=furnitureFootprints30();
+ let prev=from;
+ for(const to of points){
+  const distance=Math.hypot(prev[0]-to[0],prev[1]-to[1]),steps=Math.max(1,Math.ceil(distance/.075));
+  for(let i=0;i<=steps;i++){
+   const t=i/steps,x=prev[0]+(to[0]-prev[0])*t,z=prev[1]+(to[1]-prev[1])*t;
+   for(const o of obstacles){
+    if(o.kind==='chair'&&o.owner===destination)continue;
+    const pad=o.kind==='chair'?.13:.13;
+    if(Math.abs(x-o.x)<o.hx+pad&&Math.abs(z-o.z)<o.hz+pad)return false;
+   }
+  }
+  prev=to;
+ }
+ return true;
+}
+function safeRoute30(i){
+ if(!isClassRoom30(roomKey))return null;
+ if(!L.routes30)L.routes30=new Map();
+ if(L.routes30.has(i))return L.routes30.get(i);
+ const q=L.seats[i],stageZ=q.z-1.30,cols=L.cols;
+ const validAisles=L.aisles.filter((ax,c)=>{
+  // Never put a vertical walking corridor between the two halves of a shared table.
+  for(let r=0;r<L.rows;r++){
+   const a=r*cols+c,b=a+1;
+   if(isSharedSeat(a,roomKey)&&isSharedSeat(b,roomKey)&&c%2===0)return false;
+  }
+  return true;
+ });
+ // End aisles are fallbacks; internal lanes avoid the planters on side walls.
+ const candidates=validAisles.concat([-L.halfW+.62,L.halfW-.62])
+   .sort((a,b)=>Math.abs(a-q.x)-Math.abs(b-q.x));
+ const source=[L.door.x,L.door.z];
+ for(const ax of candidates){
+  const path=[[ax,L.frontZ],[ax,stageZ],[q.x,stageZ],[q.x,q.z-.58]];
+  if(pathClear30(source,path,i)){
+   const saved={in:path,out:[[q.x,stageZ],[ax,stageZ],[ax,L.frontZ],[L.door.x+.2,L.door.z]],lane:ax};
+   L.routes30.set(i,saved);return saved;
+  }
+ }
+ // Do not animate straight through desks when architecture leaves no passable lane.
+ console.warn('30석 좌석 이동 경로를 확보하지 못했습니다:',i);
+ return null;
+}
+function pathIn(i){
+ if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.in;return [];}
+ const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
+ return [[ax,L.frontZ],[ax,cz],[q.x,cz],[q.x,q.z-.58]];
+}
+function pathOut(i){
+ if(isClassRoom30(roomKey)){const route=safeRoute30(i);if(route)return route.out;return [[L.door.x+.2,L.door.z]];}
+ const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;
+ return [[q.x,cz],[ax,cz],[ax,L.frontZ],[L.door.x+.2,L.door.z]];
+}
 function placeChar(i,mode,onArrive){
   const so=seatObjs[i];const seat=rooms[roomKey].seats[i];
   if(so.char){roomGroup.remove(so.char);disposeObject6e(so.char);so.char=null}
