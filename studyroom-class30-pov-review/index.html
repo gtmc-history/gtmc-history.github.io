@@ -1619,7 +1619,10 @@ function showSit(i){const html=()=>`<h3>${i+1}번 ${isSharedSeat(i)?'공유 테�
  const scroll=$sheet.scrollTop;$sheet.innerHTML=html();$sheet.scrollTop=scroll;
  };
 }
-async function claim(i){if(!activeTab||!liveConnected||pendingClaim)return;pendingClaim={seat:i};
+async function claim(i){
+ if(!activeTab||!liveConnected||pendingClaim)return;
+ if(isClassRoom30(roomKey)&&!safeRoute30(i)){toast('이 좌석으로 가는 안전한 통로를 찾을 수 없어 앉기를 취소했습니다.');return;}
+ pendingClaim={seat:i};
  try{const r=checkOk(await rpc(isClassRoom30(roomKey)?'sr7_preview_claim':'sr6_claim',{p_room:roomKey,p_seat:i,p_nick:me.nick,p_subject:me.subject,p_look:{hair:me.hair,shirt:me.shirt,skin:me.skin,bun:me.bun},p_mode:modeSelected,p_show_school:false}));
   liveId=r.presence_id;me.mode=modeSelected;await refetch();
  }catch(e){pendingClaim=null;presentError(e)}
