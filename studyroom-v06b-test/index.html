@@ -595,7 +595,7 @@ const roomName=k=>k.startsWith('sch-')?(schoolName||'우리 학교')+' · '+k.sp
 function ensureRoom(k){if(!rooms[k])rooms[k]={seats:makeSeats(k,0),today:0,goal:{}}}
 function getTodaySec(mode){return +(serverTotals?.today?.[mode+'_seconds']||0)}
 function getAllSec(mode){return +(serverTotals?.all?.[mode+'_seconds']||0)}
-const fmtDuration=sec=>{const min=Math.max(0,Math.floor((+sec||0)/60));return min>=60?Math.floor(min/60)+'시간 '+(min%60)+'분':min+'분'};
+const fmtDuration=sec=>{const n=Math.max(0,Math.floor(Number(sec)||0)),h=Math.floor(n/3600),m=Math.floor((n%3600)/60),s=n%60;return h?`${h}시간 ${m}분${s?' '+s+'초':''}`:m?`${m}분${s?' '+s+'초':''}`:`${s}초`};
 function roomTitle(){return roomName(roomKey)}
 function renderRoomButton(){$('#roomBtn').textContent='🚪 '+roomName(roomKey)+' · 방 변경 ▾'}
 function renderGoal(){const pct=liveOccupied/12*100;$('#goal').innerHTML=`<div class="gt"><span>📚 ${escapeHtml(roomName(roomKey))} · 실시간</span><b>${liveOccupied} / 12석</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="gs"><span>가상 학생 0명 · 실제 입장자만 표시</span><span>${escapeHtml(schoolChoice?.name||'학교 미선택')}</span></div>`}
