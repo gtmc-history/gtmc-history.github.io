@@ -194,9 +194,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
   <button type="button" id="oceanSea20" title="창밖 바다 감상">🌊 바다</button>
   <button type="button" id="oceanDesk20" title="내 책상으로 이동" disabled>📖 책상</button>
   <button type="button" id="oceanHome20" title="전체 열람실 보기">🏠 전체</button>
+  <button type="button" id="oceanEntrance30" title="캐릭터 뒤에서 입구 보기" hidden>👤 입구</button>
   <button type="button" id="oceanSound20" title="파도 소리 켜기" aria-pressed="false">🔈 파도</button>
  </div>
- <div class="ocean-caption20">책상을 선택해 공부를 시작하세요</div>
+ <div class="ocean-caption20">좌석 번호 메뉴로 먼 자리도 선택할 수 있어요</div>
 </div>
 
 <div id="view6d" role="group" aria-label="열람실 카메라 조정">
@@ -588,6 +589,7 @@ function updateOceanDock20(){
  d.classList.toggle('show',isOcean20());
  const b=document.getElementById('oceanDesk20');
  if(b)b.disabled=!isOcean20()||me.seat===null||me.state==='walk';
+ const entrance=document.getElementById('oceanEntrance30');if(entrance)entrance.hidden=!isClassRoom30(roomKey);
 }
 function oceanDeskLights20(dt){
  if(!isOcean20())return;
@@ -965,7 +967,7 @@ function buildRoom(){
   if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch={interior:batchReport30,frontWall:frontWallBatch30};}
   rebuildChars();fitCamera(true);
   if(isClassRoom30(roomKey)&&me.seat===null){createEntranceAvatar30();cameraEntrance30();entranceBlend30=1;walkingBlend30=0;}
-  else if(isClassRoom30(roomKey)&&me.seat!==null)focusOceanDesk20(me.seat);
+  else if(isClassRoom30(roomKey)&&me.seat!==null){if(me.state==='walk')followWalkingAvatar30();else focusOceanDesk20(me.seat);}
   updateOceanDock20();updateSeatMap30();refreshEntranceWall30();
 }
 
@@ -1131,8 +1133,14 @@ function walkOut(i){
 }
 function rebuildChars(){
   walkers.length=0;
-  // 실시간 접속자의 walk 상태는 서버에서 온 그대로 유지
-  seatObjs.forEach((_,i)=>placeChar(i,'sit'));rebuildLabels()}
+  // Rotation while entering must NOT skip the walking completion callback;
+  // otherwise sr6_state / sr6_study_begin never run.
+  seatObjs.forEach((_,i)=>{
+   if(me.seat===i&&me.state==='walk')placeChar(i,'enter',()=>onSeatArrived30(i));
+   else placeChar(i,'sit');
+  });
+  rebuildLabels();
+}
 
 /* ---------- labels ---------- */
 const labelsEl=$('#labels');
@@ -1615,16 +1623,19 @@ async function claim(i){if(!activeTab||!liveConnected||pendingClaim)return;pendi
   liveId=r.presence_id;me.mode=modeSelected;await refetch();
  }catch(e){pendingClaim=null;presentError(e)}
 }
-function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
- s.occ={...s.occ,mine:true,state:'walk'};
- if(isClassRoom30(roomKey)){removeEntranceAvatar30();followWalkingAvatar30();}
- placeChar(i,'enter',()=>{
-  if(me.seat!==i)return;me.state='study';lastTickT=performance.now();lastWallT=Date.now();
+function onSeatArrived30(i){
+ if(me.seat!==i||me.state!=='walk')return;
+me.state='study';lastTickT=performance.now();lastWallT=Date.now();
   queueTransition(async()=>{if(me.mode==='focus'&&!studyWindowActive()){me.pausedAway=true;checkOk(await rpc('sr6_state',{p_state:'away'}));return}
     checkOk(await rpc('sr6_state',{p_state:'study'}));await startHistory();}).catch(()=>{sessionErr=true;updateHud()});
   if(isOcean20())focusOceanDesk20(i);
   updateHud();updateOceanDock20();refreshLabels();
- });$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
+ 
+}
+function beginSitDown(i){const s=rooms[roomKey].seats[i];me.seat=i;me.room=roomKey;me.state='walk';me.elapsed=0;me.pausedAway=false;localSessionId=null;localStatus='idle';saveMe();
+ s.occ={...s.occ,mine:true,state:'walk'};
+ if(isClassRoom30(roomKey)){removeEntranceAvatar30();followWalkingAvatar30();}
+ placeChar(i,'enter',()=>onSeatArrived30(i));$('#hud').classList.add('show');if(isOcean20()){zoomTarget=1;following=false;}else{zoomTarget=.82;following=true;}renderStats();updateHud();updateOceanDock20();refreshLabels();
 }
 async function finishStudy(showReport=true){if(finishing||me.seat===null)return;const wasWalk=me.state==='walk';finishing=true;$('#hStop').disabled=true;
  try{if(!wasWalk&&!localSessionId){throw new Error('공부 기록을 아직 시작하지 못했어요. 연결 상태를 확인하고 다시 시도하세요.')}
@@ -1703,6 +1714,7 @@ document.getElementById('oceanDesk20').addEventListener('click',()=>{
  focusOceanDesk20(me.seat);
 });
 document.getElementById('oceanHome20').addEventListener('click',()=>cameraHome6d());
+document.getElementById('oceanEntrance30').addEventListener('click',cameraEntrance30);
 document.getElementById('oceanSound20').addEventListener('click',toggleOceanSound20);
 
 /* ---------- clock ---------- */
