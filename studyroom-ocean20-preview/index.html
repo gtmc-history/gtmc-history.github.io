@@ -472,7 +472,6 @@ function buildOcean20(t,W,D){
  flat(.026,.9,.028,'#f6f5e9',W*.57,1.33,-D-3.3);
  const sail=new THREE.Mesh(new THREE.ConeGeometry(.40,.82,3),new THREE.MeshBasicMaterial({color:'#fdf4df',side:THREE.DoubleSide}));
  sail.rotation.y=Math.PI/2;sail.position.set(W*.57+.19,1.56,-D-3.3);add(sail);
- const boat=new THREE.Group();boat.position.set(W*.57,0,0);g.add(boat);
  // Two distant birds with subtle wing motion.
  for(let i=0;i<2;i++){
   const bird=new THREE.Group();
@@ -493,7 +492,6 @@ function buildOcean20(t,W,D){
  box(W*2+.4,.07,.10,'#edf2e9',0,.85,-D-1.56,g,false);
  // Ocean side windows: tinted sky and distant sea, rather than blank blocks.
  for(const dir of [-1,1]){
-  const side=new THREE.Group();g.add(side);
   const x=dir*(W+4.2),len=D*2+5;
   flat(.10,5.4,len,'#acdbe7',x,2.0,0);
   flat(.13,1.35,len,'#4faec6',dir*(W+4.0),.76,0);
@@ -502,6 +500,8 @@ function buildOcean20(t,W,D){
    flat(.16,.03,.9,'#d9f5e8',dir*(W+3.9),1.19+(i%3)*.18,z);
   }
  }
+ // Exterior scenery does not cast expensive moving shadows.
+ g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false}});
  // Material clean-up is performed by disposeObject6e when switching rooms.
 }
 function decorateOcean20(t,W,D){
