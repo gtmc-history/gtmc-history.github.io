@@ -1335,6 +1335,7 @@ async function enterRoom(k){if(!ROOM_RE.test(k))throw new Error('invalid_room');
  if(roomChannel){try{await sb.removeChannel(roomChannel)}catch(e){}roomChannel=null}
  ensureRoom(k);roomKey=k;rooms[k].seats=makeSeats(k,0);liveOccupied=0;liveViewers=0;
  buildRoom();renderRoomButton();renderGoal();renderStats();
+ if(innerWidth<700){eco6e=isClassRoom30(roomKey);applyEco6e();}
  const ch=sb.channel('room6:'+k,{config:{presence:{key:session.user.id.slice(0,8)}}});
  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'seats6',filter:'room=eq.'+k},scheduleRefetch)
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'seats6',filter:'room=eq.'+k},scheduleRefetch)
@@ -1500,6 +1501,7 @@ $('#conn').textContent='익명 인증 준비…';
 window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-preview'};
 function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
 initialUI();
+if(isClassRoom30(roomKey)&&innerWidth<700)eco6e=true;
 applyEco6e();
 
 /* ---------- loop ---------- */
@@ -1565,7 +1567,8 @@ function frame(t){
 let lastPortrait=null;
 addEventListener('resize',()=>{
   const p=innerWidth/innerHeight<.85;
-  if(p!==lastPortrait&&me.seat===null){lastPortrait=p;buildRoom()}else fitCamera(false);
+  if(p!==lastPortrait&&(me.seat===null||isClassRoom30(roomKey))){lastPortrait=p;buildRoom();if(isClassRoom30(roomKey)&&me.seat!==null)focusOceanDesk20(me.seat)}else fitCamera(false);
+ if(innerWidth<700){eco6e=isClassRoom30(roomKey);applyEco6e();}
 });
 
 })();
