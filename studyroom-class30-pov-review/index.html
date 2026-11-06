@@ -1747,7 +1747,7 @@ setInterval(()=>{syncForeground();tick()},1000);
 /* ---------- start ---------- */
 $('#dday').innerHTML='CLASS<i>30 SEATS · TEST</i>';
 $('#conn').textContent='익명 인증 준비…';
-window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-pov-review',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,batch:window.__sr.lastBatch||null})};
+window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'class-30-pov-review',stats:()=>({room:roomKey,seats:seatObjs.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometry:renderer.info.memory.geometries,textures:renderer.info.memory.textures,eco:eco6e,view:cameraMode6e,localEntranceAvatar:!!entranceAvatar30,fourthWall:!!entranceWall30,fourthWallVisible:!!entranceWall30?.visible,batch:window.__sr.lastBatch||null})};
 function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
 initialUI();
 if(isClassRoom30(roomKey)&&innerWidth<700)eco6e=true;
