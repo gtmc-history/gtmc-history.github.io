@@ -857,8 +857,8 @@ function visitorStep30(dx,dz){
  const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));
  for(let i=0;i<steps;i++){
   const x=o.position.x+dx/steps,z=o.position.z+dz/steps;
-  if(!visitorBlocked30(x,o.position.z)){o.position.x=x;moved=true;}
-  if(!visitorBlocked30(o.position.x,z)){o.position.z=z;moved=true;}
+  if(Math.abs(dx)>1e-8&&!visitorBlocked30(x,o.position.z)){o.position.x=x;moved=true;}
+  if(Math.abs(dz)>1e-8&&!visitorBlocked30(o.position.x,z)){o.position.z=z;moved=true;}
  }
  return moved;
 }
@@ -1909,6 +1909,7 @@ function frame(t){
   if(eco6e&&t-lastDraw6e<33){requestAnimationFrame(frame);return;}
   lastDraw6e=t;
   const dt=Math.min(.1,(t-last)/1000);last=t;
+  if(isClassRoom30(roomKey)&&entranceAvatar30)updateVisitor30(dt);
   updateCamera(dt);
   seatObjs.forEach((so,i)=>{
     const c=so.char;if(!c)return;
@@ -1921,7 +1922,7 @@ function frame(t){
   if(isOcean20()){animateOcean20(t);oceanDeskLights20(dt)}
   if(isClassRoom30(roomKey)){
    if(me.seat===null&&walkers.length===0&&!entranceAvatar30)createEntranceAvatar30();
-   updateVisitor30(dt);animateEntranceAvatar30(dt);refreshEntranceWall30();
+   animateEntranceAvatar30(dt);refreshEntranceWall30();
   }
   renderer.render(scene,camera);
   positionLabels();
