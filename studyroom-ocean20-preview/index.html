@@ -152,12 +152,41 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
 #view6dToggle{width:100%;background:#20544ddd!important;border:1px solid #ffffff90!important}
 #view6d .view-help{max-width:150px}
 @media(max-width:560px){#view6d{top:calc(var(--st) + 181px)}}
+
+/* Ocean View 2.0: calm compact scene navigation; controls never appear in other themes. */
+#oceanDock20{position:fixed;top:calc(var(--st) + 194px);left:10px;z-index:7;display:none;
+  padding:9px;border:1px solid #ffffff79;border-radius:15px;
+  background:linear-gradient(145deg,#123c4fdf,#194b59db);color:#f4f7ed;box-shadow:0 5px 25px #081c2870;
+  width:160px;backdrop-filter:blur(9px);}
+#oceanDock20.show{display:block}
+#oceanDock20 .ocean-label20{font:700 10px/1.2 system-ui,sans-serif;letter-spacing:1.7px;color:#cae9e8;margin:0 0 7px 2px}
+#oceanDock20 .ocean-label20 strong{color:#fff0bb;font-size:11px}
+#oceanDock20 .ocean-actions20{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#oceanDock20 button{font:600 11px/1.2 system-ui,sans-serif;color:#fff;border:1px solid #a4d7d15e;background:#dff6f51b;
+  border-radius:10px;min-height:36px;padding:5px;touch-action:manipulation;cursor:pointer}
+#oceanDock20 button:active{background:#eff9ee4d}
+#oceanDock20 button:focus-visible{outline:2px solid #ffe5a0}
+#oceanDock20 button:disabled{opacity:.42;cursor:not-allowed}
+#oceanDock20 .ocean-caption20{font:10px/1.25 system-ui,sans-serif;opacity:.76;margin-top:7px;text-align:center}
+@media(max-width:560px){#oceanDock20{top:calc(var(--st) + 183px);width:148px;left:8px}
+  #oceanDock20 button{min-height:32px;font-size:10px}}
 </style>
 </head>
 <body>
 
 <canvas id="c"></canvas>
 <div id="labels"></div>
+<div id="oceanDock20" role="group" aria-label="오션뷰 2.0 공간 조작">
+ <div class="ocean-label20">OCEAN VIEW <strong>2.0</strong></div>
+ <div class="ocean-actions20">
+  <button type="button" id="oceanSea20" title="창밖 바다 감상">🌊 바다</button>
+  <button type="button" id="oceanDesk20" title="내 책상으로 이동" disabled>📖 책상</button>
+  <button type="button" id="oceanHome20" title="전체 열람실 보기">🏠 전체</button>
+  <button type="button" id="oceanSound20" title="파도 소리 켜기" aria-pressed="false">🔈 파도</button>
+ </div>
+ <div class="ocean-caption20">책상을 선택해 공부를 시작하세요</div>
+</div>
+
 <div id="view6d" role="group" aria-label="열람실 카메라 조정">
  <button type="button" id="view6dToggle" aria-expanded="false" aria-controls="view6dPanel">🎥 시점 조정</button>
  <div id="view6dPanel" hidden>
@@ -540,6 +569,44 @@ function oceanDeskLights20(dt){
  }
 }
 
+
+/* Original procedural wave ambience, user-initiated and muted by default. */
+let seaAudio20=null,seaAudioSource20=null,seaAudioOsc20=null;
+function stopOceanSound20(){
+ try{seaAudioSource20?.stop()}catch(_){}
+ try{seaAudioOsc20?.stop()}catch(_){}
+ if(seaAudio20)seaAudio20.close().catch(()=>{});
+ seaAudio20=null;seaAudioSource20=null;seaAudioOsc20=null;
+ const b=document.getElementById('oceanSound20');
+ if(b){b.textContent='🔈 파도';b.setAttribute('aria-pressed','false')}
+}
+async function toggleOceanSound20(){
+ if(!isOcean20())return;
+ if(seaAudio20){stopOceanSound20();return}
+ const Audio=window.AudioContext||window.webkitAudioContext;
+ if(!Audio){toast('이 기기에서는 파도 소리를 지원하지 않아요');return}
+ let ctx;
+ try{
+  ctx=new Audio();const length=Math.round(ctx.sampleRate*2.5);
+  const buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
+  for(let i=0;i<length;i++)data[i]=(Math.random()*2-1);
+  const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;
+  const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=470;
+  const gain=ctx.createGain();gain.gain.value=.024;
+  const osc=ctx.createOscillator();osc.type='sine';osc.frequency.value=.12;
+  const depth=ctx.createGain();depth.gain.value=.015;
+  osc.connect(depth);depth.connect(gain.gain);
+  source.connect(low);low.connect(gain);gain.connect(ctx.destination);
+  await ctx.resume();source.start();osc.start();
+  seaAudio20=ctx;seaAudioSource20=source;seaAudioOsc20=osc;
+  const b=document.getElementById('oceanSound20');
+  if(b){b.textContent='🔊 파도 ON';b.setAttribute('aria-pressed','true')}
+ }catch(e){
+  try{await ctx?.close()}catch(_){}
+  stopOceanSound20();toast('파도 소리를 재생할 수 없어요');
+ }
+}
+
 function renderExterior6d(t,W,D){
  if(t.id==='coast'){buildOcean20(t,W,D);return;}
  const group=new THREE.Group();roomGroup.add(group);const backZ=-D-6,span=W*2+7,sky=t.id==='astral'?'#2b2449':t.id==='coast'?'#9bd8ed':t.id==='forest'?'#b5d8bc':t.id==='classic'?'#cfc3ac':'#bce1eb';
@@ -646,6 +713,7 @@ function renderWindows6d(t,W,D){
 
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
+  if(!isOcean20()&&seaAudio20)stopOceanSound20();
   deskBlend20=0;deskSeat20=null;
   seatObjs.length=0;plants.length=0;walkers.length=0;oceanFx20.length=0;
   L=computeLayout();
@@ -1335,7 +1403,17 @@ if(bc)bc.onmessage=e=>{const p=e.data||{};if(p.t==='who'&&activeTab)bc.postMessa
  if(p.t==='yield'&&p.from!==tabId){activeTab=false;liveConnected=false;clearInterval(hbTimer);clearHistoryTimer();if(roomChannel){sb?.removeChannel(roomChannel);roomChannel=null}renderStats();toast('다른 탭에서 이어서 사용 중입니다.',5000)}
 };
 function startLive(){if(!bc){activeTab=true;connect();return}tabWaiting=true;bc.postMessage({t:'who',from:tabId});setTimeout(()=>{if(tabWaiting){tabWaiting=false;activeTab=true;connect()}},450)}
-addEventListener('pagehide',()=>{clearHistoryTimer();clearInterval(hbTimer);/* Do not send unauthenticated keepalive RPCs or imply server success. */});
+addEventListener('pagehide',()=>{stopOceanSound20();clearHistoryTimer();clearInterval(hbTimer);/* Do not send unauthenticated keepalive RPCs or imply server success. */});
+
+
+/* Ocean-only controls: local camera and optional audio; no new network calls. */
+document.getElementById('oceanSea20').addEventListener('click',()=>cameraWindow6d());
+document.getElementById('oceanDesk20').addEventListener('click',()=>{
+ if(me.seat===null||me.state==='walk'){toast('먼저 공부할 자리에 앉아 주세요');return;}
+ focusOceanDesk20(me.seat);
+});
+document.getElementById('oceanHome20').addEventListener('click',()=>cameraHome6d());
+document.getElementById('oceanSound20').addEventListener('click',toggleOceanSound20);
 
 /* ---------- clock ---------- */
 function tick(){const now=performance.now(),step=Math.min(2,Math.max(0,(now-lastTickT)/1000));lastTickT=now;
