@@ -194,10 +194,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
   <button type="button" id="oceanSea20" title="창밖 바다 감상">🌊 바다</button>
   <button type="button" id="oceanDesk20" title="내 책상으로 이동" disabled>📖 책상</button>
   <button type="button" id="oceanHome20" title="전체 열람실 보기">🏠 전체</button>
-  <button type="button" id="oceanEntrance30" title="캐릭터 뒤에서 입구 보기" hidden>👤 입구</button>
+  <button type="button" id="oceanEntrance30" title="현재 캐릭터를 따라가기" hidden>👤 따라가기</button>
   <button type="button" id="oceanSound20" title="파도 소리 켜기" aria-pressed="false">🔈 파도</button>
  </div>
- <div class="ocean-caption20">좌석 번호 메뉴로 먼 자리도 선택할 수 있어요</div>
+ <div class="ocean-caption20" id="walkStatus30">WASD·방향키 이동 · E 좌석 선택</div>
 </div>
 
 <div id="view6d" role="group" aria-label="열람실 카메라 조정">
@@ -224,7 +224,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
   <div class="goal" id="goal"></div>
 </div></div>
 
-<div class="hint" id="hint">빈 책상: 자리 선택 · 모바일 상하: 앞뒤 · 🎥 시점 조정</div>
+<div class="hint" id="hint">🎮 WASD / 방향키로 이동 · E: 가까운 좌석 선택 · 책상 통과 불가</div>
 
 <div class="hud" id="hud">
   <div class="h1">
@@ -1306,7 +1306,7 @@ function floatEmoji(i,emo){
 let camZ=0,camZTarget=0,zoom=1,zoomTarget=1;
 let yaw=0,yawTarget=0,pitch=.693,pitchTarget=.693,lookY=.7,lookYTarget=.7;
 let viewBlend6e=0,cameraMode6e='room',windowShift6e=0,windowShiftTarget6e=0,eco6e=false;
-let entranceBlend30=0,walkingBlend30=0;
+let entranceBlend30=0,walkingBlend30=0,exploreBlend30=0;
 const clamp6d=(v,a,b)=>Math.min(b,Math.max(a,v));
 function camRange(){const zs=L.seats.map(p=>p.z),mn=Math.min(...zs),mx=Math.max(...zs);return L.portrait?[mn+.6,mx-1.2]:[mn*.5-.3,mx*.3]}
 function yawLimit6e(){return cameraMode6e==='window'?.65:.39}
@@ -1345,7 +1345,7 @@ function fitCamera(reset){
   const r=camRange();camZ=camZTarget=L.portrait?r[0]+.6:-.6;
   yaw=yawTarget=0;pitch=pitchTarget=.693;lookY=lookYTarget=.7;zoom=zoomTarget=1;
   viewBlend6e=0;cameraMode6e='room';windowShift6e=windowShiftTarget6e=0;
-  deskBlend20=0;deskSeat20=null;entranceBlend30=0;walkingBlend30=0;
+  deskBlend20=0;deskSeat20=null;entranceBlend30=0;walkingBlend30=0;exploreBlend30=0;
  }
 }
 function updateCamera(dt){
@@ -1357,6 +1357,8 @@ function updateCamera(dt){
  const walkDesired=isClassRoom30(roomKey)&&cameraMode6e==='walking'&&me.seat!==null?1:0;
  entranceBlend30+=(enterDesired-entranceBlend30)*k;
  walkingBlend30+=(walkDesired-walkingBlend30)*k;
+ const exploreDesired=isClassRoom30(roomKey)&&cameraMode6e==='explore'&&me.seat===null&&entranceAvatar30?1:0;
+ exploreBlend30+=(exploreDesired-exploreBlend30)*k;
  camZ+=(camZTarget-camZ)*k;zoom+=(zoomTarget-zoom)*k;
  yaw+=(yawTarget-yaw)*k;pitch+=(pitchTarget-pitch)*k;lookY+=(lookYTarget-lookY)*k;
  windowShift6e+=(windowShiftTarget6e-windowShift6e)*k;
@@ -1401,6 +1403,20 @@ function updateCamera(dt){
     cx=cx*(1-w)+ex*w;cy=cy*(1-w)+ey*w;cz=cz*(1-w)+ez*w;
     tx=tx*(1-w)+ax*w;ty=ty*(1-w)+ay*w;tz=tz*(1-w)+az*w;
    }
+  }
+  const explore=exploreBlend30;
+  if(explore>.001&&entranceAvatar30&&me.seat===null){
+   const p=entranceAvatar30.position,px=p.x,pz=p.z;
+   // Follow the visitor at eye level; maintain a view through the rear doorway.
+   const ex=clamp6d(px-.18,-L.halfW+.33,L.halfW-.33);
+   const ey=2.35,ez=Math.min(L.frontZ+.46,pz+2.55*zoom);
+   const ax=px,ay=.94,az=Math.max(-L.halfD+.1,pz-1.60);
+   cx=cx*(1-explore)+ex*explore;
+   cy=cy*(1-explore)+ey*explore;
+   cz=cz*(1-explore)+ez*explore;
+   tx=tx*(1-explore)+ax*explore;
+   ty=ty*(1-explore)+ay*explore;
+   tz=tz*(1-explore)+az*explore;
   }
  }
  camera.position.set(cx,cy,cz);camera.lookAt(tx,ty,tz);
@@ -1824,7 +1840,7 @@ document.getElementById('oceanDesk20').addEventListener('click',()=>{
  focusOceanDesk20(me.seat);
 });
 document.getElementById('oceanHome20').addEventListener('click',()=>cameraHome6d());
-document.getElementById('oceanEntrance30').addEventListener('click',cameraEntrance30);
+document.getElementById('oceanEntrance30').addEventListener('click',()=>{if(me.seat===null)cameraVisitor30();else toast('공부 종료 후 자유롭게 탐색할 수 있어요');});
 document.getElementById('oceanSound20').addEventListener('click',toggleOceanSound20);
 
 /* ---------- clock ---------- */
