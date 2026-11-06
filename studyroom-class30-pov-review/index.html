@@ -1276,10 +1276,11 @@ function updateCamera(dt){
   const e=entranceBlend30;
   if(e>.001){
    const px=L.door.x,pz=L.frontZ-.45;
-   const ex=clamp6d(px-.42,-L.halfW+.36,L.halfW-.36);
-   const ey=2.34+(zoom-1)*.22;
-   const ez=Math.min(L.frontZ+.54,pz+1.03*zoom);
-   const ax=px-2.2-2.1*Math.sin(yaw),ay=1.42-(pitch-.69)*2.2,az=pz-3.5;
+   // Doorway third-person composition: keep the entire avatar inside portrait FOV.
+   // Camera looks through the new fourth-wall portal instead of being clipped by it.
+   const ex=px-.12,ey=1.95+(zoom-1)*.18;
+   const ez=L.frontZ+clamp6d(1.55*zoom,1.10,2.0);
+   const ax=px-.15-1.5*Math.sin(yaw),ay=-.40-(pitch-.69)*1.5,az=pz-3.5;
    cx=cx*(1-e)+ex*e;cy=cy*(1-e)+ey*e;cz=cz*(1-e)+ez*e;
    tx=tx*(1-e)+ax*e;ty=ty*(1-e)+ay*e;tz=tz*(1-e)+az*e;
   }
