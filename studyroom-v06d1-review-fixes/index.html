@@ -298,6 +298,25 @@ const box=(w,h,d,c,x,y,z,parent,shadow=true)=>{const m=new THREE.Mesh(new THREE.
 const sph=(r,c,x,y,z,parent,seg=16)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,seg,Math.round(seg*.75)),M(c));m.position.set(x,y,z);m.castShadow=true;parent&&parent.add(m);return m};
 const cyl=(rt,rb,h,c,x,y,z,parent,seg=14)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),M(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent&&parent.add(m);return m};
 
+
+/* v0.6-D.1: reclaim per-room geometry, noncached materials and CanvasTexture. */
+function disposeObject6e(root){
+ if(!root)return;
+ const shared=new Set(Object.values(matCache)),geos=new Set(),mats=new Set(),maps=new Set();
+ root.traverse(o=>{
+  if(o.userData)o.userData.disposed=true;
+  if(o.geometry&&!geos.has(o.geometry)){geos.add(o.geometry);o.geometry.dispose();}
+  for(const m of (Array.isArray(o.material)?o.material:[o.material])){
+   if(!m||shared.has(m)||mats.has(m))continue;
+   mats.add(m);
+   for(const k of ['map','alphaMap','aoMap','emissiveMap','normalMap','roughnessMap','metalnessMap','bumpMap','lightMap']){
+    const t=m[k];if(t&&!maps.has(t)){maps.add(t);t.dispose();}
+   }
+   m.dispose();
+  }
+ });
+}
+
 let L=null; // layout
 let roomGroup=null;
 const seatObjs=[]; // {g, hit, char, x, z, deskTopY}
@@ -337,7 +356,7 @@ function bookshelf(w,h,parent,x,z,ry){
 
 /* v0.6-D: real window openings with lightweight 3D scenery (no borrowed photos). */
 function renderExterior6d(t,W,D){
- const group=roomGroup, backZ=-D-6,span=W*2+7,sky=t.id==='astral'?'#2b2449':t.id==='coast'?'#9bd8ed':t.id==='forest'?'#b5d8bc':t.id==='classic'?'#cfc3ac':'#bce1eb';
+ const group=new THREE.Group();roomGroup.add(group);const backZ=-D-6,span=W*2+7,sky=t.id==='astral'?'#2b2449':t.id==='coast'?'#9bd8ed':t.id==='forest'?'#b5d8bc':t.id==='classic'?'#cfc3ac':'#bce1eb';
  const block=(w,h,d,c,x,y,z)=>{const q=box(w,h,d,c,x,y,z,group,false);return q};
  const backdrop=block(span,7,.12,sky,0,2,backZ);
  backdrop.material=new THREE.MeshBasicMaterial({color:sky});
@@ -404,6 +423,8 @@ function renderExterior6d(t,W,D){
      }
    }
  }
+ // Exterior geometry uses unshadowed low-cost rendering.
+ group.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;}});
 }
 function renderWindows6d(t,W,D){
  const g=roomGroup,z=-D-.12,trim=t.trim;
@@ -438,7 +459,7 @@ function renderWindows6d(t,W,D){
 }
 
 function buildRoom(){
-  if(roomGroup){scene.remove(roomGroup);roomGroup.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
+  if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
   seatObjs.length=0;plants.length=0;walkers.length=0;
   L=computeLayout();
   roomGroup=new THREE.Group();scene.add(roomGroup);
@@ -499,7 +520,7 @@ function buildRoom(){
   box(.11,2.15,1.13,t.trim,W-.03,1.07,dz0,roomGroup,false);
   box(.07,1.96,.96,t.wood,W-.06,.98,dz0,roomGroup,false);
   sph(.04,t.lamp,W-.1,1.0,dz0-.32,roomGroup,8);
-  const sign=makeSign(t.icon+' '+t.name);sign.position.set(0,3.55,-D+.35);roomGroup.add(sign);
+  const sign=makeSign(t.icon+' '+t.name);sign.position.set(W-.13,3.1,L.frontZ-.88);sign.rotation.y=-Math.PI/2;roomGroup.add(sign);
   // Shared tables are a single connected surface with two independent seat hitboxes.
   const dh=.76;
   L.seats.forEach((p,i)=>{
@@ -547,7 +568,7 @@ function makeSign(text){
   x.fillStyle='#ffe9b8';x.font='44px Jua, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,52);
   const t=new THREE.CanvasTexture(c);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.49),new THREE.MeshBasicMaterial({map:t}));m.position.z=.12;
-  m.userData.redraw=()=>{x.fillStyle='#4e3522';x.fillRect(8,8,496,80);x.fillStyle='#ffe9b8';x.font='44px Jua, sans-serif';x.fillText(text,256,52);t.needsUpdate=true};
+  m.userData.redraw=()=>{if(m.userData.disposed)return;x.fillStyle='#4e3522';x.fillRect(8,8,496,80);x.fillStyle='#ffe9b8';x.font='44px Jua, sans-serif';x.fillText(text,256,52);t.needsUpdate=true};
   document.fonts&&document.fonts.ready.then(()=>m.userData.redraw());
   return m;
 }
@@ -611,7 +632,7 @@ function pathIn(i){const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;return [[ax,L.f
 function pathOut(i){const q=L.seats[i],ax=aisleX(q.x),cz=q.z-1.33;return [[q.x,cz],[ax,cz],[ax,L.frontZ],[L.door.x+.2,L.door.z]]}
 function placeChar(i,mode,onArrive){
   const so=seatObjs[i];const seat=rooms[roomKey].seats[i];
-  if(so.char){roomGroup.remove(so.char);so.char=null}
+  if(so.char){roomGroup.remove(so.char);disposeObject6e(so.char);so.char=null}
   if(!seat.occ)return;
   const mine=seat.occ.mine;
   const c=makeChar(mine?myLook():seat.occ.look,mine);
@@ -1134,7 +1155,7 @@ function frame(t){
     const seat=rooms[roomKey].seats[i];
     animChar(c,dt,seat.occ&&seat.occ.state==='break');
   });
-  for(let k=walkers.length-1;k>=0;k--){const c=walkers[k];if(animChar(c,dt,false)){roomGroup.remove(c);walkers.splice(k,1)}}
+  for(let k=walkers.length-1;k>=0;k--){const c=walkers[k];if(animChar(c,dt,false)){roomGroup.remove(c);disposeObject6e(c);walkers.splice(k,1)}}
   if(following&&me.seat!==null){const so=seatObjs[me.seat];if(so&&so.char){const r=camRange();camZTarget=Math.min(r[1],Math.max(r[0],so.char.position.z+.9))}}
   plants.forEach(p=>{const s=p.scale.x;const tg=Math.max(.001,p.userData.target);if(Math.abs(s-tg)>.002)p.scale.setScalar(s+(tg-s)*.06)});
   renderer.render(scene,camera);
