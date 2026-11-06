@@ -992,8 +992,8 @@ function safeRoute30(i){
   return true;
  });
  // End aisles are fallbacks; internal lanes avoid the planters on side walls.
- const candidates=validAisles.concat([-L.halfW+.62,L.halfW-.62])
-   .sort((a,b)=>Math.abs(a-q.x)-Math.abs(b-q.x));
+ const candidates=validAisles.sort((a,b)=>Math.abs(a-q.x)-Math.abs(b-q.x));
+ // Side perimeter paths are deliberately avoided: plants, wall fixtures and windows live there.
  const source=[L.door.x,L.door.z];
  for(const ax of candidates){
   const path=[[ax,L.frontZ],[ax,stageZ],[q.x,stageZ],[q.x,q.z-.58]];
