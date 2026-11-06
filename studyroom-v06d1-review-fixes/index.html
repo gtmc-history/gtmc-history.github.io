@@ -141,6 +141,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
 #view6d .view-help{color:#fff7eb;background:#1c2a34bc;border-radius:8px;padding:5px 7px;font:10px/1.3 system-ui,sans-serif;text-align:right;max-width:132px}
 .dim{z-index:30}.sheet{z-index:31}.toast{z-index:33}
 @media(max-width:560px){#view6d{right:8px;top:calc(var(--st) + 212px)}#view6d button{min-width:32px;min-height:32px;padding:5px 7px}#view6d .view-help{font-size:9px}}
+
+/* Collapsible camera controls to avoid blocking seat name tags. */
+#view6d{right:8px;top:calc(var(--st) + 199px);width:150px;max-width:150px}
+#view6dPanel[hidden]{display:none!important}
+#view6dPanel{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+#view6d .view-row{width:100%}
+#view6d .view-row button{flex:1;min-width:0;white-space:nowrap}
+#view6d button{font-size:11px}
+#view6dToggle{width:100%;background:#20544ddd!important;border:1px solid #ffffff90!important}
+#view6d .view-help{max-width:150px}
+@media(max-width:560px){#view6d{top:calc(var(--st) + 181px)}}
 </style>
 </head>
 <body>
@@ -148,9 +159,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="view6d" role="group" aria-label="열람실 카메라 조정">
- <div class="view-row"><button type="button" id="camLeft6d" aria-label="왼쪽 보기">◀</button><button type="button" id="camOut6d" class="wide">🌄 창밖</button><button type="button" id="camRight6d" aria-label="오른쪽 보기">▶</button></div>
- <div class="view-row"><button type="button" id="camMinus6d" aria-label="화면 축소">−</button><button type="button" id="camHome6d" class="wide">⌂ 정면</button><button type="button" id="camPlus6d" aria-label="화면 확대">＋</button></div>
- <div class="view-help">드래그: 시선 · Shift+드래그: 위치<br>두 손가락: 확대·위치</div>
+ <button type="button" id="view6dToggle" aria-expanded="false" aria-controls="view6dPanel">🎥 시점 조정</button>
+ <div id="view6dPanel" hidden>
+  <div class="view-row"><button type="button" id="camLeft6d" aria-label="왼쪽 보기">◀</button><button type="button" id="camOut6d" class="wide">🌄 창밖</button><button type="button" id="camRight6d" aria-label="오른쪽 보기">▶</button></div>
+  <div class="view-row"><button type="button" id="camMinus6d" aria-label="화면 축소">−</button><button type="button" id="camHome6d" class="wide">⌂ 정면</button><button type="button" id="camPlus6d" aria-label="화면 확대">＋</button></div>
+  <div class="view-row"><button type="button" id="camForward6e" aria-label="앞줄 보기">↑앞</button><button type="button" id="camTiltUp6e" aria-label="위를 보기">↑시선</button><button type="button" id="camTiltDown6e" aria-label="아래를 보기">↓시선</button><button type="button" id="camBack6e" aria-label="뒷줄 보기">↓뒤</button></div>
+  <div class="view-row"><button type="button" id="camEco6e" class="wide" aria-pressed="false">⚡ 저사양</button></div>
+  <div class="view-help">모바일 좌우 드래그: 회전<br>상하 드래그: 앞·뒤 이동<br>두 손가락: 확대·위치<br>PC: 드래그 시선, Shift+드래그 이동</div>
+ </div>
 </div>
 <div class="loading" id="loading">열람실 불 켜는 중…</div>
 
@@ -166,7 +182,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2b2118;font-family:'G
   <div class="goal" id="goal"></div>
 </div></div>
 
-<div class="hint" id="hint">빈 책상: 자리 선택 · 드래그: 시선 회전 · 🌄 창밖 보기</div>
+<div class="hint" id="hint">빈 책상: 자리 선택 · 모바일 상하: 앞뒤 · 🎥 시점 조정</div>
 
 <div class="hud" id="hud">
   <div class="h1">
@@ -277,7 +293,7 @@ const canvas=$('#c');
 let renderer;
 try { renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }
 catch(e){$('#loading').textContent='이 브라우저에서 3D를 실행할 수 없어요. Chrome을 최신 상태로 업데이트하고 그래픽 가속(WebGL)을 확인해 주세요.';return;}
-renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<600?1.5:2));
+renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<600?1.3:1.8));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#2b2118');
@@ -710,41 +726,71 @@ function floatEmoji(i,emo){
 
 /* ---------- camera ---------- */
 /* v0.6-D: adjustable camera angle, window-focus mode and pinch zoom. */
+
+/* v0.6-D.1 camera review fixes: accessible seats, safe window observation, true pinch. */
 let camZ=0,camZTarget=0,zoom=1,zoomTarget=1;
 let yaw=0,yawTarget=0,pitch=.693,pitchTarget=.693,lookY=.7,lookYTarget=.7;
+let viewBlend6e=0,cameraMode6e='room',windowShift6e=0,windowShiftTarget6e=0,eco6e=false;
 const clamp6d=(v,a,b)=>Math.min(b,Math.max(a,v));
-function camRange(){const zs=L.seats.map(s=>s.z),mn=Math.min(...zs),mx=Math.max(...zs);
- return L.portrait?[mn+.6,mx-1.2]:[mn*.5-.3,mx*.3];}
+function camRange(){const zs=L.seats.map(p=>p.z),mn=Math.min(...zs),mx=Math.max(...zs);return L.portrait?[mn+.6,mx-1.2]:[mn*.5-.3,mx*.3]}
+function yawLimit6e(){return cameraMode6e==='window'?.65:.39}
 function cameraHome6d(){
- if(!L)return;const range=camRange();
- following=false;camZTarget=L.portrait?range[0]+.6:-.6;
- yawTarget=0;pitchTarget=.693;lookYTarget=.7;zoomTarget=1;
+ if(!L)return;
+ const r=camRange();cameraMode6e='room';following=false;
+ camZTarget=L.portrait?r[0]+.6:-.6;
+ yawTarget=0;pitchTarget=.693;lookYTarget=.7;zoomTarget=1;windowShiftTarget6e=0;
 }
 function cameraWindow6d(){
- if(!L)return;following=false;
- camZTarget=-L.halfD+.95;lookYTarget=2.25;
- yawTarget=0;pitchTarget=.18;zoomTarget=.85;
+ if(!L)return;
+ cameraMode6e='window';following=false;
+ windowShiftTarget6e=0;lookYTarget=.7;pitchTarget=0;
+ yawTarget=0;zoomTarget=1;
+}
+function rotateCam6e(delta){following=false;yawTarget=clamp6d(yawTarget+delta,-yawLimit6e(),yawLimit6e())}
+function moveCam6e(amount){
+ following=false;
+ if(cameraMode6e==='window'){windowShiftTarget6e=clamp6d(windowShiftTarget6e+amount*.25,-.65,.85);return}
+ const r=camRange();camZTarget=clamp6d(camZTarget+amount,r[0],r[1]);
+}
+function tiltCam6e(amount){
+ following=false;pitchTarget=clamp6d(pitchTarget+amount,cameraMode6e==='window'?-.18:.18,cameraMode6e==='window'?.30:1.02);
+}
+function applyEco6e(){
+ renderer.setPixelRatio(eco6e?1:Math.min(devicePixelRatio,innerWidth<600?1.3:1.8));
+ renderer.shadowMap.enabled=!eco6e;renderer.setSize(innerWidth,innerHeight,false);
+ const btn=document.getElementById('camEco6e');
+ if(btn){btn.textContent=eco6e?'⚡ 절전 ON':'⚡ 저사양';btn.setAttribute('aria-pressed',eco6e?'true':'false')}
 }
 function fitCamera(reset){
- const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);
- camera.aspect=w/h;camera.fov=L.portrait?44:38;camera.updateProjectionMatrix();
- if(reset){const r=camRange();camZ=camZTarget=L.portrait?r[0]+.6:-.6;
-   yaw=yawTarget=0;pitch=pitchTarget=.693;lookY=lookYTarget=.7;zoom=zoomTarget=1;}
+ const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
+ camera.fov=L.portrait?44:38;camera.updateProjectionMatrix();
+ if(reset){
+  const r=camRange();camZ=camZTarget=L.portrait?r[0]+.6:-.6;
+  yaw=yawTarget=0;pitch=pitchTarget=.693;lookY=lookYTarget=.7;zoom=zoomTarget=1;
+  viewBlend6e=0;cameraMode6e='room';windowShift6e=windowShiftTarget6e=0;
+ }
 }
 function updateCamera(dt){
  const k=1-Math.pow(.002,Math.max(.001,dt));
+ const desired=cameraMode6e==='window'?1:0;viewBlend6e+=(desired-viewBlend6e)*k;
  camZ+=(camZTarget-camZ)*k;zoom+=(zoomTarget-zoom)*k;
  yaw+=(yawTarget-yaw)*k;pitch+=(pitchTarget-pitch)*k;lookY+=(lookYTarget-lookY)*k;
+ windowShift6e+=(windowShiftTarget6e-windowShift6e)*k;
  const need=L.cols*L.dx/2+.55;
  let d=need/(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect);
  d=Math.max(L.portrait?8:12.5,d)*zoom;
- const cosP=Math.cos(pitch),sinP=Math.sin(pitch);
- // The camera stays on the central aisle; rotate LOOK direction instead of crossing the walls.
- camera.position.set(0,lookY+d*sinP,camZ+d*cosP);
- camera.lookAt(-d*cosP*Math.sin(yaw),lookY,camZ+d*cosP*(1-Math.cos(yaw)));
+ const cp=Math.cos(pitch),sp=Math.sin(pitch);
+ const roomY=lookY+d*sp,roomZ=camZ+d*cp;
+ const targetX=-d*cp*Math.sin(yaw),targetY=lookY,targetZ=camZ+d*cp*(1-Math.cos(yaw));
+ // Window camera stays in the central aisle, BELOW every hanging light.
+ const windowZ=clamp6d(-L.halfD+3.25+windowShift6e+(zoom-1)*1.15,-L.halfD+1.75,-L.halfD+5.2);
+ const windowY=1.85;
+ const x=-11*Math.sin(yaw),y=2.08+pitch*5,z=-L.halfD-7*Math.cos(yaw),v=viewBlend6e;
+ camera.position.set(0,roomY*(1-v)+windowY*v,roomZ*(1-v)+windowZ*v);
+ camera.lookAt(targetX*(1-v)+x*v,targetY*(1-v)+y*v,targetZ*(1-v)+z*v);
 }
 const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();
-const pointers6d=new Map();let drag6d=null,pinch6d=null;
+const pointers6d=new Map();let drag6d=null,pinch6d=null,hadMulti6e=false;
 function pinchState6d(){
  const p=[...pointers6d.values()].slice(0,2);
  return {distance:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),centerY:(p[0].y+p[1].y)/2};
@@ -753,38 +799,49 @@ canvas.addEventListener('pointerdown',e=>{
  pointers6d.set(e.pointerId,{x:e.clientX,y:e.clientY});
  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
  if(pointers6d.size===1){
-  drag6d={id:e.pointerId,x:e.clientX,y:e.clientY,yaw:yawTarget,pitch:pitchTarget,z:camZTarget,moved:false};
+  hadMulti6e=false;
+  drag6d={id:e.pointerId,x:e.clientX,y:e.clientY,yaw:yawTarget,pitch:pitchTarget,z:camZTarget,shift:windowShiftTarget6e,moved:false,type:e.pointerType,axis:null};
   pinch6d=null;
  }else if(pointers6d.size===2){
-  if(drag6d)drag6d.moved=true;
-  const p=pinchState6d();pinch6d={distance:p.distance,centerY:p.centerY,zoom:zoomTarget,z:camZTarget};
+  hadMulti6e=true;if(drag6d)drag6d.moved=true;
+  const p=pinchState6d();
+  pinch6d={distance:Math.max(20,p.distance),centerY:p.centerY,zoom:zoomTarget,z:camZTarget,shift:windowShiftTarget6e};
  }
 });
 canvas.addEventListener('pointermove',e=>{
  if(!pointers6d.has(e.pointerId))return;
  pointers6d.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pointers6d.size>=2){
-  if(!pinch6d)return;const p=pinchState6d();
-  following=false;
-  zoomTarget=clamp6d(pinch6d.zoom*(pinch6d.distance/Math.max(20,pinch6d.distance)),.65,1.55);
-  const r=camRange();
-  camZTarget=clamp6d(pinch6d.z+(p.centerY-pinch6d.centerY)*.026,r[0],r[1]);
+  if(!pinch6d)return;const p=pinchState6d();following=false;
+  // original distance / CURRENT distance (not the same original distance twice).
+  zoomTarget=clamp6d(pinch6d.zoom*pinch6d.distance/Math.max(20,p.distance),.65,1.55);
+  const dy=p.centerY-pinch6d.centerY;
+  if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(pinch6d.shift-dy*.012,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(pinch6d.z-dy*.026,r[0],r[1])}
   return;
  }
  if(!drag6d||drag6d.id!==e.pointerId)return;
  const dx=e.clientX-drag6d.x,dy=e.clientY-drag6d.y;
  if(Math.hypot(dx,dy)>9)drag6d.moved=true;
- if(!drag6d.moved)return;
- following=false;
- if(e.shiftKey){const r=camRange();camZTarget=clamp6d(drag6d.z-dy*.025,r[0],r[1]);}
- else{yawTarget=clamp6d(drag6d.yaw-dx*.004,-.82,.82);
-      pitchTarget=clamp6d(drag6d.pitch+dy*.003,.12,1.1);}
+ if(!drag6d.moved)return;following=false;
+ if(drag6d.type==='touch'){
+  if(!drag6d.axis)drag6d.axis=Math.abs(dx)>Math.abs(dy)*1.1?'yaw':'move';
+  if(drag6d.axis==='yaw')yawTarget=clamp6d(drag6d.yaw-dx*.0035,-yawLimit6e(),yawLimit6e());
+  else if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(drag6d.shift-dy*.01,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(drag6d.z-dy*.04,r[0],r[1])}
+ }else if(e.shiftKey){
+  if(cameraMode6e==='window')windowShiftTarget6e=clamp6d(drag6d.shift-dy*.011,-.65,.85);
+  else{const r=camRange();camZTarget=clamp6d(drag6d.z-dy*.025,r[0],r[1])}
+ }else{
+  yawTarget=clamp6d(drag6d.yaw-dx*.0035,-yawLimit6e(),yawLimit6e());
+  pitchTarget=clamp6d(drag6d.pitch+dy*.003,cameraMode6e==='window'?-.18:.18,cameraMode6e==='window'?.30:1.02);
+ }
 });
 function release6d(e,canceled){
- const tap=!canceled&&pointers6d.size===1&&drag6d&&drag6d.id===e.pointerId&&!drag6d.moved;
+ const tap=!canceled&&!hadMulti6e&&pointers6d.size===1&&drag6d&&drag6d.id===e.pointerId&&!drag6d.moved;
  pointers6d.delete(e.pointerId);
- if(!pointers6d.size){drag6d=null;pinch6d=null;}
- else{drag6d=null;pinch6d=null;}
+ if(pointers6d.size===0){drag6d=null;pinch6d=null;hadMulti6e=false}
+ else{drag6d=null;pinch6d=null}
  if(!tap)return;
  ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
  ray.setFromCamera(ptr,camera);
@@ -795,18 +852,27 @@ canvas.addEventListener('pointerup',e=>release6d(e,false));
 canvas.addEventListener('pointercancel',e=>release6d(e,true));
 canvas.addEventListener('wheel',e=>{
  if(e.cancelable)e.preventDefault();
- if(e.altKey){const r=camRange();camZTarget=clamp6d(camZTarget+e.deltaY*.015,r[0],r[1]);}
- else zoomTarget=clamp6d(zoomTarget+e.deltaY*.001,.65,1.55);
- following=false;
+ if(e.altKey)moveCam6e(e.deltaY*.014);
+ else{zoomTarget=clamp6d(zoomTarget+e.deltaY*.001,.65,1.55);following=false}
 },{passive:false});
-const camButton6d=(id,callback)=>document.getElementById(id).addEventListener('click',e=>{e.stopPropagation();callback();});
-camButton6d('camLeft6d',()=>{yawTarget=clamp6d(yawTarget+.2,-.82,.82);following=false;});
-camButton6d('camRight6d',()=>{yawTarget=clamp6d(yawTarget-.2,-.82,.82);following=false;});
+const camButton6d=(id,fn)=>document.getElementById(id).addEventListener('click',e=>{e.stopPropagation();fn()});
+camButton6d('camLeft6d',()=>rotateCam6e(.16));
+camButton6d('camRight6d',()=>rotateCam6e(-.16));
 camButton6d('camOut6d',cameraWindow6d);
 camButton6d('camHome6d',cameraHome6d);
-camButton6d('camPlus6d',()=>{zoomTarget=clamp6d(zoomTarget*.85,.65,1.55);following=false;});
-camButton6d('camMinus6d',()=>{zoomTarget=clamp6d(zoomTarget*1.15,.65,1.55);following=false;});
-
+camButton6d('camPlus6d',()=>{zoomTarget=clamp6d(zoomTarget*.85,.65,1.55);following=false});
+camButton6d('camMinus6d',()=>{zoomTarget=clamp6d(zoomTarget*1.15,.65,1.55);following=false});
+camButton6d('camForward6e',()=>moveCam6e(-1.4));
+camButton6d('camBack6e',()=>moveCam6e(1.4));
+camButton6d('camTiltUp6e',()=>tiltCam6e(-.14));
+camButton6d('camTiltDown6e',()=>tiltCam6e(.14));
+camButton6d('camEco6e',()=>{eco6e=!eco6e;applyEco6e()});
+camButton6d('view6dToggle',()=>{
+ const panel=document.getElementById('view6dPanel');panel.hidden=!panel.hidden;
+ const toggle=document.getElementById('view6dToggle');
+ toggle.setAttribute('aria-expanded',panel.hidden?'false':'true');
+ toggle.textContent=panel.hidden?'🎥 시점 조정':'🎥 시점 닫기';
+});
 /* STUDY ROOM v0.6-C visual preview, separate from v0.5.2 and v0.6-B. */
 /* ---------- UI + network ---------- */
 const $sheet = $('#sheet'), $dim = $('#dim');
@@ -1106,6 +1172,7 @@ $('#conn').textContent='익명 인증 준비…';
 window.__sr={empty:()=>{const a=[];rooms[roomKey].seats.forEach((s,i)=>{if(s.occ)return;const so=seatObjs[i];v3.set(so.x,.9,so.z).project(camera);a.push([(v3.x*.5+.5)*innerWidth,(-v3.y*.5+.5)*innerHeight])});return a},version:'0.6-D.1-review-fixes'};
 function initialUI(){buildRoom();renderRoomButton();renderGoal();renderStats();$('#loading')?.remove();startLive();requestAnimationFrame(frame)}
 initialUI();
+applyEco6e();
 
 /* ---------- loop ---------- */
 function lerpAng(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2))-Math.PI;if(d<-Math.PI)d+=Math.PI*2;return a+d*t}
@@ -1146,8 +1213,11 @@ function animChar(c,dt,brk){ // returns true when it should be removed
   if(u.ring)u.ring.material.opacity=.55+Math.sin(ph*3)*.3;
   return false;
 }
-let last=performance.now();
+let last=performance.now(),lastDraw6e=0;
 function frame(t){
+  if(document.hidden){last=t;requestAnimationFrame(frame);return;}
+  if(eco6e&&t-lastDraw6e<33){requestAnimationFrame(frame);return;}
+  lastDraw6e=t;
   const dt=Math.min(.1,(t-last)/1000);last=t;
   updateCamera(dt);
   seatObjs.forEach((so,i)=>{
