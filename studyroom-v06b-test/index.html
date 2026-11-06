@@ -580,7 +580,7 @@ function presentError(e){const msg=(e&&e.message)||String(e)||'unknown';if(msg.i
 const SB_URL='https://onsjszszvtclmtpfivjt.supabase.co';
 const SB_KEY='sb_publishable_1DkbZFhimFE-pHGztz4JhA_cMEesM2k'; // browser-safe publishable key, NOT a secret
 const TURNSTILE_SITE_KEY='0x4AAAAAAF1uiPf1JVADknYM'; // Public Turnstile sitekey only; NEVER commit secret
-const CAPTCHA_SERVER_READY=false; // Fail closed until Supabase CAPTCHA is configured and verified
+const CAPTCHA_SERVER_READY=true; // Supabase CAPTCHA enabled by operator; verify sign-in in a real browser
 const ROOM_KEYS=['public-1','public-2','public-3','public-4','public-5'];
 const ROOM_RE=/^(?:public-[1-5]|sch-[A-Z0-9]{3}-[A-Z0-9]{6,10}-[1-3])$/;
 let sb=null, session=null, schoolChoice=null, schoolName='', serverTotals=null, serverHistory=[];
