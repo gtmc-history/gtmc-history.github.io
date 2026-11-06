@@ -371,7 +371,152 @@ function bookshelf(w,h,parent,x,z,ry){
 
 
 /* v0.6-D: real window openings with lightweight 3D scenery (no borrowed photos). */
+
+/* OCEAN VIEW 2.0 — original lightweight panorama + layered exterior. No external photos/assets. */
+const oceanFx20=[];
+function buildOcean20(t,W,D){
+ const g=new THREE.Group();roomGroup.add(g);
+ const add=(mesh)=>{mesh.castShadow=false;mesh.receiveShadow=false;g.add(mesh);return mesh};
+ const flat=(w,h,d,color,x,y,z)=>{
+  const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color}));
+  o.position.set(x,y,z);return add(o);
+ };
+ // Painted panorama is one cached-on-scene CanvasTexture, freed on room change.
+ const c=document.createElement('canvas');c.width=1024;c.height=512;
+ const p=c.getContext('2d'),w=c.width,h=c.height;
+ const sky=p.createLinearGradient(0,0,0,h*.64);
+ sky.addColorStop(0,'#72b7dd');sky.addColorStop(.35,'#aedced');sky.addColorStop(.77,'#e7f5e4');sky.addColorStop(1,'#ffead2');
+ p.fillStyle=sky;p.fillRect(0,0,w,h*.59);
+ // Soft sunlight and cloud banks.
+ const sunGrad=p.createRadialGradient(730,93,8,730,93,150);
+ sunGrad.addColorStop(0,'rgba(255,253,224,.95)');sunGrad.addColorStop(.24,'rgba(255,246,213,.65)');sunGrad.addColorStop(1,'rgba(255,251,226,0)');
+ p.fillStyle=sunGrad;p.fillRect(550,-65,360,340);
+ p.beginPath();p.arc(730,93,35,0,Math.PI*2);p.fillStyle='#fff9e2';p.fill();
+ for(let i=0;i<12;i++){
+  const x=55+i*89,y=69+(i%4)*31,rad=22+(i%3)*11;
+  p.fillStyle='rgba(255,255,251,'+(.11+(i%3)*.07)+')';
+  p.beginPath();p.ellipse(x,y,rad*2,rad*.55,0,0,Math.PI*2);p.fill();
+ }
+ const sea=p.createLinearGradient(0,h*.57,0,h);
+ sea.addColorStop(0,'#3ba1be');sea.addColorStop(.22,'#51b6c7');sea.addColorStop(.7,'#75c8cd');sea.addColorStop(1,'#abdacb');
+ p.fillStyle=sea;p.fillRect(0,h*.57,w,h*.43);
+ p.fillStyle='rgba(245,255,243,.65)';p.fillRect(0,h*.57,w,2);
+ // Distant layered headlands, no copied photograph.
+ function hill(points,fill){
+  p.beginPath();p.moveTo(points[0][0],points[0][1]);
+  for(const [x,y] of points.slice(1))p.lineTo(x,y);
+  p.lineTo(points[points.length-1][0],h*.59);
+  p.lineTo(points[0][0],h*.59);p.closePath();p.fillStyle=fill;p.fill();
+ }
+ hill([[0,280],[44,248],[88,233],[147,241],[207,263],[256,291]],'#6bafa1');
+ hill([[0,293],[82,275],[155,281],[245,301]],'#81c1b6');
+ hill([[825,296],[900,268],[944,250],[988,255],[1024,268]],'#6da998');
+ hill([[905,300],[970,289],[1024,293]],'#8fc0a7');
+ // Receding crests, avoiding excessive tiny 3D meshes.
+ for(let i=0;i<86;i++){
+  const yy=h*.64+(i*37)%(h*.34),xx=(i*137+59)%w;
+  const a=.12+(yy/h)*.32,ww=8+(i%6)*10;
+  p.fillStyle='rgba(255,255,244,'+a.toFixed(2)+')';
+  p.fillRect(xx,yy,ww,1+(i%3===0?1:0));
+ }
+ const tex=new THREE.CanvasTexture(c);
+ if(THREE.sRGBEncoding!==undefined)tex.encoding=THREE.sRGBEncoding;
+ tex.anisotropy=2;
+ const pano=new THREE.Mesh(new THREE.PlaneGeometry(W*2+11,8.3),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,fog:false}));
+ pano.position.set(0,2.1,-D-7.8);add(pano);
+ // 3D sea layers add parallax from the viewing deck.
+ flat(W*2+8,.07,.14,'#f2f6e4',0,1.07,-D-5.35);
+ flat(W*2+8,.13,.2,'#67c0ca',0,.74,-D-5.28);
+ const foamColors=['#f1ffef','#e1f9ee','#d0efed'];
+ for(let i=0;i<9;i++){
+  const line=flat(.55+(i%4)*.45,.024,.035,foamColors[i%3],
+    -W-1.1+(i*1.29)%(W*2+2.0),.66+(i%4)*.17,-D-4.85+(i%3)*.15);
+  line.material.transparent=true;line.material.opacity=.45;
+  oceanFx20.push({type:'wave',obj:line,x:line.position.x,phase:i*1.38});
+ }
+ // Small coastal island, a white lighthouse, a distant sail.
+ const isle=new THREE.Mesh(new THREE.SphereGeometry(.82,12,8),M('#4f8e73'));
+ isle.position.set(-W*.55,1.13,-D-4.1);isle.scale.set(2.1,.42,.85);add(isle);
+ const tower=flat(.16,.92,.16,'#f9eee0',-W*.64,1.83,-D-4.04);
+ flat(.25,.14,.26,'#ad5947',-W*.64,2.34,-D-4.04);
+ flat(.72,.11,.27,'#b27b63',W*.57,.83,-D-3.3);
+ flat(.026,.9,.028,'#f6f5e9',W*.57,1.33,-D-3.3);
+ const sail=new THREE.Mesh(new THREE.ConeGeometry(.40,.82,3),new THREE.MeshBasicMaterial({color:'#fdf4df',side:THREE.DoubleSide}));
+ sail.rotation.y=Math.PI/2;sail.position.set(W*.57+.19,1.56,-D-3.3);add(sail);
+ const boat=new THREE.Group();boat.position.set(W*.57,0,0);g.add(boat);
+ // Two distant birds with subtle wing motion.
+ for(let i=0;i<2;i++){
+  const bird=new THREE.Group();
+  bird.position.set((-W*.4)+i*1.45,3.3+i*.43,-D-3.5-i*.6);g.add(bird);
+  const a=flat(.24,.027,.055,'#ffffff',0,0,0);
+  // Move the temporary wing mesh from global group to the animated bird.
+  g.remove(a);bird.add(a);
+  const b=flat(.24,.027,.055,'#ffffff',0,0,0);g.remove(b);bird.add(b);
+  a.position.x=-.13;b.position.x=.13;
+  oceanFx20.push({type:'bird',obj:bird,wingA:a,wingB:b,phase:i*2.2,y:bird.position.y,x:bird.position.x});
+ }
+ // Wooden exterior deck and rail in the near field, below the main ocean sightline.
+ const deck=box(W*2+.4,.12,1.45,'#d7b999',0,-.04,-D-.9,g,false);
+ for(let x=-W+.22;x<=W;x+=1.15){
+  const pole=box(.055,.85,.07,'#e8e9d9',x,.40,-D-1.56,g,false);
+  pole.castShadow=false;
+ }
+ box(W*2+.4,.07,.10,'#edf2e9',0,.85,-D-1.56,g,false);
+ // Ocean side windows: tinted sky and distant sea, rather than blank blocks.
+ for(const dir of [-1,1]){
+  const side=new THREE.Group();g.add(side);
+  const x=dir*(W+4.2),len=D*2+5;
+  flat(.10,5.4,len,'#acdbe7',x,2.0,0);
+  flat(.13,1.35,len,'#4faec6',dir*(W+4.0),.76,0);
+  for(let i=0;i<7;i++){
+   const z=-D+1.1+i*(D*2/7);
+   flat(.16,.03,.9,'#d9f5e8',dir*(W+3.9),1.19+(i%3)*.18,z);
+  }
+ }
+ // Material clean-up is performed by disposeObject6e when switching rooms.
+}
+function decorateOcean20(t,W,D){
+ const g=roomGroup;
+ // Coastal architecture: rhythmic pale beams, rattan pendants, soft furnishing at edges.
+ for(let z=-D+2;z<L.frontZ;z+=3.1){
+  box(W*2-.3,.12,.18,'#dec69e',0,4.27,z,g,false);
+  const fixture=cyl(.30,.21,.19,'#d9c19c',0,3.93,z,g,12);
+  fixture.castShadow=false;
+  const shade=sph(.20,'#fff5cf',0,3.80,z,g,10);
+  shade.material=new THREE.MeshBasicMaterial({color:'#ffe9b8',transparent:true,opacity:.87});
+ }
+ // Seaside lounge stays outside the clickable desk footprints.
+ for(const dir of [-1,1]){
+  const x=dir*(W-.4),z=L.frontZ-.1;
+  box(.42,.42,.48,'#8db7b7',x,.24,z,g,false);
+  const planter=cyl(.18,.14,.28,'#f2e6cf',x,.54,z-.48,g,10);
+  for(let i=0;i<4;i++){
+   const leaf=sph(.16,'#6b9b83',x+Math.sin(i*2)*.18,.89+i*.05,z-.48+Math.cos(i*2)*.12,g,8);
+   leaf.scale.set(.65,1.45,.8);
+  }
+ }
+ // Slim vertical curtains frame the edges without hiding the panorama.
+ for(const dir of [-1,1]){
+  const curtain=box(.3,2.35,.05,'#f6eee0',dir*(W-.28),2.51,-D+.13,g,false);
+  curtain.material=new THREE.MeshLambertMaterial({color:'#f9f2e4',transparent:true,opacity:.77,side:THREE.DoubleSide});
+  oceanFx20.push({type:'curtain',obj:curtain,base:curtain.rotation.z,phase:dir});
+ }
+}
+function animateOcean20(ms){
+ if(!oceanFx20.length||document.hidden||eco6e)return;
+ const time=ms/1000;
+ for(const e of oceanFx20){
+  if(e.type==='wave')e.obj.position.x=e.x+Math.sin(time*.55+e.phase)*.32;
+  else if(e.type==='bird'){
+   const a=Math.sin(time*3+e.phase)*.35;
+   e.wingA.rotation.z=a;e.wingB.rotation.z=-a;
+   e.obj.position.y=e.y+Math.sin(time*.85+e.phase)*.045;
+  }else if(e.type==='curtain')e.obj.rotation.z=e.base+Math.sin(time*.7+e.phase)*.018;
+ }
+}
+
 function renderExterior6d(t,W,D){
+ if(t.id==='coast'){buildOcean20(t,W,D);return;}
  const group=new THREE.Group();roomGroup.add(group);const backZ=-D-6,span=W*2+7,sky=t.id==='astral'?'#2b2449':t.id==='coast'?'#9bd8ed':t.id==='forest'?'#b5d8bc':t.id==='classic'?'#cfc3ac':'#bce1eb';
  const block=(w,h,d,c,x,y,z)=>{const q=box(w,h,d,c,x,y,z,group,false);return q};
  const backdrop=block(span,7,.12,sky,0,2,backZ);
@@ -476,7 +621,7 @@ function renderWindows6d(t,W,D){
 
 function buildRoom(){
   if(roomGroup){scene.remove(roomGroup);disposeObject6e(roomGroup)}
-  seatObjs.length=0;plants.length=0;walkers.length=0;
+  seatObjs.length=0;plants.length=0;walkers.length=0;oceanFx20.length=0;
   L=computeLayout();
   roomGroup=new THREE.Group();scene.add(roomGroup);
   const W=L.halfW,D=L.halfD,t=themeFor(roomKey);
@@ -493,6 +638,7 @@ function buildRoom(){
   }
   const rug=new THREE.Mesh(new THREE.PlaneGeometry(W*2-1.8,D*2-1.8),M(t.rug));rug.rotation.x=-Math.PI/2;rug.position.y=.005;roomGroup.add(rug);
   renderWindows6d(t,W,D);
+  if(t.id==='coast')decorateOcean20(t,W,D);
   // New windows remain unobstructed; compact details stay at room corners.
   function lamp(x,y,z,scale){
     cyl(.07*scale,.11*scale,.25*scale,t.trim,x,y,z,roomGroup,12);
@@ -1228,6 +1374,7 @@ function frame(t){
   for(let k=walkers.length-1;k>=0;k--){const c=walkers[k];if(animChar(c,dt,false)){roomGroup.remove(c);disposeObject6e(c);walkers.splice(k,1)}}
   if(following&&me.seat!==null){const so=seatObjs[me.seat];if(so&&so.char){const r=camRange();camZTarget=Math.min(r[1],Math.max(r[0],so.char.position.z+.9))}}
   plants.forEach(p=>{const s=p.scale.x;const tg=Math.max(.001,p.userData.target);if(Math.abs(s-tg)>.002)p.scale.setScalar(s+(tg-s)*.06)});
+  if(themeFor(roomKey).id==='coast')animateOcean20(t);
   renderer.render(scene,camera);
   positionLabels();
   requestAnimationFrame(frame);
