@@ -582,7 +582,7 @@ let deskBlend20=0,deskSeat20=null;
 const isOcean20=()=>themeFor(roomKey).id==='coast';
 function focusOceanDesk20(n){
  if(!isOcean20()||n==null||!L?.seats?.[n])return;
- deskSeat20=n;cameraMode6e='desk';following=false;pitchTarget=.65;yawTarget=0;zoomTarget=.94;
+ deskSeat20=n;cameraMode6e='desk';following=false;pitchTarget=.65;yawTarget=0;zoomTarget=isClassRoom30(roomKey)?1:.94;
 }
 function updateOceanDock20(){
  const d=document.getElementById('oceanDock20');if(!d)return;
@@ -1474,9 +1474,20 @@ function updateCamera(dt){
  let tx=targetX*(1-v)+x*v,ty=targetY*(1-v)+y*v,tz=targetZ*(1-v)+z*v;
  if(deskBlend20>.001&&deskSeat20!==null&&L.seats[deskSeat20]){
   const p=L.seats[deskSeat20],b=deskBlend20;
-  const dx=p.x+(p.x<0?-.3:.3),dy=1.86,dz=Math.min(L.frontZ+.30,p.z+2.0);
-  cx=cx*(1-b)+dx*b;cy=cy*(1-b)+dy*b;cz=cz*(1-b)+dz*b;
-  tx=tx*(1-b)+p.x*b;ty=ty*(1-b)+.77*b;tz=tz*(1-b)+(p.z-.16)*b;
+  if(isClassRoom30(roomKey)){
+   // Actual over-the-shoulder view: camera BEHIND the seated avatar, desk in front.
+   // Odd/even desk positions choose the outer shoulder so the character doesn't hide the book.
+   const shoulder=(deskSeat20%L.cols)%2===0?-.38:.38;
+   const dx=clamp6d(p.x+shoulder,-L.halfW+.36,L.halfW-.36),dy=1.85;
+   const behind=clamp6d(1.48*zoom,1.22,1.72);
+   const dz=Math.max(-L.halfD+.35,p.z-behind);
+   cx=cx*(1-b)+dx*b;cy=cy*(1-b)+dy*b;cz=cz*(1-b)+dz*b;
+   tx=tx*(1-b)+p.x*b;ty=ty*(1-b)+.91*b;tz=tz*(1-b)+(p.z+.12)*b;
+  }else{
+   const dx=p.x+(p.x<0?-.3:.3),dy=1.86,dz=Math.min(L.frontZ+.30,p.z+2.0);
+   cx=cx*(1-b)+dx*b;cy=cy*(1-b)+dy*b;cz=cz*(1-b)+dz*b;
+   tx=tx*(1-b)+p.x*b;ty=ty*(1-b)+.77*b;tz=tz*(1-b)+(p.z-.16)*b;
+  }
  }
  if(isClassRoom30(roomKey)&&L){
   const e=entranceBlend30;
