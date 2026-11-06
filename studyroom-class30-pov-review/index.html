@@ -963,6 +963,10 @@ function buildRoom(){
   if(isClassRoom30(roomKey)){
    buildEntranceWall30(W,t);
    frontWallBatch30=batchStaticBoxes30(entranceWall30);
+   // Always-visible structural outline makes the fourth face legible in cutaway overview.
+   const entranceZ=L.frontZ+.74;
+   box(W*2+.2,.12,.22,t.trim,0,4.26,entranceZ,roomGroup,false);
+   for(const side of [-1,1])box(.16,4.15,.22,t.trim,side*(W-.09),2.08,entranceZ,roomGroup,false);
   }
   if(isClassRoom30(roomKey)&&window.__sr){window.__sr.lastBatch={interior:batchReport30,frontWall:frontWallBatch30};}
   rebuildChars();fitCamera(true);
