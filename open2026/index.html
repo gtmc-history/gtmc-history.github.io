@@ -6,25 +6,67 @@
 <title>2026 역사수업 공개 자료 · 찰리쌤</title>
 <meta name="description" content="질문하고, 근거를 살피고, 스스로 판단하는 역사수업 — 교사용 공개 자료">
 <style>
-  :root { --ink:#161616; --accent:#2b4a9b; --muted:#5a5a5a; --line:#d9d9d9; }
+  :root { --ink:#161616; --accent:#2b4a9b; --muted:#5a5a5a; --line:#d9d9d9; --soft:#f4f6fa; }
   * { box-sizing:border-box; }
   body { margin:0; background:#fff; color:var(--ink);
-         font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; line-height:1.6; }
-  main { max-width:720px; margin:0 auto; padding:48px 20px 64px; }
-  header { border-top:6px solid var(--ink); padding-top:20px; margin-bottom:36px; }
-  .eyebrow { font-size:13px; letter-spacing:.08em; color:var(--accent); font-weight:700; margin:0 0 8px; }
-  h1 { font-size:28px; line-height:1.3; margin:0 0 10px; }
-  .lead { color:var(--muted); margin:0; }
-  section { border-top:1px solid var(--line); padding:24px 0; }
-  h2 { font-size:20px; margin:0 0 6px; }
-  .tag { font-size:13px; color:var(--accent); font-weight:700; margin:0 0 8px; }
+         font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; line-height:1.65; word-break:keep-all;
+         -webkit-text-size-adjust:100%; }
+  main { max-width:760px; margin:0 auto; padding:40px 20px 64px; }
+
+  header { border-top:8px solid var(--ink); padding-top:22px; margin-bottom:28px; }
+  .eyebrow { font-size:13px; letter-spacing:.1em; color:var(--accent); font-weight:800; margin:0 0 10px; }
+  h1 { font-size:30px; line-height:1.28; margin:0 0 14px; letter-spacing:-.02em; }
+  .lead { color:var(--muted); margin:0; font-size:15px; }
+
+  /* 수업 흐름 */
+  .flow { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--ink); margin:28px 0 8px; }
+  .flow a { display:block; padding:14px 12px 12px; color:var(--ink); text-decoration:none;
+            border-right:1px solid var(--ink); }
+  .flow a:last-child { border-right:0; }
+  .flow a:hover { background:var(--soft); }
+  .flow b { display:block; font-size:12px; color:var(--accent); letter-spacing:.08em; }
+  .flow span { display:block; font-weight:800; font-size:15px; margin-top:2px; }
+  .flow small { display:block; font-size:12px; color:var(--muted); margin-top:2px; line-height:1.4; }
+  .flow-cap { font-size:12px; color:var(--muted); margin:0 0 8px; }
+
+  section { border-top:2px solid var(--ink); padding:26px 0 30px; display:grid;
+            grid-template-columns:72px 1fr; column-gap:16px; scroll-margin-top:12px; }
+  .num { font-size:40px; font-weight:800; line-height:1; color:var(--accent); letter-spacing:-.03em; }
+  .tag { font-size:13px; color:var(--accent); font-weight:800; margin:2px 0 6px; }
+  h2 { font-size:22px; line-height:1.35; margin:0 0 10px; letter-spacing:-.01em; }
   p { margin:0 0 12px; }
-  .links a { display:inline-block; margin:4px 16px 4px 0; color:var(--accent); font-weight:700;
-             text-decoration:none; border-bottom:2px solid var(--accent); }
-  .links a:hover { color:var(--ink); border-color:var(--ink); }
-  .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
-  footer { border-top:1px solid var(--line); padding-top:20px; font-size:13px; color:var(--muted); }
+
+  dl.meta { display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:4px 0 16px;
+            padding:12px 14px; background:var(--soft); border-left:3px solid var(--accent); font-size:14px; }
+  dl.meta dt { color:var(--muted); font-weight:700; }
+  dl.meta dd { margin:0; }
+
+  ul.files { list-style:none; padding:0; margin:0 0 16px; border-top:1px solid var(--line); }
+  ul.files li { border-bottom:1px solid var(--line); padding:8px 0; font-size:14px;
+                display:flex; justify-content:space-between; gap:12px; }
+  ul.files li em { font-style:normal; color:var(--muted); font-size:12px; white-space:nowrap; }
+
+  .links { display:flex; flex-wrap:wrap; gap:8px; }
+  .links a { display:inline-block; padding:10px 14px; border:2px solid var(--accent); color:var(--accent);
+             font-weight:800; text-decoration:none; font-size:15px; }
+  .links a.primary { background:var(--accent); color:#fff; }
+  .links a:hover { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .note { color:var(--muted); font-size:13px; margin:12px 0 0; }
+
+  .policy { border-top:1px solid var(--line); padding:18px 0 0; margin-top:6px; font-size:13px; color:var(--muted); }
+  .policy p { margin:0 0 6px; }
+  footer { border-top:8px solid var(--ink); margin-top:28px; padding-top:16px; font-size:13px; color:var(--muted); }
   footer a { color:var(--muted); }
+
+  @media (max-width:560px) {
+    h1 { font-size:24px; }
+    .flow { grid-template-columns:repeat(2,1fr); }
+    .flow a:nth-child(2) { border-right:0; }
+    .flow a:nth-child(-n+2) { border-bottom:1px solid var(--ink); }
+    section { grid-template-columns:1fr; }
+    .num { font-size:32px; margin-bottom:6px; }
+    .links a { flex:1 1 100%; text-align:center; }
+  }
 </style>
 </head>
 <body>
@@ -32,47 +74,89 @@
   <header>
     <p class="eyebrow">2026 역사수업 공개 자료</p>
     <h1>질문하고, 근거를 살피고,<br>스스로 판단하는 역사수업</h1>
-    <p class="lead">복정고등학교 한국사 수업과 역사교육 행사에서 개발·활용한 자료입니다. 수업에 활용할 수 있도록 공개하였습니다.</p>
+    <p class="lead">복정고등학교 한국사 수업과 역사교육 행사에서 개발·활용한 자료입니다. 다른 학교 수업에서도 참고할 수 있도록 공개하였습니다.</p>
+
+    <nav class="flow" aria-label="수업 흐름">
+      <a href="#questions"><b>01</b><span>질문하기</span><small>질문을 만들고 다시 살핀다</small></a>
+      <a href="#newsroom"><b>02</b><span>근거 살피기</span><small>당시 보도와 자료를 대조한다</small></a>
+      <a href="#fourcut"><b>03</b><span>기억하기</span><small>역사 속 학생을 오늘과 잇는다</small></a>
+      <a href="#more"><b>04</b><span>더 보기</span><small>한국사 학습 웹게임</small></a>
+    </nav>
+    <p class="flow-cap">번호를 누르면 해당 자료로 이동합니다.</p>
   </header>
 
   <section id="questions">
-    <p class="tag">고1 한국사 · 질문·사료 탐구</p>
-    <h2>질문이 탐구로 자라는 한국사 수행평가</h2>
-    <p>학생이 역사적 질문을 만들고 AI와 교사의 피드백을 검토하며 자신의 질문을 다시 살펴보는 수업입니다. 교과서와 사료를 근거로 질문을 발전시키고, 탐구보고서와 판단 글쓰기로 연결합니다.</p>
-    <div class="links">
-      <a href="https://gtmc-history.github.io/conference2026/">수업 운영 자료·양식 보기</a>
-      <a href="https://gtmc-history.github.io/question-demo/?source=conference2026">질문 성장 3분 체험</a>
+    <div class="num">01</div>
+    <div>
+      <p class="tag">고1 한국사 · 질문·사료 탐구</p>
+      <h2>질문이 탐구로 자라는 한국사 수행평가</h2>
+      <p>학생이 역사적 질문을 만들고, AI와 교사의 피드백을 검토하며 자신의 질문을 다시 살펴보는 수업입니다. 교과서와 사료를 근거로 질문을 발전시키고, 탐구보고서와 판단 글쓰기로 연결합니다.</p>
+      <dl class="meta">
+        <dt>운영</dt><dd>2026년 3월~11월, 고1 한국사</dd>
+        <dt>흐름</dt><dd>질문 작성 → 피드백 검토 → 수정·유지 판단 → 탐구보고서</dd>
+      </dl>
+      <ul class="files">
+        <li>질문 탐구 활동지 <em>PDF·DOCX</em></li>
+        <li>질문 탐구보고서 양식 <em>PDF·DOCX</em></li>
+        <li>질문 프레임 카드 4종 <em>PDF</em></li>
+      </ul>
+      <div class="links">
+        <a class="primary" href="https://gtmc-history.github.io/conference2026/">수업 운영 자료·양식 보기</a>
+        <a href="https://gtmc-history.github.io/question-demo/?source=conference2026">질문 성장 3분 체험</a>
+      </div>
+      <p class="note">2026년 8월 교육 콘퍼런스 발표 당시의 운영 자료입니다. 현재 수업·평가 방식과 일부 다를 수 있습니다.</p>
     </div>
-    <p class="note">2026년 8월 교육 콘퍼런스 발표 당시의 운영 자료입니다. 현재 수업·평가 방식과 일부 다를 수 있습니다.</p>
   </section>
 
-  <section>
-    <p class="tag">한국 현대사 · 역사적 미디어 읽기</p>
-    <h2>1945 NEWSROOM</h2>
-    <p>모스크바 3상회의 결정을 전한 당시 보도를 다른 자료와 대조하며, 무엇이 어떻게 전달되었는지 학생이 직접 판단하는 2차시 수업 자료입니다. 활동지, 교사용 안내, 슬라이드가 함께 들어 있습니다.</p>
-    <div class="links">
-      <a href="https://gtmc-history.github.io/games/newsroom1945/kit/">교사용 수업자료 꾸러미</a>
-      <a href="https://gtmc-history.github.io/games/newsroom1945/?mode=paper">학습지 연계 게임 실행</a>
+  <section id="newsroom">
+    <div class="num">02</div>
+    <div>
+      <p class="tag">한국 현대사 · 역사적 미디어 읽기</p>
+      <h2>1945 NEWSROOM</h2>
+      <p>모스크바 3상회의 결정을 전한 당시 보도를 다른 자료와 대조하며, 무엇이 어떻게 전달되었는지 학생이 직접 판단하는 수업 자료입니다.</p>
+      <dl class="meta">
+        <dt>운영</dt><dd>2026년 10월, 4개 학급</dd>
+        <dt>구성</dt><dd>2차시 · 활동지 · 교사용 안내 · 슬라이드 · 학습지 연계 게임</dd>
+      </dl>
+      <div class="links">
+        <a class="primary" href="https://gtmc-history.github.io/games/newsroom1945/kit/">교사용 수업자료 꾸러미</a>
+        <a href="https://gtmc-history.github.io/games/newsroom1945/?mode=paper">학습지 연계 게임 실행</a>
+      </div>
     </div>
   </section>
 
-  <section>
-    <p class="tag">학생의 날 · 계기 활동</p>
-    <h2>역사네컷 — 그날의 학생들, 오늘의 우리</h2>
-    <p>1929년 광주학생항일운동을 기억하며 역사 미션과 구호·소품 스티커를 활용하는 네 컷 촬영 콘텐츠입니다. 촬영 사진은 서버에 자동 업로드되지 않으며, 사용자가 자신의 기기에 저장할 수 있습니다.</p>
-    <div class="links">
-      <a href="https://gtmc-history.github.io/history4cut/share.html">배포판 열기</a>
+  <section id="fourcut">
+    <div class="num">03</div>
+    <div>
+      <p class="tag">학생의 날 · 계기 활동</p>
+      <h2>역사네컷 — 그날의 학생들, 오늘의 우리</h2>
+      <p>1929년 광주학생항일운동을 기억하며 역사 미션과 구호·소품 스티커를 활용하는 네 컷 촬영 콘텐츠입니다.</p>
+      <dl class="meta">
+        <dt>운영</dt><dd>2026년 11월 3일 학생의 날 교과캠프 「역사로 만나는 오늘」</dd>
+        <dt>개인정보</dt><dd>촬영 사진은 서버에 자동 업로드되지 않고, 사용자 기기에만 저장됩니다.</dd>
+      </dl>
+      <div class="links">
+        <a class="primary" href="https://gtmc-history.github.io/history4cut/share.html">배포판 열기</a>
+      </div>
     </div>
   </section>
 
   <section id="more">
-    <p class="tag">다른 수업 자료</p>
-    <h2>한국사 학습 웹게임 모음</h2>
-    <p>한국사 학습에서 도입·탐구·정리 활동에 활용할 수 있는 웹게임을 모았습니다.</p>
-    <div class="links">
-      <a href="https://gtmc-history.github.io/">웹게임 모음 보기</a>
+    <div class="num">04</div>
+    <div>
+      <p class="tag">다른 수업 자료</p>
+      <h2>한국사 학습 웹게임 모음</h2>
+      <p>한국사 수업의 도입·탐구·정리 활동에 활용할 수 있는 웹게임을 모았습니다.</p>
+      <div class="links">
+        <a href="https://gtmc-history.github.io/">웹게임 모음 보기</a>
+      </div>
     </div>
   </section>
+
+  <div class="policy">
+    <p>· 이 페이지의 자료에는 학생 개인 기록이 포함되어 있지 않습니다.</p>
+    <p>· 수업 참고·활용 목적으로 공개한 자료입니다. 재배포가 필요하면 아래 연락처로 알려 주세요.</p>
+  </div>
 
   <footer>
     찰리쌤 · 복정고등학교 한국사 · <a href="mailto:gtmc@gtmc.kr">gtmc@gtmc.kr</a>
