@@ -1536,6 +1536,48 @@
       "dashboard": {
         "status": "audit_required"
       }
+    },
+    {
+      "id": "G038",
+      "legacyOrder": 38,
+      "sortOrder": 37,
+      "slug": "democracy-1979",
+      "title": "1979: 지워진 목소리",
+      "shortDescription": "유신 체제·긴급조치·부마민주항쟁 기록을 대조해 주장의 사실·누락·보류를 판정하고 보도 결정을 내린다.",
+      "course": "한국사2",
+      "era": "해방 이후",
+      "unit": "유신 체제와 민주화 운동",
+      "periodLabel": "현대사 · 1972–1979",
+      "startYear": 1972,
+      "endYear": 1979,
+      "lessonUse": [],
+      "lessonUseStatus": "unconfirmed",
+      "activityType": "자료·판단",
+      "durationMin": null,
+      "durationMax": null,
+      "durationStatus": "unconfirmed",
+      "participation": "개인",
+      "tags": [
+        "유신 체제",
+        "긴급조치",
+        "부마민주항쟁",
+        "사료 대조",
+        "편집 판단"
+      ],
+      "learningGoal": "1972~1979년 보도 문장과 역사 자료를 대조해 확인된 사실·빠진 맥락·미확인 수치를 구분하고, 보도 통제 조건 속에서 편집 결정을 내린다.",
+      "essentialQuestion": "자료에서 확인되는 사실과 빠진 맥락을 나눌 때, 우리는 어떤 기준으로 보도와 판단을 내려야 할까?",
+      "ai": {
+        "use": "none",
+        "mode": null
+      },
+      "path": "/games/democracy-1979/",
+      "status": "published",
+      "dataCollection": {
+        "status": "audit_required"
+      },
+      "dashboard": {
+        "status": "audit_required"
+      }
     }
   ]
 }
