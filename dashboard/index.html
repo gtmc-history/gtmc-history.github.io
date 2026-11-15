@@ -427,6 +427,12 @@ footer a:hover { color: var(--gold-lt); }
 const EDGE_FN_URL     = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-data';
 const AI_QUESTIONS_URL = 'https://xgniwztlrakkrbzcfklb.supabase.co/functions/v1/dashboard-ai-questions';
 const FALLBACK_META = {
+  'democracy-1979': {
+    game_id: 'democracy-1979',
+    label: '1979: 지워진 목소리',
+    era: '현대사·1970년대',
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
   balhae: {
     game_id: 'balhae',
     label: '발해에서 고구려의 DNA를 찾아라',
@@ -530,6 +536,7 @@ const CANONICAL_GAME_LABELS = {
   bungdang: '이조 전랑 자리를 차지하라 — 붕당의 탄생 1575',
   daehan1897: '대한제국 1897 — 당신의 기준으로 평가하라',
   daewongun: '대원군의 결단 — 무너지는 조선을 세워라',
+  'democracy-1979': '1979: 지워진 목소리',
   dongnip1898: '황제와 맞서다 — 1898 독립협회',
   economy1930: '숫자는 성장하고 있습니다',
   euibyeong1907: '의병을 일으켜라 — 1895·1905·1907',
@@ -575,6 +582,7 @@ const CUSTOM_RENDERERS = {
   imjeong1919: buildImjeongCards,
   rationnet1943: buildRationnetCards,
   saito1919: buildSaitoCards,
+  'democracy-1979': buildDemocracyCards,
 };
 
 // ═══════════════════════════════════════════════════
@@ -785,6 +793,7 @@ function getAnalysisRows(rows = getRows()) {
   if (selGame === 'geunal1945') return rows.filter(r => !(r.comment || '').trim());
   if (selGame === 'hoesaryeong1912') return rows.filter(isHoesaryeongResultRow);
   if (selGame === 'rationnet1943') return rows.filter(isRationnetResultRow);
+  if (selGame === 'democracy-1979') return rows.filter(isDemocracyResultRow);
   return rows;
 }
 
@@ -1586,6 +1595,271 @@ function buildRationnetMapCard(rows,meta){
   raf(()=>defs.forEach(([key,,expected],i)=>{ const count=rows.filter(r=>r.choices?.[key]===expected).length; setW(`rn_map_${i}`,rationnetWidth(count,total)); })); return card;
 }
 
+// 1979: 지워진 목소리 (democracy-1979) — 문항 판정 · 자료 전후 판단 변화 · 편집회의 보도 결정
+// choices: { version:'v0.7', record_type:'result', mode:'editorial-judgment',
+//   records:[{ number, year, claim, initial, initial_confidence, initial_mode, source_exposure,
+//              final, final_confidence, correct, reason, change_reason, key_card,
+//              editorial, editorial_reason, editorial_outcome, kind, recorded_at }] }
+const DEMOCRACY_JUDGE = {
+  match: { label: '자료와 일치', color: 'c-jade' },
+  error: { label: '사실과 다름', color: 'c-red' },
+  omit:  { label: '중요한 내용 빠짐', color: 'c-amber' },
+  hold:  { label: '판단 보류', color: 'c-muted' },
+};
+const DEMOCRACY_CHANGE = {
+  keep:     { label: '판단 유지', color: 'c-blue' },
+  revise:   { label: '판단 수정', color: 'c-amber' },
+  unhold:   { label: '보류 후 판단', color: 'c-jade' },
+  holdKeep: { label: '보류 유지', color: 'c-muted' },
+};
+const DEMOCRACY_EDITORIAL = {
+  publish: { label: '송고', color: 'c-jade' },
+  revise:  { label: '수정 후 송고', color: 'c-amber' },
+  hold:    { label: '보류', color: 'c-muted' },
+};
+const DEMOCRACY_CONFIDENCE_SCORE = { low: 1, medium: 2, high: 3 };
+// 문항 제목·권장 판정은 저장 payload에 없는 고정 정보라 게임 v0.7 정의와 같게 둡니다.
+const DEMOCRACY_ITEMS = [
+  { number: 1, year: '1972', title: '대통령은 어떻게 뽑았을까?', correct: 'error', pre: true },
+  { number: 2, year: '1972', title: '10월 17일, 무슨 조치가?', correct: 'match', pre: false },
+  { number: 3, year: '1975', title: '1975년, 여론을 둘러싼 주장', correct: 'hold', pre: true },
+  { number: 4, year: '1975', title: '긴급조치는 무엇을 금지했나?', correct: 'match', pre: false },
+  { number: 5, year: '1979', title: '1979년 10월 16일의 기록', correct: 'omit', pre: true },
+  { number: 6, year: '1979', title: '1979년 10월의 항쟁', correct: 'match', pre: false },
+];
+
+function isDemocracyResultRow(row) {
+  const choices = row?.choices || {};
+  if (choices.record_type === 'comment') return false;
+  return Array.isArray(choices.records) || choices.record_type === 'result';
+}
+
+function democracyRecords(row) {
+  const records = row?.choices?.records;
+  if (!Array.isArray(records)) return [];
+  return records.filter(rec => rec && typeof rec === 'object');
+}
+
+function democracyItemRecords(rows, number) {
+  const out = [];
+  (Array.isArray(rows) ? rows : []).forEach(row => {
+    democracyRecords(row).forEach(rec => {
+      if (Number(rec.number) === number) out.push(rec);
+    });
+  });
+  return out;
+}
+
+function democracyInitialMode(rec) {
+  const mode = rec?.initial_mode;
+  if (mode === 'beforeEvidence' || mode === 'afterEvidence') return mode;
+  return rec?.initial ? 'beforeEvidence' : 'afterEvidence';
+}
+
+function democracyChangeKind(rec) {
+  const kind = rec?.kind;
+  if (kind && Object.prototype.hasOwnProperty.call(DEMOCRACY_CHANGE, kind)) return kind;
+  const initial = rec?.initial || '';
+  const final = rec?.final || '';
+  if (initial === 'hold' && final && final !== 'hold') return 'unhold';
+  if (initial === 'hold' && final === 'hold') return 'holdKeep';
+  if (initial && final && initial !== final) return 'revise';
+  return 'keep';
+}
+
+function democracyJudgeLabel(key) {
+  return DEMOCRACY_JUDGE[key]?.label || '미입력';
+}
+
+function democracyPct(count, total) {
+  return total > 0 ? Math.round(count / total * 100) : 0;
+}
+
+function democracyConfidenceAvg(records, key) {
+  const values = (Array.isArray(records) ? records : [])
+    .map(rec => DEMOCRACY_CONFIDENCE_SCORE[rec?.[key]] || 0)
+    .filter(value => value > 0);
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function democracyConfidenceText(value) {
+  return value === null ? '기록 없음' : `${value.toFixed(2)} / 3.00`;
+}
+
+function buildDemocracyCards(rows, meta) {
+  const label = String(meta?.label || '1979: 지워진 목소리');
+  const safeRows = (Array.isArray(rows) ? rows : []).filter(row => row && row.choices);
+  return [
+    buildDemocracyJudgeCard(safeRows, label),
+    buildDemocracyChangeCard(safeRows, label),
+    buildDemocracyEditorialCard(safeRows, label),
+  ];
+}
+
+// 카드 1 — 1~6번 문항별 최종 판정 분포와 권장 판정 일치율
+function buildDemocracyJudgeCard(rows, label) {
+  const card = mkCard(esc(label), '문항별 최종 판정 분포');
+  const judgeEntries = Object.entries(DEMOCRACY_JUDGE);
+  let allAnswered = 0;
+  let allMatched = 0;
+
+  card.innerHTML += DEMOCRACY_ITEMS.map(item => {
+    const records = democracyItemRecords(rows, item.number);
+    const answered = records.filter(rec => rec.final).length;
+    const matched = records.filter(rec => rec.final === item.correct).length;
+    allAnswered += answered;
+    allMatched += matched;
+    const rateText = answered > 0 ? `${democracyPct(matched, answered)}%` : '응답 없음';
+    return `<div class="bar-item" style="margin-bottom:1.15rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.45rem">${item.number}번 · ${esc(item.year)} · ${esc(item.title)} · 권장 판정 <strong style="color:var(--gold-lt)">${esc(democracyJudgeLabel(item.correct))}</strong></div>
+      ${judgeEntries.map(([key, def], ji) => {
+        const count = records.filter(rec => rec.final === key).length;
+        const pct = democracyPct(count, answered);
+        return `<div class="bar-row" style="margin-bottom:0.25rem">
+          <span class="bar-label" style="font-size:0.76rem">${esc(def.label)}</span>
+          <div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${count}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${def.color}" id="dm_judge_${item.number}_${ji}" style="width:0%"></div></div>`;
+      }).join('')}
+      <div class="slider-note" style="margin-top:0.15rem">권장 판정 일치율 ${rateText} · 응답 ${answered}건</div>
+    </div>`;
+  }).join('');
+
+  const overallRate = allAnswered > 0 ? `${democracyPct(allMatched, allAnswered)}%` : '응답 없음';
+  card.innerHTML += `<div class="slider-note">※ 6문항의 최종 판정만 집계합니다 · 전체 권장 판정 일치율 ${overallRate}(${allMatched}/${allAnswered}건) · 소감 전용 행 제외 · 결과 ${rows.length}건</div>`;
+
+  raf(() => DEMOCRACY_ITEMS.forEach(item => {
+    const records = democracyItemRecords(rows, item.number);
+    const answered = records.filter(rec => rec.final).length;
+    judgeEntries.forEach(([key], ji) => {
+      const count = records.filter(rec => rec.final === key).length;
+      setW(`dm_judge_${item.number}_${ji}`, democracyPct(count, answered));
+    });
+  }));
+  return card;
+}
+
+// 카드 2 — 1·3·5번(사전 판단) 판단 변화·확신도 / 2·4·6번(후속 판단) 일치율·확신도 분리 집계
+function buildDemocracyChangeCard(rows, label) {
+  const card = mkCard(esc(label), '자료 전후 판단 변화 · 확신도');
+  const changeEntries = Object.entries(DEMOCRACY_CHANGE);
+  const preItems = DEMOCRACY_ITEMS.filter(item => item.pre);
+  const postItems = DEMOCRACY_ITEMS.filter(item => !item.pre);
+  let preAnswered = 0;
+  let preRevised = 0;
+  let preUnhold = 0;
+
+  card.innerHTML += `<div style="font-size:0.72rem;color:var(--gold-lt);font-weight:600;margin-bottom:0.5rem">자료를 보기 전에 판단한 문항 · 1·3·5번</div>`;
+  card.innerHTML += preItems.map(item => {
+    const records = democracyItemRecords(rows, item.number)
+      .filter(rec => democracyInitialMode(rec) === 'beforeEvidence' && rec.final);
+    const answered = records.length;
+    const reviseCount = records.filter(rec => democracyChangeKind(rec) === 'revise').length;
+    const unholdCount = records.filter(rec => democracyChangeKind(rec) === 'unhold').length;
+    preAnswered += answered;
+    preRevised += reviseCount;
+    preUnhold += unholdCount;
+    const beforeConf = democracyConfidenceText(democracyConfidenceAvg(records, 'initial_confidence'));
+    const afterConf = democracyConfidenceText(democracyConfidenceAvg(records, 'final_confidence'));
+    return `<div class="bar-item" style="margin-bottom:0.9rem">
+      <div style="font-size:0.71rem;color:var(--text-muted);margin-bottom:0.4rem">${item.number}번 · ${esc(item.year)} · ${esc(item.title)}</div>
+      ${changeEntries.map(([key, def], ci) => {
+        const count = records.filter(rec => democracyChangeKind(rec) === key).length;
+        const pct = democracyPct(count, answered);
+        return `<div class="bar-row" style="margin-bottom:0.22rem">
+          <span class="bar-label" style="font-size:0.76rem">${esc(def.label)}</span>
+          <div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${count}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:3px"><div class="bar-fill fill-${def.color}" id="dm_change_${item.number}_${ci}" style="width:0%"></div></div>`;
+      }).join('')}
+      <div class="slider-note" style="margin-top:0.15rem">평균 확신도 자료 전 ${beforeConf} → 자료 후 ${afterConf} · 응답 ${answered}건</div>
+    </div>`;
+  }).join('');
+
+  const preRate = preAnswered > 0 ? `${democracyPct(preRevised + preUnhold, preAnswered)}%` : '응답 없음';
+  card.innerHTML += `<div class="slider-note" style="margin-bottom:1.1rem">※ 1·3·5번 전체에서 처음 판단이 달라진 비율 ${preRate}(판단 수정 ${preRevised}건 + 보류 후 판단 ${preUnhold}건 / 응답 ${preAnswered}건)</div>`;
+
+  card.innerHTML += `<div style="font-size:0.72rem;color:var(--gold-lt);font-weight:600;margin-bottom:0.5rem">앞서 본 자료로 다시 판단한 문항 · 2·4·6번</div>`;
+  card.innerHTML += `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>문항</th><th>응답</th><th>권장 판정 일치</th><th>최종 확신도</th></tr></thead><tbody>${
+    postItems.map(item => {
+      const records = democracyItemRecords(rows, item.number)
+        .filter(rec => democracyInitialMode(rec) === 'afterEvidence' && rec.final);
+      const answered = records.length;
+      const matched = records.filter(rec => rec.final === item.correct).length;
+      const rate = answered > 0 ? `${democracyPct(matched, answered)}%` : '-';
+      const conf = democracyConfidenceText(democracyConfidenceAvg(records, 'final_confidence'));
+      return `<tr><td>${item.number}번 · ${esc(item.title)}</td><td><span class="${answered ? 'matrix-count' : 'matrix-zero'}">${answered}</span></td><td><span class="${answered ? 'matrix-count' : 'matrix-zero'}">${rate}</span></td><td><span class="${answered ? 'matrix-count' : 'matrix-zero'}">${conf}</span></td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+  card.innerHTML += `<div class="slider-note">※ 2·4·6번은 이미 확인한 자료를 활용해 판정하는 후속 문항(초기 판단 없음, initial_mode=afterEvidence)이라, 1·3·5번의 판단 변화와 섞지 않고 따로 집계합니다. 평균 확신도는 낮음 1 · 보통 2 · 높음 3 기준입니다.</div>`;
+
+  raf(() => preItems.forEach(item => {
+    const records = democracyItemRecords(rows, item.number)
+      .filter(rec => democracyInitialMode(rec) === 'beforeEvidence' && rec.final);
+    const answered = records.length;
+    changeEntries.forEach(([key], ci) => {
+      const count = records.filter(rec => democracyChangeKind(rec) === key).length;
+      setW(`dm_change_${item.number}_${ci}`, democracyPct(count, answered));
+    });
+  }));
+  return card;
+}
+
+// 카드 3 — 1972·1975·1979 연도별 및 문항별 편집회의 보도 결정
+function buildDemocracyEditorialCard(rows, label) {
+  const card = mkCard(esc(label), '편집회의 보도 결정 분포');
+  const editorialEntries = Object.entries(DEMOCRACY_EDITORIAL);
+  const years = ['1972', '1975', '1979'];
+  const yearRecords = yi => {
+    const out = [];
+    DEMOCRACY_ITEMS.filter(item => item.year === years[yi]).forEach(item => {
+      democracyItemRecords(rows, item.number).forEach(rec => {
+        if (rec.editorial) out.push(rec);
+      });
+    });
+    return out;
+  };
+
+  card.innerHTML += years.map((year, yi) => {
+    const records = yearRecords(yi);
+    const answered = records.length;
+    const itemNumbers = DEMOCRACY_ITEMS.filter(item => item.year === year).map(item => item.number).join('·');
+    return `<div class="bar-item" style="margin-bottom:1.05rem">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.45rem">${esc(year)}년 · ${itemNumbers}번 문항 · 응답 ${answered}건</div>
+      ${answered === 0 ? `<div class="matrix-zero" style="font-size:0.76rem">보도 결정 기록 없음</div>` : editorialEntries.map(([key, def], di) => {
+        const count = records.filter(rec => rec.editorial === key).length;
+        const pct = democracyPct(count, answered);
+        return `<div class="bar-row" style="margin-bottom:0.25rem">
+          <span class="bar-label" style="font-size:0.76rem">${esc(def.label)}</span>
+          <div class="bar-right"><span class="bar-pct pct-${def.color}">${pct}%</span><span class="bar-count">${count}명</span></div>
+        </div>
+        <div class="bar-track" style="margin-bottom:4px"><div class="bar-fill fill-${def.color}" id="dm_edit_${yi}_${di}" style="width:0%"></div></div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+
+  card.innerHTML += `<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th>문항</th><th>송고</th><th>수정 후 송고</th><th>보류</th></tr></thead><tbody>${
+    DEMOCRACY_ITEMS.map(item => {
+      const records = democracyItemRecords(rows, item.number).filter(rec => rec.editorial);
+      return `<tr><td>${item.number}번 · ${esc(item.year)} · ${esc(item.title)}</td>${editorialEntries.map(([key]) => {
+        const count = records.filter(rec => rec.editorial === key).length;
+        return `<td><span class="${count ? 'matrix-count' : 'matrix-zero'}">${count}</span></td>`;
+      }).join('')}</tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+  card.innerHTML += `<div class="slider-note">※ 학생이 편집회의에서 고른 보도 결정입니다 · 결과 ${rows.length}건</div>`;
+
+  raf(() => years.forEach((year, yi) => {
+    const records = yearRecords(yi);
+    const answered = records.length;
+    editorialEntries.forEach(([key], di) => {
+      setW(`dm_edit_${yi}_${di}`, democracyPct(records.filter(rec => rec.editorial === key).length, answered));
+    });
+  }));
+  return card;
+}
+
 // ⓪ 사료판단 차트 — choices: {key: 'pos'|'neg'|'hold'}, axes: [{key, label}]
 function buildSrcCardsCard(rows, meta) {
   const total = rows.length;
@@ -1892,6 +2166,10 @@ function genQuestions(rows, meta) {
   if (total === 0) return [];
   const qs = [];
 
+  if (selGame === 'democracy-1979') {
+    return buildDemocracyQuestions(rows, meta);
+  }
+
   if (isGukchaeRows(rows, meta)) {
     return buildGukchaeQuestions(rows, meta);
   }
@@ -2021,6 +2299,75 @@ function buildGukchaeQuestions(rows, meta) {
       stage: '전이',
       text: `검열을 피하기 위해 일부 진실을 우회해 쓴 기사는 타협일까요, 저항의 한 방식일까요? 오늘 우리가 권력과 여론 앞에서 진실을 말하는 방식과도 연결해볼 수 있을까요?`,
       hint: '정답을 고르는 대신 역사적 조건 속 행위자의 선택을 평가하게 합니다.'
+    },
+  ];
+}
+
+function buildDemocracyQuestions(rows, meta) {
+  const label = String(meta?.label || '1979: 지워진 목소리');
+  const holdRecords = democracyItemRecords(rows, 3);
+  const holdAnswered = holdRecords.filter(rec => rec.final).length;
+  const holdCount = holdRecords.filter(rec => rec.final === 'hold').length;
+  const holdPct = democracyPct(holdCount, holdAnswered);
+
+  const preRecords = [];
+  DEMOCRACY_ITEMS.filter(item => item.pre).forEach(item => {
+    democracyItemRecords(rows, item.number)
+      .filter(rec => democracyInitialMode(rec) === 'beforeEvidence' && rec.final)
+      .forEach(rec => preRecords.push(rec));
+  });
+  const preAnswered = preRecords.length;
+  const revised = preRecords.filter(rec => democracyChangeKind(rec) === 'revise').length;
+  const unhold = preRecords.filter(rec => democracyChangeKind(rec) === 'unhold').length;
+  const changePct = democracyPct(revised + unhold, preAnswered);
+
+  const editorialForYear = year => {
+    const out = [];
+    DEMOCRACY_ITEMS.filter(item => item.year === year).forEach(item => {
+      democracyItemRecords(rows, item.number).forEach(rec => {
+        if (rec.editorial) out.push(rec);
+      });
+    });
+    return out;
+  };
+  const yearText = year => {
+    const records = editorialForYear(year);
+    if (!records.length) return '기록 없음';
+    return Object.entries(DEMOCRACY_EDITORIAL)
+      .map(([key, def]) => `${def.label} ${democracyPct(records.filter(rec => rec.editorial === key).length, records.length)}%`)
+      .join(' · ');
+  };
+
+  const postRecords = [];
+  DEMOCRACY_ITEMS.filter(item => !item.pre).forEach(item => {
+    democracyItemRecords(rows, item.number)
+      .filter(rec => democracyInitialMode(rec) === 'afterEvidence' && rec.final)
+      .forEach(rec => postRecords.push({ rec, correct: item.correct }));
+  });
+  const postAnswered = postRecords.length;
+  const postMatched = postRecords.filter(pair => pair.rec.final === pair.correct).length;
+  const postRate = postAnswered > 0 ? `${democracyPct(postMatched, postAnswered)}%` : '응답 없음';
+
+  return [
+    {
+      stage: '관찰',
+      text: `3번 문항(1975년 “국민의 70%가 반대했다”)에 대해 우리 반은 ‘판단 보류’를 ${holdPct}% 골랐습니다(${holdAnswered}건 중 ${holdCount}명). 자료가 확인해 주지 않는 수치를 만났을 때, 무엇을 근거로 ‘보류’를 결정했고 보류하지 않은 학생들은 무엇을 근거로 판정했을까요?`,
+      hint: '보류를 회피가 아니라 판단의 한 종류로 다룹니다. 확인되지 않은 수치를 어떻게 처리하는지가 이 게임의 핵심입니다.'
+    },
+    {
+      stage: '해석',
+      text: `자료를 보기 전에 먼저 판단한 1·3·5번에서 최종 판정이 처음과 달라진 비율은 ${changePct}%입니다(판단 수정 ${revised}건 + 보류 후 판단 ${unhold}건 / 응답 ${preAnswered}건). 어떤 자료가 판단을 바꾸었고, 바뀌지 않은 판단은 왜 그대로 남았을까요?`,
+      hint: '판단 변화를 ‘틀렸다가 고쳤다’가 아니라 근거를 더 본 결과로 읽게 합니다.'
+    },
+    {
+      stage: '맥락',
+      text: `편집회의 보도 결정은 1975년 문항 ${yearText('1975')}, 1979년 문항 ${yearText('1979')}입니다. 1975년의 긴급조치 제9호와 1979년 부마민주항쟁 초기의 보도 통제라는 서로 다른 조건은 기자의 결정을 어떻게 제약했을까요?`,
+      hint: '같은 판정이라도 시대의 검열 조건이 다르면 보도 결정이 달라진다는 점을 비교하게 합니다.'
+    },
+    {
+      stage: '전이',
+      text: `앞서 본 자료로 다시 판정한 2·4·6번의 권장 판정 일치율은 ${postRate}입니다(응답 ${postAnswered}건). 기자가 이미 확인한 자료에 기대어 기사를 쓰는 방식은 오늘 우리가 뉴스를 읽을 때 어떤 강점과 위험이 될까요?`,
+      hint: '후속 판단이 더 정확해지는지, 아니면 앞선 자료에 갇히는지 토론하게 합니다.'
     },
   ];
 }
@@ -2270,6 +2617,36 @@ function buildAiSummary(rows, meta) {
       count,
       pct: total ? Math.round(count / total * 100) : 0,
     }));
+  }
+
+  if (selGame === 'democracy-1979') {
+    summary.scenes = DEMOCRACY_ITEMS.map(item => {
+      const records = democracyItemRecords(rows, item.number).filter(rec => rec.final);
+      return {
+        key: `item${item.number}`,
+        label: `${item.number}. ${item.year} ${item.title}`,
+        options: Object.entries(DEMOCRACY_JUDGE).map(([key, def]) => {
+          const count = records.filter(rec => rec.final === key).length;
+          return { key, label: def.label, count, pct: records.length ? Math.round(count / records.length * 100) : 0 };
+        }),
+      };
+    });
+
+    const editorialRecords = [];
+    DEMOCRACY_ITEMS.forEach(item => {
+      democracyItemRecords(rows, item.number).forEach(rec => {
+        if (rec.editorial) editorialRecords.push(rec);
+      });
+    });
+    summary.endings = Object.entries(DEMOCRACY_EDITORIAL).map(([key, def]) => {
+      const count = editorialRecords.filter(rec => rec.editorial === key).length;
+      return {
+        key: `editorial:${key}`,
+        label: `보도 결정 - ${def.label}`,
+        count,
+        pct: editorialRecords.length ? Math.round(count / editorialRecords.length * 100) : 0,
+      };
+    });
   }
 
   return summary;

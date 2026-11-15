@@ -32,6 +32,12 @@ type ResultRow = {
 
 const FALLBACK_META: MetaRow[] = [
   {
+    game_id: "democracy-1979",
+    label: "1979: 지워진 목소리",
+    era: "현대사·1970년대",
+    axes: [], scenes: [], sliders: [], endings: [],
+  },
+  {
     game_id: "balhae",
     label: "발해에서 고구려의 DNA를 찾아라",
     era: "남북국 시대",
